@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36429.23
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.API", "PoemApp.API\PoemApp.API.csproj", "{0D35D663-2DBD-4F38-A867-1C40C94E4839}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Maui", "PoemApp.Maui\PoemApp.Maui.csproj", "{B2016D94-83A3-46FC-824E-458F358448A0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Core", "PoemApp.Core\PoemApp.Core.csproj", "{1463BF06-BC67-41FF-876E-683B9CBC71CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Infrastructure", "PoemApp.Infrastructure\PoemApp.Infrastructure.csproj", "{E600FC89-3E4D-44D7-949A-96EC3200694D}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B2016D94-83A3-46FC-824E-458F358448A0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B2016D94-83A3-46FC-824E-458F358448A0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B2016D94-83A3-46FC-824E-458F358448A0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B2016D94-83A3-46FC-824E-458F358448A0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DDFEA590-4E1A-4335-ACE5-718FA25FEDF2}
+	EndGlobalSection
+EndGlobal
