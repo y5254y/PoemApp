@@ -32,6 +32,7 @@ namespace PoemApp.API
 
             // 注册自定义服务
             builder.Services.AddScoped<IPoemService, PoemService>();
+            builder.Services.AddScoped<IAuthorService, AuthorService>();
             builder.Services.AddOpenApiDocument(config =>
             {
                 config.Title = "PoemApp API";

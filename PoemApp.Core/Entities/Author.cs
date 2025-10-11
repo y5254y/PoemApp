@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PoemApp.Core.Enums;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PoemApp.Core.Entities;
@@ -13,7 +14,7 @@ public class Author
 
     [Required]
     [StringLength(20)]
-    public string Dynasty { get; set; } = null!;
+    public DynastyEnum Dynasty { get; set; }
 
     public string? Biography { get; set; }
 
@@ -38,5 +39,5 @@ public class AuthorRelationship
 
     [Required]
     [StringLength(20)]
-    public string RelationshipType { get; set; } = null!;// 如"师徒"、"好友"、"父子"、"兄弟"、
+    public RelationshipTypeEnum RelationshipType { get; set; }
 }

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using PoemApp.Core.Enums;
+using System.ComponentModel.DataAnnotations;
 
 namespace PoemApp.Core.DTOs;
 
@@ -16,6 +17,10 @@ public class PoemDto
     [Required]
     public int AuthorId { get; set; }
     public string AuthorName { get; set; }
+
+    public DynastyEnum Dynasty { get; set; }
+    // 添加朝代显示名称
+    public string DynastyDisplayName { get; set; }
 
     public string Background { get; set; }
     public string Translation { get; set; }

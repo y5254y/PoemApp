@@ -1,15 +1,19 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
-
+using PoemApp.Core.Enums;
+using PoemApp.Core.Extensions;
 namespace PoemApp.Core.Entities;
 
 public class Category
 {
     public int Id { get; set; }
 
+
+    // 使用枚举类型
+    public CategoryTypeEnum Type { get; set; }
     [Required]
     [StringLength(50)]
-    public string Name { get; set; } = null!;
+    public string Name => Type.GetDisplayName();
 
     public string? Description { get; set; }
 

@@ -1,4 +1,5 @@
 ﻿
+using PoemApp.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace PoemApp.Core.Entities;
@@ -20,6 +21,20 @@ public class User
     public string? Phone { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+
+    // 新增字段：用户角色/权限
+    public UserRole Role { get; set; } = UserRole.Normal;
+
+    // 新增字段：VIP开始时间
+    public DateTime? VipStartDate { get; set; }
+
+    // 新增字段：VIP结束时间
+    public DateTime? VipEndDate { get; set; }
+
+    // 计算属性：判断用户当前是否是VIP
+    public bool IsVip => VipEndDate.HasValue && VipEndDate.Value > DateTime.Now;
+
 
     // 收藏的诗文
     public ICollection<UserFavorite> Favorites { get; set; } = [];

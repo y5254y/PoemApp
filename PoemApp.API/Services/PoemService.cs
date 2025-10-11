@@ -3,6 +3,8 @@ using PoemApp.API.Data;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Core.Interfaces;
+using PoemApp.Core.Extensions;
+using PoemApp.Core.Enums; // 添加枚举命名空间
 
 namespace PoemApp.API.Services
 {
@@ -28,6 +30,10 @@ namespace PoemApp.API.Services
                     Content = p.Content,
                     AuthorId = p.AuthorId,
                     AuthorName = p.Author.Name,
+                    // 使用枚举而不是字符串
+                    Dynasty = p.Author.Dynasty,
+                    // 使用扩展方法获取友好的显示名称
+                    DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
                     Background = p.Background,
                     Translation = p.Translation,
                     Annotation = p.Annotation,
@@ -53,6 +59,9 @@ namespace PoemApp.API.Services
                 Content = poem.Content,
                 AuthorId = poem.AuthorId,
                 AuthorName = poem.Author.Name,
+                // 添加枚举字段
+                Dynasty = poem.Author.Dynasty,
+                DynastyDisplayName = poem.Author.Dynasty.GetDisplayName(),
                 Background = poem.Background,
                 Translation = poem.Translation,
                 Annotation = poem.Annotation,
@@ -74,6 +83,9 @@ namespace PoemApp.API.Services
                     Content = p.Content,
                     AuthorId = p.AuthorId,
                     AuthorName = p.Author.Name,
+                    // 添加枚举字段
+                    Dynasty = p.Author.Dynasty,
+                    DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
                     Background = p.Background,
                     Translation = p.Translation,
                     Annotation = p.Annotation,
@@ -96,6 +108,9 @@ namespace PoemApp.API.Services
                     Content = p.Content,
                     AuthorId = p.AuthorId,
                     AuthorName = p.Author.Name,
+                    // 添加枚举字段
+                    Dynasty = p.Author.Dynasty,
+                    DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
                     Background = p.Background,
                     Translation = p.Translation,
                     Annotation = p.Annotation,
