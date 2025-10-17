@@ -21,10 +21,9 @@ public class Category
     public ICollection<PoemCategory> Poems { get; set; } = [];
 }
 
-// 多对多关系表
+// 多对多关系表， 没有额外属性，使用联合主键
 public class PoemCategory
 {
-    public int Id { get; set; }
     public int PoemId { get; set; }
     public Poem Poem { get; set; } = null!;
 

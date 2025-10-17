@@ -48,9 +48,9 @@ public class AuthorService : IAuthorService
                     AuthorName = p.Author.Name,
                     Dynasty = p.Author.Dynasty,
                     DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
-                    Background = p.Background,
-                    Translation = p.Translation,
-                    Annotation = p.Annotation
+                    Background = p.Background ?? string.Empty,
+                    Translation = p.Translation ?? string.Empty,
+                    Annotation = p.Annotation ?? string.Empty
                 }).ToList()
             })
             .ToListAsync();
@@ -92,9 +92,9 @@ public class AuthorService : IAuthorService
                 AuthorName = p.Author.Name,
                 Dynasty = p.Author.Dynasty,
                 DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
-                Background = p.Background,
-                Translation = p.Translation,
-                Annotation = p.Annotation
+                Background = p.Background ?? string.Empty,
+                Translation = p.Translation ?? string.Empty,
+                Annotation = p.Annotation ?? string.Empty
             }).ToList()
         };
     }

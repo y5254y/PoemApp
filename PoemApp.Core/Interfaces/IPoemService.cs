@@ -11,4 +11,7 @@ public interface IPoemService
     Task<PoemDto> AddPoemAsync(CreatePoemDto poemDto);
     Task UpdatePoemAsync(int id, UpdatePoemDto poemDto);
     Task DeletePoemAsync(int id);
+
+    Task AddCategoryToPoemAsync(int poemId, int categoryId);
+    Task RemoveCategoryFromPoemAsync(int poemId, int categoryId);
 }

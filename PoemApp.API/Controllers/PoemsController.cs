@@ -90,4 +90,33 @@ public class PoemsController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+
+    [HttpPost("{poemId}/categories/{categoryId}")]
+    public async Task<IActionResult> AddCategoryToPoem(int poemId, int categoryId)
+    {
+        try
+        {
+            await _poemService.AddCategoryToPoemAsync(poemId, categoryId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{poemId}/categories/{categoryId}")]
+    public async Task<IActionResult> RemoveCategoryFromPoem(int poemId, int categoryId)
+    {
+        try
+        {
+            await _poemService.RemoveCategoryFromPoemAsync(poemId, categoryId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }

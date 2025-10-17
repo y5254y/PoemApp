@@ -34,9 +34,9 @@ namespace PoemApp.API.Services
                     Dynasty = p.Author.Dynasty,
                     // 使用扩展方法获取友好的显示名称
                     DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
-                    Background = p.Background,
-                    Translation = p.Translation,
-                    Annotation = p.Annotation,
+                    Background = p.Background ?? string.Empty,
+                    Translation = p.Translation ?? string.Empty,
+                    Annotation = p.Annotation ?? string.Empty,
                     Categories = p.Categories.Select(pc => pc.Category.Name).ToList()
                 })
                 .ToListAsync();
@@ -62,9 +62,9 @@ namespace PoemApp.API.Services
                 // 添加枚举字段
                 Dynasty = poem.Author.Dynasty,
                 DynastyDisplayName = poem.Author.Dynasty.GetDisplayName(),
-                Background = poem.Background,
-                Translation = poem.Translation,
-                Annotation = poem.Annotation,
+                Background = poem.Background ?? string.Empty,
+                Translation = poem.Translation ?? string.Empty,
+                Annotation = poem.Annotation ?? string.Empty,
                 Categories = poem.Categories.Select(pc => pc.Category.Name).ToList()
             };
         }
@@ -86,9 +86,9 @@ namespace PoemApp.API.Services
                     // 添加枚举字段
                     Dynasty = p.Author.Dynasty,
                     DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
-                    Background = p.Background,
-                    Translation = p.Translation,
-                    Annotation = p.Annotation,
+                    Background = p.Background ?? string.Empty,
+                    Translation = p.Translation ?? string.Empty,
+                    Annotation = p.Annotation ?? string.Empty,
                     Categories = p.Categories.Select(pc => pc.Category.Name).ToList()
                 })
                 .ToListAsync();
@@ -111,9 +111,9 @@ namespace PoemApp.API.Services
                     // 添加枚举字段
                     Dynasty = p.Author.Dynasty,
                     DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
-                    Background = p.Background,
-                    Translation = p.Translation,
-                    Annotation = p.Annotation,
+                    Background = p.Background ?? string.Empty,
+                    Translation = p.Translation ?? string.Empty,
+                    Annotation = p.Annotation ?? string.Empty,
                     Categories = p.Categories.Select(pc => pc.Category.Name).ToList()
                 })
                 .ToListAsync();
@@ -208,6 +208,66 @@ namespace PoemApp.API.Services
             }
 
             _context.Poems.Remove(poem);
+            await _context.SaveChangesAsync();
+        }
+
+
+
+
+
+        // 添加专门的诗文分类管理方法
+        public async Task UpdatePoemCategoriesAsync(int poemId, List<int> categoryIds)
+        {
+            var poem = await _context.Poems
+                .Include(p => p.Categories)
+                .FirstOrDefaultAsync(p => p.Id == poemId);
+
+            if (poem == null) throw new ArgumentException("Poem not found");
+
+            // 清除现有分类
+            poem.Categories.Clear();
+
+            // 添加新分类
+            foreach (var categoryId in categoryIds)
+            {
+                if (await _context.Categories.AnyAsync(c => c.Id == categoryId))
+                {
+                    poem.Categories.Add(new PoemCategory
+                    {
+                        PoemId = poemId,
+                        CategoryId = categoryId
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task AddCategoryToPoemAsync(int poemId, int categoryId)
+        {
+            // 检查关系是否已存在
+            var exists = await _context.PoemCategories
+                .AnyAsync(pc => pc.PoemId == poemId && pc.CategoryId == categoryId);
+
+            if (exists) throw new ArgumentException("Category already assigned to poem");
+
+            _context.PoemCategories.Add(new PoemCategory
+            {
+                PoemId = poemId,
+                CategoryId = categoryId
+            });
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task RemoveCategoryFromPoemAsync(int poemId, int categoryId)
+        {
+            var poemCategory = await _context.PoemCategories
+                .FirstOrDefaultAsync(pc => pc.PoemId == poemId && pc.CategoryId == categoryId);
+
+            if (poemCategory == null) throw new ArgumentException("Category not assigned to poem");
+
+            _context.PoemCategories.Remove(poemCategory);
             await _context.SaveChangesAsync();
         }
     }

@@ -11,6 +11,10 @@ public class User
     [StringLength(50)]
     public string Username { get; set; } = null!;
 
+    // 密码相关字段（如果需要用户名密码登录）
+    public byte[] PasswordHash { get; set; }
+    public byte[] PasswordSalt { get; set; }
+
     [StringLength(50)]
     public string? WeChatId { get; set; }
 
@@ -35,6 +39,11 @@ public class User
     // 计算属性：判断用户当前是否是VIP
     public bool IsVip => VipEndDate.HasValue && VipEndDate.Value > DateTime.Now;
 
+    // 新增积分字段
+    public int Points { get; set; } = 0;
+
+    // 积分获取记录
+    public ICollection<PointsRecord> PointsRecords { get; set; } = [];
 
     // 收藏的诗文
     public ICollection<UserFavorite> Favorites { get; set; } = [];
@@ -47,6 +56,31 @@ public class User
 
     // 标注记录
     public ICollection<Annotation> Annotations { get; set; } = [];
+}
+
+
+// 积分获取记录实体
+public class PointsRecord
+{
+    public int Id { get; set; }
+
+    [Required]
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+
+    [Required]
+    public PointsSource Source { get; set; }
+
+    [Required]
+    public int Points { get; set; }
+
+    [StringLength(200)]
+    public string? Description { get; set; }
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // 关联的业务ID（如签到记录ID、任务完成记录ID等）
+    public int? RelatedId { get; set; }
 }
 
 public class UserFavorite

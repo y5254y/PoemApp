@@ -25,6 +25,8 @@ public class Author
     public ICollection<Poem> Poems { get; set; } = [];
 }
 
+
+//带额外信息的自引用关系实体，例如师徒关系、亲属关系等。有自己的id做为主键
 public class AuthorRelationship
 {
     public int Id { get; set; }

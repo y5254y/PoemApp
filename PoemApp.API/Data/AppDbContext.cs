@@ -21,6 +21,7 @@ namespace PoemApp.API.Data
         public DbSet<Audio> Audios { get; set; }
         public DbSet<AudioRating> AudioRatings { get; set; }
         public DbSet<AuthorRelationship> AuthorRelationships { get; set; }
+        public DbSet<PointsRecord> PointsRecords { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -83,6 +84,16 @@ namespace PoemApp.API.Data
                 .HasOne(ar => ar.User)
                 .WithMany(u => u.Ratings)
                 .HasForeignKey(ar => ar.UserId);
+
+
+            // 配置 PointsRecord 实体
+            modelBuilder.Entity<PointsRecord>()
+                .HasKey(pr => pr.Id);
+
+            modelBuilder.Entity<PointsRecord>()
+                .HasOne(pr => pr.User)
+                .WithMany(u => u.PointsRecords)
+                .HasForeignKey(pr => pr.UserId);
         }
     }
 }
