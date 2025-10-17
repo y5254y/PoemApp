@@ -1,13 +1,16 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-using PoemApp.API.Data;
-using PoemApp.API.Services;
+using PoemApp.Infrastructure.Data;
+using Microsoft.Extensions.DependencyInjection;
+using PoemApp.Infrastructure.Extensions;
+using PoemApp.Infrastructure.Services;
 using PoemApp.Core.Interfaces;
 using System.Reflection;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+//using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+
 
 namespace PoemApp.API
 {
@@ -33,31 +36,33 @@ namespace PoemApp.API
                 //     new MySqlServerVersion(new Version(8, 0, 27))
                 // );
             });
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuerSigningKey = true,
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                .GetBytes(builder.Configuration.GetSection("Jwt:Key").Value)),
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"]
-        };
-    });
+    //        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    //.AddJwtBearer(options =>
+    //{
+    //    options.TokenValidationParameters = new TokenValidationParameters
+    //    {
+    //        ValidateIssuerSigningKey = true,
+    //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+    //            .GetBytes(builder.Configuration.GetSection("Jwt:Key").Value)),
+    //        ValidateIssuer = true,
+    //        ValidateAudience = true,
+    //        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+    //        ValidAudience = builder.Configuration["Jwt:Audience"]
+    //    };
+    //});
 
 
             // 注册认证服务
-            builder.Services.AddScoped<IAuthService, AuthService>();
-          
-            builder.Services.AddScoped<IPoemService, PoemService>();
-            builder.Services.AddScoped<IAuthorService, AuthorService>();
-            builder.Services.AddScoped<ICategoryService, CategoryService>();
-            builder.Services.AddScoped<IAnnotationService, AnnotationService>();
-            builder.Services.AddScoped<IAudioService, AudioService>();
-            builder.Services.AddScoped<IUserService, UserService>();
+            // 添加基础设施服务（替换原来的服务注册）
+            builder.Services.AddInfrastructure(builder.Configuration);
+            //builder.Services.AddScoped<IAuthService, AuthService>();
+
+            //builder.Services.AddScoped<IPoemService, PoemService>();
+            //builder.Services.AddScoped<IAuthorService, AuthorService>();
+            //builder.Services.AddScoped<ICategoryService, CategoryService>();
+            //builder.Services.AddScoped<IAnnotationService, AnnotationService>();
+            //builder.Services.AddScoped<IAudioService, AudioService>();
+            //builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddOpenApiDocument(config =>
             {
                 config.Title = "PoemApp API";

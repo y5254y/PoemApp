@@ -1,12 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using PoemApp.API.Data;
+using PoemApp.Infrastructure.Data;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Core.Enums;
 using PoemApp.Core.Extensions;
 using PoemApp.Core.Interfaces;
 
-namespace PoemApp.API.Services;
+namespace PoemApp.Infrastructure.Services;
 
 public class CategoryService : ICategoryService
 {

@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
-namespace PoemApp.API.Migrations
+namespace PoemApp.Infrastructure.Data.Migrations
 {
     /// <inheritdoc />
     public partial class AddPointsRecord : Migration

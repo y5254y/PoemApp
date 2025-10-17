@@ -1,12 +1,12 @@
 ﻿// UserService.cs
 using Microsoft.EntityFrameworkCore;
-using PoemApp.API.Data;
+using PoemApp.Infrastructure.Data;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Core.Interfaces;
 using PoemApp.Core.Extensions;
 
-namespace PoemApp.API.Services;
+namespace PoemApp.Infrastructure.Services;
 
 public class UserService : IUserService
 {

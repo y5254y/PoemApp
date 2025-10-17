@@ -4,11 +4,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using PoemApp.API.Data;
+using PoemApp.Infrastructure.Data;
 
 #nullable disable
 
-namespace PoemApp.API.Migrations
+namespace PoemApp.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
     [Migration("20251005090659_InitialCreate")]
