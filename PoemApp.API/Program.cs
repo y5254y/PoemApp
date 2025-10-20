@@ -1,13 +1,13 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi;
+//using Microsoft.OpenApi;
 using PoemApp.Infrastructure.Data;
 using Microsoft.Extensions.DependencyInjection;
 using PoemApp.Infrastructure.Extensions;
 using PoemApp.Infrastructure.Services;
 using PoemApp.Core.Interfaces;
 using System.Reflection;
-//using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
@@ -24,45 +24,28 @@ namespace PoemApp.API
             builder.Services.AddAuthorization();
             builder.Services.AddControllers();
 
-            // 添加 DbContext 配置
-            builder.Services.AddDbContext<AppDbContext>(options =>
-            {
-                // 使用 SQLite
-                options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection"));
 
-                // 如果使用 MySQL，使用以下代码：
-                // options.UseMySql(
-                //     builder.Configuration.GetConnectionString("DefaultConnection"),
-                //     new MySqlServerVersion(new Version(8, 0, 27))
-                // );
-            });
-    //        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    //.AddJwtBearer(options =>
-    //{
-    //    options.TokenValidationParameters = new TokenValidationParameters
-    //    {
-    //        ValidateIssuerSigningKey = true,
-    //        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-    //            .GetBytes(builder.Configuration.GetSection("Jwt:Key").Value)),
-    //        ValidateIssuer = true,
-    //        ValidateAudience = true,
-    //        ValidIssuer = builder.Configuration["Jwt:Issuer"],
-    //        ValidAudience = builder.Configuration["Jwt:Audience"]
-    //    };
-    //});
+            // 2. JWT认证配置（保留在API层）
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
+                            .GetBytes(builder.Configuration.GetSection("Jwt:Key").Value)),
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                        ValidAudience = builder.Configuration["Jwt:Audience"]
+                    };
+                });
 
 
             // 注册认证服务
             // 添加基础设施服务（替换原来的服务注册）
             builder.Services.AddInfrastructure(builder.Configuration);
-            //builder.Services.AddScoped<IAuthService, AuthService>();
-
-            //builder.Services.AddScoped<IPoemService, PoemService>();
-            //builder.Services.AddScoped<IAuthorService, AuthorService>();
-            //builder.Services.AddScoped<ICategoryService, CategoryService>();
-            //builder.Services.AddScoped<IAnnotationService, AnnotationService>();
-            //builder.Services.AddScoped<IAudioService, AudioService>();
-            //builder.Services.AddScoped<IUserService, UserService>();
+           
             builder.Services.AddOpenApiDocument(config =>
             {
                 config.Title = "PoemApp API";
@@ -75,9 +58,10 @@ namespace PoemApp.API
             if (app.Environment.IsDevelopment())
             {
                 app.UseOpenApi();
-                //app.UseSwaggerUi3();
+                app.UseSwaggerUi();
             }
             app.UseHttpsRedirection();
+            app.UseAuthentication();    // 重要：添加认证中间件
             app.UseAuthorization();
             app.MapControllers();
 
