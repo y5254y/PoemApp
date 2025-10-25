@@ -1,0 +1,108 @@
+﻿@page "/login"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@inject LoginDtoValidation LoginValidator
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-16">
+    <MudCard>
+        <MudCardContent>
+            <MudText Typo="Typo.h4" Align="Align.Center" Class="mb-4">PoemApp 管理后台登录</MudText>
+
+            <MudForm @ref="_form" Model="_loginModel" Validation="LoginValidator.Validate">
+                <MudTextField T="string" @bind-Value="_loginModel.Username"
+                              Label="用户名"
+                              Variant="Variant.Outlined"
+                              Required="true"
+                              RequiredError="用户名不能为空" />
+
+                <MudTextField T="string" @bind-Value="_loginModel.Password"
+                              Label="密码"
+                              Variant="Variant.Outlined"
+                              InputType="InputType.Password"
+                              Required="true"
+                              RequiredError="密码不能为空"
+                              Class="mt-4" />
+
+                <MudButton T="string" Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           Size="Size.Large"
+                           FullWidth="true"
+                           Class="mt-4"
+                           OnClick="HandleLogin"
+                           Disabled="_isLoading">
+                    @if (_isLoading)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                        <MudText Class="ml-2">登录中...</MudText>
+                    }
+                    else
+                    {
+                        <MudText>登录</MudText>
+                    }
+                </MudButton>
+            </MudForm>
+
+            @if (!string.IsNullOrEmpty(_errorMessage))
+            {
+                <MudAlert Severity="Severity.Error" Class="mt-4">
+                    @_errorMessage
+                </MudAlert>
+            }
+        </MudCardContent>
+    </MudCard>
+</MudContainer>
+
+@code {
+    private MudForm _form = null!;
+    private LoginDto _loginModel = new();
+    private bool _isLoading = false;
+    private string _errorMessage = string.Empty;
+
+    [Inject] private AuthService AuthService { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthService.IsAuthenticated())
+        {
+            Navigation.NavigateTo("/dashboard");
+        }
+    }
+
+    private async Task HandleLogin()
+    {
+        await _form.Validate();
+
+        if (_form.IsValid)
+        {
+            _isLoading = true;
+            _errorMessage = string.Empty;
+            StateHasChanged();
+
+            try
+            {
+                var result = await AuthService.LoginAsync(_loginModel.Username, _loginModel.Password);
+
+                if (result?.Success == true)
+                {
+                    Snackbar.Add("登录成功", Severity.Success);
+                    Navigation.NavigateTo("/dashboard", true);
+                }
+                else
+                {
+                    _errorMessage = result?.Message ?? "登录失败，请检查用户名和密码";
+                }
+            }
+            catch (Exception ex)
+            {
+                _errorMessage = $"登录失败: {ex.Message}";
+            }
+            finally
+            {
+                _isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+}

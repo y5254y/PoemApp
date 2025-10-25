@@ -11,6 +11,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Core", "PoemApp.Cor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Infrastructure", "PoemApp.Infrastructure\PoemApp.Infrastructure.csproj", "{E600FC89-3E4D-44D7-949A-96EC3200694D}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Admin", "PoemApp.Admin\PoemApp.Admin.csproj", "{28429041-F877-5814-6552-BFD3C3A350D6}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA} = {1463BF06-BC67-41FF-876E-683B9CBC71CA}
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +38,10 @@ Global
 		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
