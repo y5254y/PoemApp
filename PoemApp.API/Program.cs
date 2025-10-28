@@ -24,10 +24,11 @@ public class Program
         builder.Logging.AddConsole();
         builder.Logging.AddDebug();
 
-        Console.WriteLine("=== API 项目启动 ===");
-        Console.WriteLine($"环境: {builder.Environment.EnvironmentName}");
-        Console.WriteLine($"根路径: {Directory.GetCurrentDirectory()}");
+        // 添加文件日志提供程序
+        var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-api.log");
+        builder.Logging.AddProvider(new FileLoggerProvider(logFilePath));
 
+        
         // 注册基础设施服务
         try
         {
@@ -54,25 +55,45 @@ public class Program
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
 
-
+        // 添加 JWT 认证
+        var jwtKey = builder.Configuration["Jwt:Key"];
+        if (string.IsNullOrEmpty(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 64)
+        {
+            jwtKey = "ThisIsAVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast64BytesLongToMeetHMACSHA512Requirements";
+        }
         // 2. JWT认证配置（保留在API层）
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+            // 放宽时钟偏差，避免时间同步问题
+            ClockSkew = TimeSpan.FromMinutes(5)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnAuthenticationFailed = context =>
             {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuerSigningKey = true,
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8
-                        .GetBytes(builder.Configuration.GetSection("Jwt:Key").Value)),
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                    ValidAudience = builder.Configuration["Jwt:Audience"]
-                };
-            });
+                Console.WriteLine($"认证失败: {context.Exception.Message}");
+                return Task.CompletedTask;
+            },
+            OnTokenValidated = context =>
+            {
+                Console.WriteLine("Token 验证成功");
+                return Task.CompletedTask;
+            }
+        };
+    });
 
 
-        
 
         builder.Services.AddOpenApiDocument(config =>
         {

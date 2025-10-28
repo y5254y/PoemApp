@@ -1,0 +1,204 @@
+﻿@page "/logs"
+@using MudBlazor
+@using PoemApp.Admin.Services
+@attribute [Authorize(Roles = "Admin")]
+@inject ILogViewerService LogViewerService
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>系统日志 - PoemApp 管理后台</PageTitle>
+
+<MudText Typo="Typo.h4" Class="mb-4">系统日志查看</MudText>
+
+<MudCard>
+    <MudCardContent>
+        <MudGrid Spacing="2" Class="mb-4">
+            <MudItem xs="12" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_fromDate" Label="开始日期" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudDatePicker T="DateTime?" @bind-Date="_toDate" Label="结束日期" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect T="string" @bind-Value="_selectedLevel" Label="日志级别">
+                    <MudSelectItem T="string" Value=@("all")>全部</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("Information")>信息</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("Warning")>警告</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("Error")>错误</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("Critical")>严重</MudSelectItem>
+                    <MudSelectItem T="string" Value=@("Debug")>调试</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="3" Class="d-flex align-center">
+                <MudButton T="string" OnClick="LoadLogs" Variant="Variant.Filled" Color="Color.Primary" StartIcon="Icons.Material.Filled.Search">
+                    查询
+                </MudButton>
+                <MudButton T="string" OnClick="ClearLogs" Variant="Variant.Outlined" Color="Color.Error" Class="ml-2" StartIcon="Icons.Material.Filled.Clear">
+                    清空
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+
+        @if (_isLoading)
+        {
+            <MudProgressLinear Indeterminate="true" />
+            <MudText Class="text-center">正在加载日志...</MudText>
+        }
+        else if (_logs.Any())
+        {
+            <MudTable T="LogEntry" Items="@_logs" Hover="true" Striped="true" Height="600px" FixedHeader="true">
+                <HeaderContent>
+                    <MudTh>时间</MudTh>
+                    <MudTh>级别</MudTh>
+                    <MudTh>消息</MudTh>
+                    <MudTh>操作</MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd DataLabel="时间">@context.Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff")</MudTd>
+                    <MudTd DataLabel="级别">
+                        <MudChip T="string" Color="@GetColorForLevel(context.Level)" Size="Size.Small">@context.Level</MudChip>
+                    </MudTd>
+                    <MudTd DataLabel="消息">
+                        <MudText Typo="Typo.body2" Class="log-message">@context.Message</MudText>
+                    </MudTd>
+                    <MudTd DataLabel="操作">
+                        <MudIconButton T="string" Icon="Icons.Material.Filled.Visibility"
+                                       Color="Color.Primary"
+                                       Size="Size.Small"
+                                       OnClick="@(async () => await ShowLogDetail(context))" />
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+
+            <MudText Typo="Typo.caption" Class="mt-2">
+                共 @_logs.Count 条日志记录
+            </MudText>
+        }
+        else
+        {
+            <MudText Class="text-center">暂无日志记录</MudText>
+        }
+    </MudCardContent>
+</MudCard>
+
+<MudDialog @bind-IsVisible="_showDetailDialog" MaxWidth="MaxWidth.Medium">
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-3">日志详情</MudText>
+        <MudText Typo="Typo.body2" Class="log-detail">@_selectedLogDetail</MudText>
+    </DialogContent>
+    <DialogActions>
+        <MudButton T="string" OnClick="CloseDetailDialog" Variant="Variant.Text">关闭</MudButton>
+    </DialogActions>
+</MudDialog>
+
+<style>
+    .log-message {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 400px;
+    }
+
+    .log-detail {
+        white-space: pre-wrap;
+        font-family: 'Courier New', monospace;
+        background-color: #f5f5f5;
+        padding: 10px;
+        border-radius: 4px;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+</style>
+
+@code {
+    private List<LogEntry> _logs = new List<LogEntry>();
+    private bool _isLoading = false;
+    private DateTime? _fromDate = DateTime.Today.AddDays(-7);
+    private DateTime? _toDate = DateTime.Today.AddDays(1);
+    private string _selectedLevel = "all";
+    private bool _showDetailDialog = false;
+    private string _selectedLogDetail = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLogs();
+    }
+
+    private async Task LoadLogs()
+    {
+        _isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // 如果选择的是"全部"，则传递 null
+            var level = _selectedLevel == "all" ? null : _selectedLevel;
+            _logs = await LogViewerService.GetLogsAsync(_fromDate, _toDate, level);
+            Snackbar.Add($"加载了 {_logs.Count} 条日志记录", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"加载日志失败: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ClearLogs()
+    {
+        var parameters = new DialogParameters
+        {
+            { "ContentText", "确定要清空所有日志吗？此操作不可恢复。" },
+            { "ButtonText", "清空" },
+            { "Color", Color.Error }
+        };
+
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.ExtraSmall };
+
+        var dialog = DialogService.Show<MudDialog>("确认清空", parameters, options);
+        var result = await dialog.Result;
+
+        if (!result.Canceled)
+        {
+            try
+            {
+                await LogViewerService.ClearLogsAsync();
+                Snackbar.Add("日志已清空", Severity.Success);
+                await LoadLogs();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add($"清空日志失败: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task ShowLogDetail(LogEntry log)
+    {
+        _selectedLogDetail = log.FullText;
+        _showDetailDialog = true;
+        StateHasChanged();
+        await Task.CompletedTask; // 修复 lambda 表达式返回类型问题
+    }
+
+    private void CloseDetailDialog()
+    {
+        _showDetailDialog = false;
+        StateHasChanged();
+    }
+
+    private Color GetColorForLevel(string level)
+    {
+        return level?.ToLower() switch
+        {
+            "error" or "critical" => Color.Error,
+            "warning" => Color.Warning,
+            "information" or "info" => Color.Info,
+            "debug" => Color.Secondary,
+            _ => Color.Default
+        };
+    }
+}

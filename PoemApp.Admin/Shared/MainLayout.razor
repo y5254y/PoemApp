@@ -48,27 +48,44 @@ else
     [CascadingParameter]
     private Task<AuthenticationState>? AuthenticationStateTask { get; set; }
 
-    [Inject] private AuthService AuthService { get; set; } = null!;
+    [Inject] private IAdminAuthService AuthService { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private ILogger<MainLayout> Logger { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthenticationStateTask != null)
+        try
         {
-            var authState = await AuthenticationStateTask;
-            _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
-            _userName = authState.User.Identity?.Name ?? "用户";
+            if (AuthenticationStateTask != null)
+            {
+                var authState = await AuthenticationStateTask;
+                _isAuthenticated = authState.User.Identity?.IsAuthenticated ?? false;
+                _userName = authState.User.Identity?.Name ?? "用户";
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "MainLayout 初始化错误");
+        }
+    }
+
+    private async void Logout()
+    {
+        try
+        {
+            await AuthService.LogoutAsync();
+            // 使用安全的延迟重定向
+            await Task.Delay(100);
+            Navigation.NavigateTo("/login", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "注销过程中发生错误");
         }
     }
 
     private void ToggleDrawer()
     {
         _drawerOpen = !_drawerOpen;
-    }
-
-    private async void Logout()
-    {
-        await AuthService.LogoutAsync();
-        Navigation.NavigateTo("/login", true);
     }
 }

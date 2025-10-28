@@ -5,12 +5,23 @@ using System.Security.Claims;
 
 namespace PoemApp.Admin.Services;
 
-public class AuthService
+
+public interface IAdminAuthService
+{
+    Task<LoginResultDto?> LoginAsync(string username, string password);
+    Task LogoutAsync();
+    bool IsAuthenticated();
+    bool IsAdmin();
+    string? GetUserName();
+    string? GetUserRole();
+}
+
+public class AdminAuthService:IAdminAuthService
 {
     private readonly IApiService _apiService;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public AuthService(IApiService apiService, IHttpContextAccessor httpContextAccessor)
+    public AdminAuthService(IApiService apiService, IHttpContextAccessor httpContextAccessor)
     {
         _apiService = apiService;
         _httpContextAccessor = httpContextAccessor;

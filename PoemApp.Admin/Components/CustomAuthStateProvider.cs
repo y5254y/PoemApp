@@ -6,9 +6,9 @@ namespace PoemApp.Admin.Components
 {
     public class CustomAuthStateProvider : AuthenticationStateProvider
     {
-        private readonly AuthService _authService;
+        private readonly IAdminAuthService _authService;
 
-        public CustomAuthStateProvider(AuthService authService)
+        public CustomAuthStateProvider(IAdminAuthService authService)
         {
             _authService = authService;
         }

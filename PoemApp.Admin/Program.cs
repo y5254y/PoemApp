@@ -4,6 +4,7 @@ using MudBlazor.Services;
 using PoemApp.Admin.Services;
 using PoemApp.Core.Interfaces;
 using PoemApp.Admin.Components;
+using PoemApp.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,18 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
         listenOptions.UseHttps();
     });
 });
+// 配置日志
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.AddDebug();
+
+// 添加文件日志提供程序
+var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-admin.log");
+builder.Logging.AddProvider(new FileLoggerProvider(logFilePath));
+
+// 注册自定义日志服务
+builder.Services.AddScoped<IAppLogger, AppLogger>();
+builder.Services.AddScoped<ILogViewerService, LogViewerService>();
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
@@ -38,10 +51,10 @@ builder.Services.Configure<ApiServiceConfiguration>(options =>
 {
     options.BaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7001/api/";
 });
-
+builder.Services.AddScoped<ILogViewerService, LogViewerService>();
 builder.Services.AddScoped<ApiServiceConfiguration>();
 builder.Services.AddScoped<IApiService, ApiService>();
-builder.Services.AddScoped<AuthService>();
+builder.Services.AddScoped<IAdminAuthService ,AdminAuthService>();
 builder.Services.AddScoped<LoginDtoValidation>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 
@@ -75,6 +88,27 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+// 添加自定义错误处理中间件
+app.Use(async (context, next) =>
+{
+    try
+    {
+        await next();
+    }
+    catch (Exception ex)
+    {
+        // 记录错误但不修改已开始的响应
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+        logger.LogError(ex, "全局异常处理");
+
+        if (!context.Response.HasStarted)
+        {
+            context.Response.StatusCode = 500;
+            await context.Response.WriteAsync("内部服务器错误");
+        }
+    }
+});
 
 //app.UseHttpsRedirection();
 

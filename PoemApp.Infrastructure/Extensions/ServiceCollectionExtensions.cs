@@ -34,8 +34,11 @@ namespace PoemApp.Infrastructure.Extensions
             });
 
             // 2. 注册所有服务（按照依赖顺序）
-            services.AddTransient<IAuthService, AuthService>();
+            // 注册自定义日志服务
+            services.AddTransient<IAppLogger, AppLogger>();
+            
             services.AddTransient<IUserService, UserService>();
+            services.AddTransient<IAuthService, AuthService>();
             services.AddTransient<IPoemService, PoemService>();
             services.AddTransient<IAuthorService, AuthorService>();
             services.AddTransient<ICategoryService, CategoryService>();

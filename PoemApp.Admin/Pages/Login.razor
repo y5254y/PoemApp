@@ -58,51 +58,69 @@
     private bool _isLoading = false;
     private string _errorMessage = string.Empty;
 
-    [Inject] private AuthService AuthService { get; set; } = null!;
+    [Inject] private IAdminAuthService AuthService { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
     [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private ILogger<Login> Logger { get; set; } = null!;
 
     protected override async Task OnInitializedAsync()
     {
-        if (AuthService.IsAuthenticated())
+        try
         {
-            Navigation.NavigateTo("/dashboard");
+            if (AuthService.IsAuthenticated())
+            {
+                // 使用安全的延迟重定向
+                await Task.Delay(1);
+                Navigation.NavigateTo("/dashboard", forceLoad: true);
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "初始化登录页面时发生错误");
         }
     }
 
     private async Task HandleLogin()
     {
-        await _form.Validate();
-
-        if (_form.IsValid)
+        try
         {
+            await _form.Validate();
+
+            if (!_form.IsValid)
+            {
+                _errorMessage = "请填写完整的登录信息";
+                return;
+            }
+
             _isLoading = true;
             _errorMessage = string.Empty;
-            StateHasChanged();
 
-            try
-            {
-                var result = await AuthService.LoginAsync(_loginModel.Username, _loginModel.Password);
+            // 使用 StateHasChanged 更新UI
+            await InvokeAsync(StateHasChanged);
 
-                if (result?.Success == true)
-                {
-                    Snackbar.Add("登录成功", Severity.Success);
-                    Navigation.NavigateTo("/dashboard", true);
-                }
-                else
-                {
-                    _errorMessage = result?.Message ?? "登录失败，请检查用户名和密码";
-                }
-            }
-            catch (Exception ex)
+            var result = await AuthService.LoginAsync(_loginModel.Username, _loginModel.Password);
+
+            if (result?.Success == true)
             {
-                _errorMessage = $"登录失败: {ex.Message}";
+                Snackbar.Add("登录成功", Severity.Success);
+
+                // 使用延迟重定向避免响应头问题
+                await Task.Delay(100);
+                Navigation.NavigateTo("/dashboard", forceLoad: true);
             }
-            finally
+            else
             {
+                _errorMessage = result?.Message ?? "登录失败，请检查用户名和密码";
                 _isLoading = false;
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
             }
+        }
+        catch (Exception ex)
+        {
+            Logger.LogError(ex, "登录过程中发生错误");
+            _errorMessage = $"登录失败: {ex.Message}";
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
         }
     }
 }

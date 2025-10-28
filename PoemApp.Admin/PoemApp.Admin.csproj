@@ -17,6 +17,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PoemApp.Core\PoemApp.Core.csproj" />
+    <ProjectReference Include="..\PoemApp.Infrastructure\PoemApp.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
