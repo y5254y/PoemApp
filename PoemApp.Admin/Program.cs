@@ -1,21 +1,22 @@
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using MudBlazor.Services;
+using PoemApp.Admin.Components;
 using PoemApp.Admin.Services;
 using PoemApp.Core.Interfaces;
-using PoemApp.Admin.Components;
 using PoemApp.Infrastructure.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // 配置Kestrel使用7002端口
-builder.WebHost.ConfigureKestrel(serverOptions =>
-{
-    serverOptions.ListenAnyIP(7002, listenOptions =>
-    {
-        listenOptions.UseHttps();
-    });
-});
+//builder.WebHost.ConfigureKestrel(serverOptions =>
+//{
+//    serverOptions.ListenAnyIP(7002, listenOptions =>
+//    {
+//        listenOptions.UseHttps();
+//    });
+//});
 // 配置日志
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
@@ -46,22 +47,47 @@ builder.Services.AddScoped<HttpClient>(sp =>
     return client;
 });
 
+
+
 // 配置API服务
 builder.Services.Configure<ApiServiceConfiguration>(options =>
 {
     options.BaseUrl = builder.Configuration["ApiBaseUrl"] ?? "https://localhost:7001/api/";
 });
+// 添加 MVC 服务以支持控制器
+builder.Services.AddControllersWithViews();
 builder.Services.AddScoped<ILogViewerService, LogViewerService>();
 builder.Services.AddScoped<ApiServiceConfiguration>();
 builder.Services.AddScoped<IApiService, ApiService>();
 builder.Services.AddScoped<IAdminAuthService ,AdminAuthService>();
-builder.Services.AddScoped<LoginDtoValidation>();
+//builder.Services.AddScoped<LoginDtoValidation>(); 不再使用blazor表单验证,改为控制器验证
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-
-builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
-
+builder.Services.AddScoped<INavigationService, NavigationService>();
+//builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
+// 注册仪表板服务
+builder.Services.AddScoped<IDashboardService, DashboardService>();
 // 添加HTTP上下文访问
 builder.Services.AddHttpContextAccessor();
+
+// 添加模型绑定诊断
+builder.Services.Configure<ApiBehaviorOptions>(options =>
+{
+    options.InvalidModelStateResponseFactory = context =>
+    {
+        var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<Program>>();
+
+        foreach (var key in context.ModelState.Keys)
+        {
+            var state = context.ModelState[key];
+            foreach (var error in state.Errors)
+            {
+                logger.LogWarning("模型绑定错误 - {Key}: {ErrorMessage}", key, error.ErrorMessage);
+            }
+        }
+
+        return new BadRequestObjectResult(context.ModelState);
+    };
+});
 
 // 添加认证
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
@@ -71,6 +97,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
         options.LoginPath = "/login";
         options.AccessDeniedPath = "/access-denied";
         options.ExpireTimeSpan = TimeSpan.FromDays(7);
+        options.SlidingExpiration = true;
     });
 
 builder.Services.AddAuthorization(options =>
@@ -118,6 +145,15 @@ app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();
+// 添加控制器路由
+app.MapControllerRoute(
+    name: "account",
+    pattern: "Account/{action}",
+    defaults: new { controller = "Account" });
+
+app.MapControllerRoute(
+    name: "default",
+    pattern: "{controller=Account}/{action=Login}/{id?}");
 
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");

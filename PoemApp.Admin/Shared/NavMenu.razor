@@ -1,79 +1,9 @@
-﻿@* <div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">PoemApp 管理后台</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-    </div>
-</div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
-            <a class="nav-link" href="/dashboard">
-                <span class="oi oi-dashboard" aria-hidden="true"></span> 仪表板
-            </a>
-        </div>
-        <div class="nav-item px-3">
-            <div class="nav-link text-muted">内容管理</div>
-            <div class="nav-item px-3">
-                <a class="nav-link" href="/poems">
-                    <span class="oi oi-book" aria-hidden="true"></span> 诗文管理
-                </a>
-            </div>
-            <div class="nav-item px-3">
-                <a class="nav-link" href="/authors">
-                    <span class="oi oi-people" aria-hidden="true"></span> 作者管理
-                </a>
-            </div>
-            <div class="nav-item px-3">
-                <a class="nav-link" href="/categories">
-                    <span class="oi oi-tags" aria-hidden="true"></span> 分类管理
-                </a>
-            </div>
-        </div>
-        <div class="nav-item px-3">
-            <div class="nav-link text-muted">多媒体管理</div>
-            <div class="nav-item px-3">
-                <a class="nav-link" href="/audios">
-                    <span class="oi oi-audio" aria-hidden="true"></span> 音频管理
-                </a>
-            </div>
-            <div class="nav-item px-3">
-                <a class="nav-link" href="/annotations">
-                    <span class="oi oi-comment-square" aria-hidden="true"></span> 标注管理
-                </a>
-            </div>
-        </div>
-        <div class="nav-item px-3">
-            <div class="nav-link text-muted">用户管理</div>
-            <div class="nav-item px-3">
-                <a class="nav-link" href="/users">
-                    <span class="oi oi-person" aria-hidden="true"></span> 用户管理
-                </a>
-            </div>
-        </div>
-    </nav>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-} *@
-
-
-@using MudBlazor
+﻿@using MudBlazor
 
 <MudNavMenu>
     <MudText Typo="Typo.h6" Class="px-4 py-2">管理菜单</MudText>
 
-    <MudNavLink T="string" Href="/dashboard" Match="NavLinkMatch.Prefix">
+    <MudNavLink T="string" Href="/" Match="NavLinkMatch.Prefix">
         <MudIcon Icon="Icons.Material.Filled.Dashboard" Class="me-3" />
         <MudText>仪表板</MudText>
     </MudNavLink>
@@ -90,24 +20,24 @@
         </MudNavLink>
     </MudNavGroup>
 
-    <MudNavGroup T="string" Text="多媒体管理" Icon="Icons.Material.Filled.AudioFile" Expanded="true">
-        <MudNavLink T="string" Href="/audios" Match="NavLinkMatch.Prefix">
-            <MudText>音频管理</MudText>
-        </MudNavLink>
-        <MudNavLink T="string" Href="/annotations" Match="NavLinkMatch.Prefix">
-            <MudText>标注管理</MudText>
-        </MudNavLink>
-    </MudNavGroup>
-
     <MudNavGroup T="string" Text="用户管理" Icon="Icons.Material.Filled.People" Expanded="true">
         <MudNavLink T="string" Href="/users" Match="NavLinkMatch.Prefix">
             <MudText>用户管理</MudText>
         </MudNavLink>
-    </MudNavGroup>
-
-    <MudNavGroup T="string" Text="系统管理" Icon="Icons.Material.Filled.Settings" Expanded="true">
-        <MudNavLink T="string" Href="/logs" Match="NavLinkMatch.Prefix">
-            <MudText>日志查看</MudText>
+        <MudNavLink T="string" OnClick="Logout">
+            <MudIcon Icon="Icons.Material.Filled.ExitToApp" Class="me-3" />
+            <MudText>注销</MudText>
         </MudNavLink>
     </MudNavGroup>
 </MudNavMenu>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private IAdminAuthService AuthService { get; set; } = null!;
+
+    private async void Logout()
+    {
+        await AuthService.LogoutAsync();
+        Navigation.NavigateTo("/Account/Login", forceLoad: true);
+    }
+}

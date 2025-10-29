@@ -16,6 +16,7 @@ public interface IApiService
     Task<T?> PutAsync<T>(string endpoint, object data);
     Task<bool> DeleteAsync(string endpoint);
     void SetToken(string token);
+    string? GetToken();
 }
 
 public class ApiService : IApiService
@@ -52,6 +53,11 @@ public class ApiService : IApiService
         {
             _httpClient.DefaultRequestHeaders.Authorization = null;
         }
+    }
+
+    public string? GetToken()
+    {
+        return _config.Token;
     }
 
     public async Task<T?> GetAsync<T>(string endpoint)

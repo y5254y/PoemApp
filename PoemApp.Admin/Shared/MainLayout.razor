@@ -69,14 +69,12 @@ else
         }
     }
 
-    private async void Logout()
+    private async Task Logout()
     {
         try
         {
-            await AuthService.LogoutAsync();
-            // 使用安全的延迟重定向
-            await Task.Delay(100);
-            Navigation.NavigateTo("/login", forceLoad: true);
+            // 使用控制器进行注销
+            Navigation.NavigateTo("/Account/Logout", forceLoad: true);
         }
         catch (Exception ex)
         {

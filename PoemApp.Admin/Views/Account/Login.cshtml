@@ -1,0 +1,107 @@
+﻿@model PoemApp.Core.DTOs.LoginDto
+@{
+    ViewData["Title"] = "登录 - PoemApp 管理后台";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="login-container">
+            <div class="login-header">
+                <h2>PoemApp</h2>
+                <p class="mb-0">管理后台登录</p>
+            </div>
+
+            <div class="login-body">
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        @Html.ValidationSummary()
+                    </div>
+                }
+
+                @if (TempData["ErrorMessage"] != null)
+                {
+                    <div class="alert alert-danger">
+                        @TempData["ErrorMessage"]
+                    </div>
+                }
+
+                @if (TempData["SuccessMessage"] != null)
+                {
+                    <div class="alert alert-success">
+                        @TempData["SuccessMessage"]
+                    </div>
+                }
+
+                <form asp-controller="Account" asp-action="Login" method="post" >
+                    @Html.AntiForgeryToken()
+
+                    <div class="mb-3">
+                        <label asp-for="Username" class="form-label">用户名</label>
+                        <input type="text" id="Username" name="Username" class="form-control"
+                               placeholder="请输入用户名" value="@Model?.Username" />
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Password" class="form-label">密码</label>
+                        <input type="password" id="Password" name="Password" class="form-control"
+                               placeholder="请输入密码" />
+                        <span asp-validation-for="Password" class="text-danger"></span>
+                    </div>
+
+                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+
+                    <button type="submit" class="btn btn-primary w-100">登录</button>
+                </form>
+
+                <div class="text-center mt-3">
+                    <small class="text-muted">默认账号: admin / admin123</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<style>
+    .login-container {
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        overflow: hidden;
+    }
+
+    .login-header {
+        background: #2c3e50;
+        color: white;
+        padding: 2rem;
+        text-align: center;
+    }
+
+    .login-body {
+        padding: 2rem;
+    }
+
+    .form-control {
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        padding: 0.75rem;
+    }
+
+    .btn-primary {
+        background: #3498db;
+        border: none;
+        border-radius: 5px;
+        padding: 0.75rem;
+        font-weight: 600;
+    }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+</style>
