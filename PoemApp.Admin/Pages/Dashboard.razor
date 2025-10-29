@@ -2,55 +2,176 @@
 @page "/dashboard"
 @attribute [Authorize]
 @using MudBlazor
+@using PoemApp.Core.DTOs
 @using PoemApp.Admin.Models
 
 <PageTitle>仪表板 - PoemApp 管理后台</PageTitle>
 
 <MudText Typo="Typo.h4" Class="mb-4">系统概览</MudText>
 
-<!-- 仪表板内容 -->
-<MudGrid Spacing="2">
-    <MudItem xs="12" md="3">
-        <MudCard>
-            <MudCardContent>
-                <MudIcon Icon="Icons.Material.Filled.Book" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
-                <MudText Typo="Typo.h6">诗文总数</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Primary">156</MudText>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
+@if (_stats == null)
+{
+    <MudGrid>
+        <MudItem xs="12" md="3">
+            <MudSkeleton Height="100px" Animation="Animation.Wave" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSkeleton Height="100px" Animation="Animation.Wave" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSkeleton Height="100px" Animation="Animation.Wave" />
+        </MudItem>
+        <MudItem xs="12" md="3">
+            <MudSkeleton Height="100px" Animation="Animation.Wave" />
+        </MudItem>
+    </MudGrid>
+}
+else
+{
+    <MudGrid Spacing="2">
+        <MudItem xs="12" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudIcon Icon="Icons.Material.Filled.Book" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">诗文总数</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Primary">@_stats.PoemCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudIcon Icon="Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">作者总数</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Secondary">@_stats.AuthorCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudIcon Icon="Icons.Material.Filled.People" Size="Size.Large" Color="Color.Tertiary" Class="mb-2" />
+                    <MudText Typo="Typo.h6">用户总数</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Tertiary">@_stats.UserCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" md="3">
+            <MudCard>
+                <MudCardContent>
+                    <MudIcon Icon="Icons.Material.Filled.AudioFile" Size="Size.Large" Color="Color.Success" Class="mb-2" />
+                    <MudText Typo="Typo.h6">音频总数</MudText>
+                    <MudText Typo="Typo.h4" Color="Color.Success">@_stats.AudioCount</MudText>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
 
-    <MudItem xs="12" md="3">
-        <MudCard>
-            <MudCardContent>
-                <MudIcon Icon="Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
-                <MudText Typo="Typo.h6">作者总数</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Secondary">89</MudText>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <MudItem xs="12" md="3">
-        <MudCard>
-            <MudCardContent>
-                <MudIcon Icon="Icons.Material.Filled.People" Size="Size.Large" Color="Color.Tertiary" Class="mb-2" />
-                <MudText Typo="Typo.h6">用户总数</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Tertiary">1245</MudText>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-
-    <MudItem xs="12" md="3">
-        <MudCard>
-            <MudCardContent>
-                <MudIcon Icon="Icons.Material.Filled.AudioFile" Size="Size.Large" Color="Color.Success" Class="mb-2" />
-                <MudText Typo="Typo.h6">音频总数</MudText>
-                <MudText Typo="Typo.h4" Color="Color.Success">67</MudText>
-            </MudCardContent>
-        </MudCard>
-    </MudItem>
-</MudGrid>
+    <!-- 最近活动 -->
+    <MudGrid Class="mt-6">
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardHeader>
+                    <MudCardHeaderContent>
+                        <MudText Typo="Typo.h6">最近活动</MudText>
+                    </MudCardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudList T="string">
+                        <MudListItem T="string" Text="新用户注册" SecondaryText="刚刚" />
+                        <MudListItem T="string" Text="诗文添加" SecondaryText="5分钟前" />
+                        <MudListItem T="string" Text="音频上传" SecondaryText="10分钟前" />
+                    </MudList>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+        
+        <MudItem xs="12" md="6">
+            <MudCard>
+                <MudCardHeader>
+                    <MudCardHeaderContent>
+                        <MudText Typo="Typo.h6">快速操作</MudText>
+                    </MudCardHeaderContent>
+                </MudCardHeader>
+                <MudCardContent>
+                    <MudStack Spacing="2">
+                        <MudButton T="string" Variant="Variant.Outlined" 
+                                  Color="Color.Primary" 
+                                  StartIcon="Icons.Material.Filled.Add"
+                                  OnClick="NavigateToPoems"
+                                  FullWidth="true">
+                            添加诗文
+                        </MudButton>
+                        <MudButton T="string" Variant="Variant.Outlined" 
+                                  Color="Color.Secondary" 
+                                  StartIcon="Icons.Material.Filled.PersonAdd"
+                                  OnClick="NavigateToAuthors"
+                                  FullWidth="true">
+                            添加作者
+                        </MudButton>
+                        <MudButton T="string" Variant="Variant.Outlined" 
+                                  Color="Color.Tertiary" 
+                                  StartIcon="Icons.Material.Filled.AudioFile"
+                                  OnClick="NavigateToAudios"
+                                  FullWidth="true">
+                            管理音频
+                        </MudButton>
+                    </MudStack>
+                </MudCardContent>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+}
 
 @code {
-    // 这里可以添加获取仪表板数据的逻辑
+    private DashboardStats? _stats;
+
+    [Inject] private IDashboardService DashboardService { get; set; } = null!;
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardStats();
+    }
+
+    private async Task LoadDashboardStats()
+    {
+        try
+        {
+            _stats = await DashboardService.GetDashboardStatsAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"加载统计数据失败: {ex.Message}", Severity.Error);
+            // 提供默认数据
+            _stats = new DashboardStats
+            {
+                PoemCount = 0,
+                AuthorCount = 0,
+                UserCount = 0,
+                AudioCount = 0,
+                AnnotationCount = 0,
+                CategoryCount = 0
+            };
+        }
+    }
+
+    private void NavigateToPoems()
+    {
+        Navigation.NavigateTo("/poems");
+    }
+
+    private void NavigateToAuthors()
+    {
+        Navigation.NavigateTo("/authors");
+    }
+
+    private void NavigateToAudios()
+    {
+        Navigation.NavigateTo("/audios");
+    }
 }

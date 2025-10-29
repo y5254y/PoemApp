@@ -65,7 +65,7 @@ builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<INavigationService, NavigationService>();
 //builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 // 注册仪表板服务
-builder.Services.AddScoped<IDashboardService, DashboardService>();
+//builder.Services.AddScoped<IDashboardService, DashboardService>();
 // 添加HTTP上下文访问
 builder.Services.AddHttpContextAccessor();
 
