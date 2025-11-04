@@ -1,0 +1,36 @@
+@page "/poems"
+@using PoemApp.Core.DTOs
+@inject HttpClient Http
+@using MudBlazor
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">诗文管理</MudText>
+
+    <MudTable Items="_poems" Hover="true" Bordered="true" Striped="true">
+        <HeaderContent>
+            <MudTh>Id</MudTh>
+            <MudTh>标题</MudTh>
+            <MudTh>作者</MudTh>
+            <MudTh>朝代</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Id">@context.Id</MudTd>
+            <MudTd>@context.Title</MudTd>
+            <MudTd>@context.AuthorName</MudTd>
+            <MudTd>@context.Dynasty</MudTd>
+            <MudTd>
+                <MudButton Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">编辑</MudButton>
+            </MudTd>
+        </RowTemplate>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private List<PoemDto> _poems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _poems = await Http.GetFromJsonAsync<List<PoemDto>>("api/poems") ?? new();
+    }
+}

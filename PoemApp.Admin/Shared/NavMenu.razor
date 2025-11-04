@@ -1,0 +1,25 @@
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Routing
+
+<MudNavMenu>
+    <MudText Typo="Typo.h6" Class="px-4 py-2">管理菜单</MudText>
+
+    <MudNavLink Href="/" Match="NavLinkMatch.All">
+        <MudIcon Icon="Icons.Material.Filled.Dashboard" Class="me-3" />
+        <MudText>仪表板</MudText>
+    </MudNavLink>
+
+    <MudNavGroup Title="内容管理" Icon="Icons.Material.Filled.LibraryBooks" Expanded="true">
+        <MudNavLink Href="/poems">诗文管理</MudNavLink>
+        <MudNavLink Href="/authors">作者管理</MudNavLink>
+        <MudNavLink Href="/categories">分类管理</MudNavLink>
+    </MudNavGroup>
+
+    <MudNavGroup Title="用户管理" Icon="Icons.Material.Filled.People" Expanded="true">
+        <MudNavLink Href="/users">用户管理</MudNavLink>
+        <MudNavLink Href="/Account/Logout">
+            <MudIcon Icon="Icons.Material.Filled.ExitToApp" Class="me-3" />
+            注销
+        </MudNavLink>
+    </MudNavGroup>
+</MudNavMenu>

@@ -1,0 +1,40 @@
+@page "/login"
+@using PoemApp.Admin.Services
+@inject AdminAuthService AuthService
+@inject NavigationManager Navigation
+@inject ApiAuthenticationStateProvider AuthStateProvider
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:400px">
+    <MudText Typo="Typo.h6">¹ÜÀíÔ±µÇÂ¼</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleLogin">
+        <MudTextField @bind-Value="_model.Username" Label="ÓÃ»§Ãû" Required="true" />
+        <MudTextField @bind-Value="_model.Password" Label="ÃÜÂë" InputType="InputType.Password" Required="true" />
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">µÇÂ¼</MudButton>
+    </EditForm>
+
+    @if (!string.IsNullOrEmpty(_error))
+    {
+        <MudText Color="Color.Error">@_error</MudText>
+    }
+</MudPaper>
+
+@code {
+    private PoemApp.Core.DTOs.LoginDto _model = new();
+    private string? _error;
+
+    private async Task HandleLogin()
+    {
+        _error = null;
+        var result = await AuthService.LoginAsync(_model);
+        if (result.Success && result.User != null)
+        {
+            AuthStateProvider.NotifyUserAuthentication(result.User);
+            Navigation.NavigateTo("/");
+        }
+        else
+        {
+            _error = result.Message ?? "µÇÂ¼Ê§°Ü";
+        }
+    }
+}

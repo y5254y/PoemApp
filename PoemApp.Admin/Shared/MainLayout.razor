@@ -1,0 +1,55 @@
+@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using PoemApp.Admin.Services
+
+<CascadingAuthenticationState>
+    <MudThemeProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
+    <MudLayout>
+        <MudAppBar Elevation="1">
+            <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+            <MudSpacer />
+            <MudText Typo="Typo.h6">PoemApp 管理后台</MudText>
+            <MudSpacer />
+
+            <AuthorizeView Context="authState">
+                <Authorized>
+                    <MudText Typo="Typo.body2" Class="mr-3">@authState.User.Identity?.Name</MudText>
+                    <MudButton Variant="Variant.Text" OnClick="Logout">注销</MudButton>
+                </Authorized>
+                <NotAuthorized>
+                    <MudButton Variant="Variant.Text" OnClick="LoginNavigate">登录</MudButton>
+                </NotAuthorized>
+            </AuthorizeView>
+        </MudAppBar>
+
+        <MudDrawer Open="true" ClipMode="DrawerClipMode.Always">
+            <NavMenu />
+        </MudDrawer>
+
+        <MudMainContent>
+            <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+                @Body
+            </MudContainer>
+        </MudMainContent>
+    </MudLayout>
+</CascadingAuthenticationState>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private ApiAuthenticationStateProvider AuthStateProvider { get; set; } = null!;
+
+    private async Task Logout()
+    {
+        AuthStateProvider.NotifyUserLogout();
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private void LoginNavigate()
+    {
+        Navigation.NavigateTo("/login");
+    }
+}
