@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MudBlazor.Services;
-using PoemApp.Admin.Components;
 using PoemApp.Admin.Services;
 using PoemApp.Core.Interfaces;
 using PoemApp.Infrastructure.Services;
@@ -62,7 +61,7 @@ builder.Services.AddScoped<IApiService, ApiService>();
 builder.Services.AddScoped<IAdminAuthService ,AdminAuthService>();
 //builder.Services.AddScoped<LoginDtoValidation>(); 不再使用blazor表单验证,改为控制器验证
 builder.Services.AddScoped<IDashboardService, DashboardService>();
-builder.Services.AddScoped<INavigationService, NavigationService>();
+//builder.Services.AddScoped<INavigationService, NavigationService>();
 //builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthStateProvider>();
 // 注册仪表板服务
 //builder.Services.AddScoped<IDashboardService, DashboardService>();

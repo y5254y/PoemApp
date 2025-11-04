@@ -17,7 +17,6 @@
     <base href="~/" />
     <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
     <link href="_content/MudBlazor/MudBlazor.min.css" rel="stylesheet" />
-    <link href="css/site.css" rel="stylesheet" />
 </head>
 <body>
     @if (isAuthenticated)
@@ -28,17 +27,12 @@
     else
     {
         <!-- 未认证用户显示登录提示 -->
-        <div class="unauthorized-container">
+        <div style="display: flex; justify-content: center; align-items: center; height: 100vh; flex-direction: column;">
             <h1>PoemApp 管理后台</h1>
-            <p>您需要登录以访问管理功能</p>
-            <a href="/Account/Login" class="btn btn-primary">前往登录</a>
-
-            <script>
-                // 3秒后自动跳转到登录页
-                setTimeout(function() {
-                    window.location.href = '/Account/Login';
-                }, 3000);
-            </script>
+            <p>请先登录以访问管理功能</p>
+            <a href="/Account/Login" style="padding: 10px 20px; background: #1976d2; color: white; text-decoration: none; border-radius: 4px;">
+                前往登录
+            </a>
         </div>
     }
 
@@ -57,40 +51,3 @@
     <script src="_content/MudBlazor/MudBlazor.min.js"></script>
 </body>
 </html>
-
-<style>
-    .unauthorized-container {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-        text-align: center;
-        padding: 2rem;
-    }
-
-        .unauthorized-container h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-
-        .unauthorized-container p {
-            font-size: 1.2rem;
-            margin-bottom: 2rem;
-        }
-
-    .btn {
-        display: inline-block;
-        padding: 0.75rem 1.5rem;
-        background: #3498db;
-        color: white;
-        text-decoration: none;
-        border-radius: 5px;
-        font-weight: 600;
-        transition: background 0.3s;
-    }
-
-        .btn:hover {
-            background: #2980b9;
-        }
-</style>
