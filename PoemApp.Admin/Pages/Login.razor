@@ -2,7 +2,7 @@
 @using PoemApp.Admin.Services
 @inject AdminAuthService AuthService
 @inject NavigationManager Navigation
-@inject ApiAuthenticationStateProvider AuthStateProvider
+@inject AuthenticationStateProvider AuthStateProvider
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:400px">
     <MudText Typo="Typo.h6">π‹¿Ì‘±µ«¬º</MudText>
@@ -29,7 +29,11 @@
         var result = await AuthService.LoginAsync(_model);
         if (result.Success && result.User != null)
         {
-            await AuthStateProvider.NotifyUserAuthenticationAsync(result.User, result.Token ?? string.Empty);
+            if (AuthStateProvider is ApiAuthenticationStateProvider api)
+            {
+                await api.NotifyUserAuthenticationAsync(result.User, result.Token ?? string.Empty);
+            }
+            // Navigate without forceLoad so Blazor stays connected and AuthorizeView updates
             Navigation.NavigateTo("/");
         }
         else

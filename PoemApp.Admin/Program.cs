@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.AspNetCore.Components.Authorization;
 using MudBlazor.Services;
 using PoemApp.Admin.Services;
+using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,10 +11,12 @@ builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
 builder.Services.AddMudServices();
 
+// Register ProtectedLocalStorage service manually
+builder.Services.AddScoped<ProtectedLocalStorage>();
+
 // Authentication/Authorization for Blazor
 builder.Services.AddAuthorizationCore();
-// Register the concrete provider so it can be injected by its concrete type
-builder.Services.AddScoped<ApiAuthenticationStateProvider>();
+// Register only the abstraction to avoid multiple instances; concrete type will be created by DI
 builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
 
 // HttpClient for API calls
@@ -29,9 +32,9 @@ builder.Services.AddServerSideBlazor()
 builder.Services.AddScoped<PoemApiClient>();
 builder.Services.AddScoped<AdminAuthService>();
 
-// Token service (localStorage)
-builder.Services.AddScoped<ITokenService, LocalStorageTokenService>();
-
+// Token service (use ProtectedLocalStorage in Blazor Server)
+builder.Services.AddScoped<ITokenService, ProtectedLocalStorageTokenService>();
+    
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
