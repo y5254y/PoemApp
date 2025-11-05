@@ -29,7 +29,7 @@
         var result = await AuthService.LoginAsync(_model);
         if (result.Success && result.User != null)
         {
-            AuthStateProvider.NotifyUserAuthentication(result.User);
+            await AuthStateProvider.NotifyUserAuthenticationAsync(result.User, result.Token ?? string.Empty);
             Navigation.NavigateTo("/");
         }
         else

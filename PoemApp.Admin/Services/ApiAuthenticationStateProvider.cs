@@ -9,20 +9,27 @@ namespace PoemApp.Admin.Services;
 public class ApiAuthenticationStateProvider : AuthenticationStateProvider
 {
     private readonly IHttpClientFactory _factory;
+    private readonly ITokenService _tokenService;
     private ClaimsPrincipal _anonymous = new ClaimsPrincipal(new ClaimsIdentity());
 
-    public ApiAuthenticationStateProvider(IHttpClientFactory factory)
+    public ApiAuthenticationStateProvider(IHttpClientFactory factory, ITokenService tokenService)
     {
         _factory = factory;
+        _tokenService = tokenService;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         var client = _factory.CreateClient("Api");
 
-        // Try to read token from localStorage via JS interop could be done, but for simplicity check a /me endpoint
         try
         {
+            var token = await _tokenService.GetTokenAsync();
+            if (string.IsNullOrEmpty(token))
+                return new AuthenticationState(_anonymous);
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
             var resp = await client.GetAsync("api/auth/me");
             if (!resp.IsSuccessStatusCode)
                 return new AuthenticationState(_anonymous);
@@ -34,7 +41,7 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
             var identity = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim("id", user.Id.ToString()),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             }, "apiauth");
 
             var principal = new ClaimsPrincipal(identity);
@@ -46,20 +53,26 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
         }
     }
 
-    public void NotifyUserAuthentication(UserDto user)
+    public async Task NotifyUserAuthenticationAsync(UserDto user, string token)
     {
+        if (!string.IsNullOrEmpty(token))
+        {
+            await _tokenService.SetTokenAsync(token);
+        }
+
         var identity = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, user.Username),
                 new Claim("id", user.Id.ToString()),
-                new Claim(ClaimTypes.Role, "Admin")
+                new Claim(ClaimTypes.Role, user.Role.ToString())
             }, "apiauth");
 
         var principal = new ClaimsPrincipal(identity);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
     }
 
-    public void NotifyUserLogout()
+    public async Task NotifyUserLogoutAsync()
     {
+        await _tokenService.RemoveTokenAsync();
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
     }
 }

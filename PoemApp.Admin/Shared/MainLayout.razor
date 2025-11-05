@@ -2,6 +2,7 @@
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Authorization
 @using PoemApp.Admin.Services
+@using Microsoft.AspNetCore.Components.Web
 
 <CascadingAuthenticationState>
     <MudThemeProvider />
@@ -18,10 +19,10 @@
             <AuthorizeView Context="authState">
                 <Authorized>
                     <MudText Typo="Typo.body2" Class="mr-3">@authState.User.Identity?.Name</MudText>
-                    <MudButton Variant="Variant.Text" OnClick="Logout">×¢Ïú</MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="@Logout">×¢Ïú</MudButton>
                 </Authorized>
                 <NotAuthorized>
-                    <MudButton Variant="Variant.Text" OnClick="LoginNavigate">µÇÂ¼</MudButton>
+                    <MudButton Variant="Variant.Text" OnClick="@LoginNavigate">µÇÂ¼</MudButton>
                 </NotAuthorized>
             </AuthorizeView>
         </MudAppBar>
@@ -40,11 +41,20 @@
 
 @code {
     [Inject] private NavigationManager Navigation { get; set; } = null!;
-    [Inject] private ApiAuthenticationStateProvider AuthStateProvider { get; set; } = null!;
+    // Inject abstract AuthenticationStateProvider to avoid concrete-type DI issues
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
 
     private async Task Logout()
     {
-        AuthStateProvider.NotifyUserLogout();
+        if (AuthStateProvider is ApiAuthenticationStateProvider api)
+        {
+            await api.NotifyUserLogoutAsync();
+        }
+        else
+        {
+            // fallback: just navigate to login
+        }
+
         Navigation.NavigateTo("/login", forceLoad: true);
     }
 
