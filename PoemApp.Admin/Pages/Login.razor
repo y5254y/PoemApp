@@ -1,4 +1,6 @@
 @page "/login"
+@attribute [AllowAnonymous]
+@layout Shared.PublicLayout
 @using PoemApp.Admin.Services
 @inject AdminAuthService AuthService
 @inject NavigationManager Navigation
@@ -23,6 +25,16 @@
     private PoemApp.Core.DTOs.LoginDto _model = new();
     private string? _error;
 
+    protected override async Task OnInitializedAsync()
+    {
+        // If already authenticated, redirect to root
+        var state = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (state.User.Identity?.IsAuthenticated ?? false)
+        {
+            Navigation.NavigateTo("/");
+        }
+    }
+
     private async Task HandleLogin()
     {
         _error = null;
@@ -33,7 +45,7 @@
             {
                 await api.NotifyUserAuthenticationAsync(result.User, result.Token ?? string.Empty);
             }
-            // Navigate without forceLoad so Blazor stays connected and AuthorizeView updates
+            // Navigate to root after login
             Navigation.NavigateTo("/");
         }
         else

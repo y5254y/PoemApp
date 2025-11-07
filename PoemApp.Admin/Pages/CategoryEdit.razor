@@ -1,0 +1,91 @@
+@page "/categories/edit/{Id:int}"
+@attribute [Authorize]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@inject CategoriesApiClient CategoriesClient
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:800px">
+    <MudText Typo="Typo.h5">分类编辑</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleValid">
+        <MudSelect T="CategoryTypeEnum" Label="类型" @bind-Value="_model.Type" Required="true">
+            @foreach (CategoryTypeEnum t in Enum.GetValues(typeof(CategoryTypeEnum)))
+            {
+                <MudSelectItem T="CategoryTypeEnum" Value="@t">@t.GetDisplayName()</MudSelectItem>
+            }
+        </MudSelect>
+        <MudTextField @bind-Value="_model.Description" Label="描述" />
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CreateCategoryDto _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            var dto = await CategoriesClient.GetByIdAsync(Id);
+            if (dto != null)
+            {
+                _model = new CreateCategoryDto { Type = dto.Type, Description = dto.Description };
+            }
+        }
+    }
+
+    private async Task HandleValid()
+    {
+        // Debug: log that handler executed
+        await JS.InvokeVoidAsync("console.log", $"HandleValid called. Id={Id}, Type={_model.Type}, Desc={_model.Description}");
+        Snackbar.Add($"准备保存分类(Id={Id})...", Severity.Info);
+
+        try
+        {
+            if (Id == 0)
+            {
+                var res = await CategoriesClient.CreateAsync(_model);
+                await JS.InvokeVoidAsync("console.log", $"CreateAsync returned: {res != null}");
+                if (res != null)
+                {
+                    Snackbar.Add("创建成功", Severity.Success);
+                    Navigation.NavigateTo("/categories");
+                }
+                else
+                {
+                    Snackbar.Add("创建失败", Severity.Error);
+                }
+            }
+            else
+            {
+                var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Type = _model.Type, Description = _model.Description });
+                await JS.InvokeVoidAsync("console.log", $"UpdateAsync returned: {ok}");
+                if (ok)
+                {
+                    Snackbar.Add("更新成功", Severity.Success);
+                    Navigation.NavigateTo("/categories");
+                }
+                else
+                {
+                    Snackbar.Add("更新失败", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+            await JS.InvokeVoidAsync("console.error", ex.Message);
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/categories");
+}

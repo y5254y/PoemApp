@@ -2,11 +2,13 @@
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Interfaces;
 using PoemApp.Core.Enums;
+using Microsoft.AspNetCore.Authorization;
 
 namespace PoemApp.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize] // Require authentication by default for all endpoints in this controller
 public class CategoriesController : ControllerBase
 {
     private readonly ICategoryService _categoryService;
@@ -17,6 +19,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<CategoryDto>>> GetCategories()
     {
         var categories = await _categoryService.GetAllCategoriesAsync();
@@ -24,6 +27,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [AllowAnonymous]
     public async Task<ActionResult<CategoryDto>> GetCategory(int id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);
@@ -35,6 +39,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpGet("type/{type}")]
+    [AllowAnonymous]
     public async Task<ActionResult<CategoryDto>> GetCategoryByType(CategoryTypeEnum type)
     {
         var category = await _categoryService.GetCategoryByTypeAsync(type);
@@ -45,7 +50,9 @@ public class CategoriesController : ControllerBase
         return Ok(category);
     }
 
+    // Only Admin role can create categories
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<ActionResult<CategoryDto>> PostCategory(CreateCategoryDto categoryDto)
     {
         try
@@ -59,7 +66,9 @@ public class CategoriesController : ControllerBase
         }
     }
 
+    // Only Admin role can update categories
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> PutCategory(int id, UpdateCategoryDto categoryDto)
     {
         try
@@ -73,7 +82,9 @@ public class CategoriesController : ControllerBase
         }
     }
 
+    // Only Admin role can delete categories
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> DeleteCategory(int id)
     {
         try
@@ -87,7 +98,9 @@ public class CategoriesController : ControllerBase
         }
     }
 
+    // Only Admin role can add/remove poems to categories
     [HttpPost("{categoryId}/poems/{poemId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> AddPoemToCategory(int categoryId, int poemId)
     {
         try
@@ -102,6 +115,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{categoryId}/poems/{poemId}")]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> RemovePoemFromCategory(int categoryId, int poemId)
     {
         try

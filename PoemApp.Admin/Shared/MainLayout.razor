@@ -1,3 +1,4 @@
+@using Microsoft.AspNetCore.Authorization
 @inherits LayoutComponentBase
 @using MudBlazor
 @using Microsoft.AspNetCore.Components.Authorization
@@ -6,31 +7,33 @@
 @using Microsoft.JSInterop
 @using System.Net.Http.Headers
 @using System.Net.Http.Json
-
 <CascadingAuthenticationState>
     <MudThemeProvider />
+    <MudPopoverProvider />
     <MudDialogProvider />
     <MudSnackbarProvider />
 
     <MudLayout>
-        <MudAppBar Elevation="1">
-            <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" />
+        <!-- Use a primary AppBar so icons/text contrast on mobile -->
+        <MudAppBar Elevation="1" Color="Color.Primary">
+            <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit"  Edge="Edge.Start" OnClick="ToggleDrawer" />
             <MudSpacer />
-            <MudText Typo="Typo.h6">PoemApp 管理后台</MudText>
+            <MudText Typo="Typo.h6" Color="Color.Inherit">PoemApp 管理后台</MudText>
             <MudSpacer />
 
             <AuthorizeView>
-                <Authorized Context="authState">
-                    <MudText Typo="Typo.body2" Class="mr-3">@authState.User.Identity?.Name</MudText>
-                    <MudButton Variant="Variant.Text" OnClick="Logout">注销</MudButton>
+                <Authorized Context="innerState">
+                    <MudText Typo="Typo.body2" Color="Color.Inherit" Class="mr-3">@innerState.User.Identity?.Name</MudText>
+                    <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Logout">注销</MudButton>
                 </Authorized>
                 <NotAuthorized>
-                    <MudButton Variant="Variant.Text" OnClick="LoginNavigate">登录</MudButton>
+                    <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoginNavigate">登录</MudButton>
                 </NotAuthorized>
             </AuthorizeView>
         </MudAppBar>
 
-        <MudDrawer Open="true" ClipMode="DrawerClipMode.Always">
+        <!-- Responsive drawer -->
+        <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive" Breakpoint="Breakpoint.Md">
             <NavMenu />
         </MudDrawer>
 
@@ -49,6 +52,7 @@
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private const string DebugKey = "poemapp_token_debug";
+    private bool _drawerOpen = true;
 
     private async Task Logout()
     {
@@ -63,6 +67,11 @@
     private void LoginNavigate()
     {
         Navigation.NavigateTo("/login");
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

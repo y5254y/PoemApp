@@ -10,6 +10,10 @@ using System.Reflection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
+using System.Security.Claims;
 
 namespace PoemApp.API;
 
@@ -19,16 +23,24 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
 
-        // 添加详细的日志记录
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-        builder.Logging.AddDebug();
+        // Create a LoggingLevelSwitch so we can change the level at runtime
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Information);
 
-        // 添加文件日志提供程序
+        // Configure Serilog with async file sink and controlled level
         var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-api.log");
-        builder.Logging.AddProvider(new FileLoggerProvider(logFilePath));
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.ControlledBy(levelSwitch)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.Async(a => a.File(logFilePath, rollingInterval: RollingInterval.Day))
+            .CreateLogger();
 
-        
+        builder.Host.UseSerilog();
+
+        // expose Serilog.ILogger and LoggingLevelSwitch to DI so controllers can change level
+        builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
+        builder.Services.AddSingleton<LoggingLevelSwitch>(levelSwitch);
+
         // 注册基础设施服务
         try
         {
@@ -61,39 +73,40 @@ public class Program
         {
             jwtKey = "ThisIsAVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast64BytesLongToMeetHMACSHA512Requirements";
         }
-        // 2. JWT认证配置（保留在API层）
+
         builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-    .AddJwtBearer(options =>
-    {
-        options.TokenValidationParameters = new TokenValidationParameters
-        {
-            ValidateIssuer = true,
-            ValidateAudience = true,
-            ValidateLifetime = true,
-            ValidateIssuerSigningKey = true,
-            ValidIssuer = builder.Configuration["Jwt:Issuer"],
-            ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
-            // 放宽时钟偏差，避免时间同步问题
-            ClockSkew = TimeSpan.FromMinutes(5)
-        };
-
-        options.Events = new JwtBearerEvents
-        {
-            OnAuthenticationFailed = context =>
+            .AddJwtBearer(options =>
             {
-                Console.WriteLine($"认证失败: {context.Exception.Message}");
-                return Task.CompletedTask;
-            },
-            OnTokenValidated = context =>
-            {
-                Console.WriteLine("Token 验证成功");
-                return Task.CompletedTask;
-            }
-        };
-    });
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    // Ensure role/name claim mapping matches tokens created in AuthService
+                    RoleClaimType = ClaimTypes.Role,
+                    NameClaimType = ClaimTypes.Name,
+                    // 放宽时钟偏差，避免时间同步问题
+                    ClockSkew = TimeSpan.FromMinutes(5)
+                };
 
-
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine($"认证失败: {context.Exception.Message}");
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine("Token 验证成功");
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
         builder.Services.AddOpenApiDocument(config =>
         {
@@ -138,8 +151,7 @@ public class Program
         app.UseCors("AllowAll");
         app.UseAuthorization();
         app.MapControllers();
-
-       
+        //app.MapHealthChecks("/health"); // Map health check endpoint
 
         app.Run();
     }

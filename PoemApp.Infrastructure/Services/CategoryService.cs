@@ -127,10 +127,17 @@ public class CategoryService : ICategoryService
             Description = categoryDto.Description
         };
 
+        // If Category has a writable Name property, populate it from enum display name
+        var nameProp = typeof(Category).GetProperty("Name");
+        if (nameProp != null && nameProp.CanWrite)
+        {
+            nameProp.SetValue(category, categoryDto.Type.GetDisplayName());
+        }
+
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
 
-        return await GetCategoryByIdAsync(category.Id);
+        return await GetCategoryByIdAsync(category.Id) ?? throw new InvalidOperationException("Failed to load created category");
     }
 
     public async Task UpdateCategoryAsync(int id, UpdateCategoryDto categoryDto)
@@ -153,6 +160,13 @@ public class CategoryService : ICategoryService
         category.Type = categoryDto.Type;
         category.Description = categoryDto.Description;
 
+        // Update Name if writable
+        var nameProp = typeof(Category).GetProperty("Name");
+        if (nameProp != null && nameProp.CanWrite)
+        {
+            nameProp.SetValue(category, categoryDto.Type.GetDisplayName());
+        }
+
         _context.Categories.Update(category);
         await _context.SaveChangesAsync();
     }
@@ -164,6 +178,10 @@ public class CategoryService : ICategoryService
         {
             throw new ArgumentException("Category not found");
         }
+
+        // Remove any PoemCategory relationships first to avoid FK constraint issues
+        var relations = _context.PoemCategories.Where(pc => pc.CategoryId == id);
+        _context.PoemCategories.RemoveRange(relations);
 
         _context.Categories.Remove(category);
         await _context.SaveChangesAsync();

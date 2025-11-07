@@ -46,9 +46,36 @@ public class DataSeedService : IDataSeedService
         Console.WriteLine("管理员用户创建成功：admin / admin123");
     }
 
+
+    public async Task SeedTestUserAsync()
+    {
+        // 检查是否已存在管理员用户
+        if (await _context.Users.AnyAsync(u => u.Username == "test"))
+        {
+            return; // 已存在，不重复创建
+        }
+
+        // 创建管理员用户
+        var testUser = new User
+        {
+            Username = "test",
+            Role = UserRole.Normal,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        // 设置密码（默认密码：admin123）
+        SetPassword(testUser, "test123");
+
+        _context.Users.Add(testUser);
+        await _context.SaveChangesAsync();
+
+        Console.WriteLine("管理员用户创建成功：admin / admin123");
+    }
+
     public async Task SeedTestDataAsync()
     {
         await SeedAdminUserAsync();
+        await SeedTestUserAsync();
 
         // 可以添加其他测试数据，比如示例作者、诗文等
         await SeedSampleAuthorsAsync();

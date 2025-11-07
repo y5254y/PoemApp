@@ -54,4 +54,29 @@ public class AuthController : ControllerBase
 
         return Ok(result);
     }
+
+    // GET api/auth/me
+    // Returns current authenticated user based on Bearer token
+    [HttpGet("me")]
+    public async Task<ActionResult<UserDto>> Me()
+    {
+        // Look for Authorization header
+        if (!Request.Headers.TryGetValue("Authorization", out var authHeaderValues))
+            return Unauthorized();
+
+        var authHeader = authHeaderValues.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(authHeader) || !authHeader.StartsWith("Bearer "))
+            return Unauthorized();
+
+        var token = authHeader.Substring("Bearer ".Length).Trim();
+        if (string.IsNullOrEmpty(token))
+            return Unauthorized();
+
+        // Ask the auth service to resolve user from token
+        var user = await _authService.GetUserFromTokenAsync(token);
+        if (user == null)
+            return Unauthorized();
+
+        return Ok(user);
+    }
 }

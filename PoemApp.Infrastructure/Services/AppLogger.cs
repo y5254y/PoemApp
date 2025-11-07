@@ -1,39 +1,46 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Serilog;
 using PoemApp.Core.Interfaces;
 
 namespace PoemApp.Infrastructure.Services;
 
 public class AppLogger : IAppLogger
 {
-    private readonly ILogger<AppLogger> _logger;
+    private readonly ILogger _logger;
 
-    public AppLogger(ILogger<AppLogger> logger)
+    public AppLogger(ILogger logger)
     {
-        _logger = logger;
+        // Ensure we have a context-specific logger
+        _logger = logger.ForContext<AppLogger>();
     }
 
     public void LogInformation(string message)
     {
-        _logger.LogInformation(message);
+        _logger.Information(message);
     }
 
     public void LogWarning(string message)
     {
-        _logger.LogWarning(message);
+        _logger.Warning(message);
     }
 
     public void LogError(string message, Exception ex = null)
     {
-        _logger.LogError(ex, message);
+        if (ex == null)
+            _logger.Error(message);
+        else
+            _logger.Error(ex, message);
     }
 
     public void LogDebug(string message)
     {
-        _logger.LogDebug(message);
+        _logger.Debug(message);
     }
 
     public void LogCritical(string message, Exception ex = null)
     {
-        _logger.LogCritical(ex, message);
+        if (ex == null)
+            _logger.Fatal(message);
+        else
+            _logger.Fatal(ex, message);
     }
 }

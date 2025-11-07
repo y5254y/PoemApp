@@ -381,22 +381,159 @@ public class AuthService : IAuthService
         });
     }
 
-    public Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
+    public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)
     {
-        // 实现密码修改逻辑
-        throw new NotImplementedException();
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null)
+        {
+            _logger.LogWarning($"ChangePasswordAsync: user {userId} not found");
+            return false;
+        }
+
+        // Verify current password
+        if (!VerifyPasswordHash(currentPassword, user.PasswordHash, user.PasswordSalt))
+        {
+            _logger.LogWarning($"ChangePasswordAsync: current password mismatch for user {userId}");
+            return false;
+        }
+
+        // Create new password hash
+        CreatePasswordHash(newPassword, out byte[] newHash, out byte[] newSalt);
+        user.PasswordHash = newHash;
+        user.PasswordSalt = newSalt;
+
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+
+        _logger.LogInformation($"ChangePasswordAsync: password changed for user {userId}");
+        return true;
     }
 
-    public Task<bool> ValidateTokenAsync(string token)
+    public async Task<bool> ValidateTokenAsync(string token)
     {
-        // 实现Token验证逻辑
-        throw new NotImplementedException();
+        if (string.IsNullOrEmpty(token))
+            return false;
+
+        // Support development fallback tokens that start with "dev-token-<userId>-<guid>"
+        if (token.StartsWith("dev-token-"))
+        {
+            var parts = token.Split('-', 3);
+            if (parts.Length >= 2 && int.TryParse(parts[1], out var devUserId))
+            {
+                var u = await _context.Users.FindAsync(devUserId);
+                return u != null;
+            }
+            return false;
+        }
+
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtKey = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 16)
+            {
+                _logger.LogWarning("ValidateTokenAsync: JWT key missing or too short");
+                return false;
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = !string.IsNullOrEmpty(_configuration["Jwt:Issuer"]),
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidateAudience = !string.IsNullOrEmpty(_configuration["Jwt:Audience"]),
+                ValidAudience = _configuration["Jwt:Audience"],
+                ClockSkew = TimeSpan.Zero
+            };
+
+            tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+            return validatedToken != null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("ValidateTokenAsync: token validation failed", ex);
+            return false;
+        }
     }
 
-    public Task<UserDto?> GetUserFromTokenAsync(string token)
+    public async Task<UserDto?> GetUserFromTokenAsync(string token)
     {
-        // 实现从Token中获取用户信息逻辑
-        throw new NotImplementedException();
+        if (string.IsNullOrEmpty(token))
+            return null;
+
+        // Handle development fallback token
+        if (token.StartsWith("dev-token-"))
+        {
+            var parts = token.Split('-', 3);
+            if (parts.Length >= 2 && int.TryParse(parts[1], out var devUserId))
+            {
+                var userEntity = await _context.Users.FindAsync(devUserId);
+                if (userEntity == null) return null;
+                return new UserDto
+                {
+                    Id = userEntity.Id,
+                    Username = userEntity.Username,
+                    WeChatId = userEntity.WeChatId,
+                    QQId = userEntity.QQId,
+                    Phone = userEntity.Phone,
+                    Points = userEntity.Points
+                };
+            }
+            return null;
+        }
+
+        try
+        {
+            var tokenHandler = new JwtSecurityTokenHandler();
+            var jwtKey = _configuration["Jwt:Key"];
+            if (string.IsNullOrEmpty(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 16)
+            {
+                _logger.LogWarning("GetUserFromTokenAsync: JWT key missing or too short");
+                return null;
+            }
+
+            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
+            var validationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = key,
+                ValidateIssuer = !string.IsNullOrEmpty(_configuration["Jwt:Issuer"]),
+                ValidIssuer = _configuration["Jwt:Issuer"],
+                ValidateAudience = !string.IsNullOrEmpty(_configuration["Jwt:Audience"]),
+                ValidAudience = _configuration["Jwt:Audience"],
+                ClockSkew = TimeSpan.Zero
+            };
+
+            var principal = tokenHandler.ValidateToken(token, validationParameters, out var validatedToken);
+            if (principal == null)
+                return null;
+
+            // Try common claim types for user id
+            var idClaim = principal.FindFirst(ClaimTypes.NameIdentifier) ?? principal.FindFirst("id") ?? principal.FindFirst("sub");
+            if (idClaim == null) return null;
+
+            if (!int.TryParse(idClaim.Value, out var userId)) return null;
+
+            var userEntity = await _context.Users.FindAsync(userId);
+            if (userEntity == null) return null;
+
+            return new UserDto
+            {
+                Id = userEntity.Id,
+                Username = userEntity.Username,
+                WeChatId = userEntity.WeChatId,
+                QQId = userEntity.QQId,
+                Phone = userEntity.Phone,
+                Points = userEntity.Points
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError("GetUserFromTokenAsync: failed to validate token or retrieve user", ex);
+            return null;
+        }
     }
 }
 

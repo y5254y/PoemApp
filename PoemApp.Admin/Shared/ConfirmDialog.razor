@@ -1,0 +1,77 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudPaper Class="pa-4" Style="width:100%;max-width:720px;border-left:4px solid var(--mud-palette-warning);">
+            <div class="d-flex align-center">
+                <MudAvatar Icon="Icons.Material.Filled.WarningAmber" Color="Color.Warning" Size="Size.Large" Class="me-3" />
+                <MudText Typo="Typo.h6">@Title</MudText>
+            </div>
+
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.body1" Class="mb-4">@ContentText</MudText>
+        </MudPaper>
+    </DialogContent>
+    <DialogActions>
+        <div class="d-flex justify-end" style="width:100%;">
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel" StartIcon="Icons.Material.Filled.Close" Class="me-2">取消</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Ok" StartIcon="Icons.Material.Filled.Delete">删除</MudButton>
+        </div>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [Parameter] public string Title { get; set; } = "确认";
+    [Parameter] public string ContentText { get; set; } = "确定要继续吗？";
+
+    // Use object to avoid compile-time dependency on MudBlazor internal types across versions
+    [CascadingParameter] public object? MudDialog { get; set; }
+
+    void Cancel()
+    {
+        TryInvokeDialogClose(false);
+    }
+
+    void Ok()
+    {
+        TryInvokeDialogClose(true);
+    }
+
+    private void TryInvokeDialogClose(bool confirmed)
+    {
+        if (MudDialog == null)
+            return;
+
+        try
+        {
+            // Prefer Close(object) with a DialogResult
+            var dialogType = MudDialog.GetType();
+            var closeWithParam = dialogType.GetMethod("Close", new Type[] { typeof(object) });
+            if (closeWithParam != null)
+            {
+                var result = confirmed ? DialogResult.Ok(true) : DialogResult.Cancel();
+                closeWithParam.Invoke(MudDialog, new object[] { result });
+                return;
+            }
+
+            // Fallback: try parameterless Close()
+            var closeNoParam = dialogType.GetMethod("Close", Type.EmptyTypes);
+            if (closeNoParam != null)
+            {
+                closeNoParam.Invoke(MudDialog, null);
+                return;
+            }
+
+            // Fallback: try Cancel()
+            var cancelMethod = dialogType.GetMethod("Cancel", Type.EmptyTypes);
+            if (cancelMethod != null)
+            {
+                cancelMethod.Invoke(MudDialog, null);
+            }
+        }
+        catch
+        {
+            // swallow any reflection errors to avoid crashing the UI
+        }
+    }
+}
