@@ -1,0 +1,84 @@
+@page "/users/edit/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@inject UsersApiClient UsersClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:800px">
+    <MudText Typo="Typo.h5">用户编辑</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleValid">
+        <MudTextField @bind-Value="_model.Username" Label="用户名" Required="true" />
+        <MudTextField @bind-Value="_model.Phone" Label="手机号" />
+        <MudSelect T="UserRole?" Label="角色" @bind-Value="_model.Role">
+            @foreach (UserRole r in Enum.GetValues(typeof(UserRole)))
+            {
+                <MudSelectItem T="UserRole?" Value="@(r)">@r.GetDisplayName()</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private UpdateUserDto _model = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            var dto = await UsersClient.GetByIdAsync(Id);
+            if (dto != null)
+            {
+                _model = new UpdateUserDto { Username = dto.Username, Phone = dto.Phone, Role = dto.Role };
+            }
+        }
+    }
+
+    private async Task HandleValid()
+    {
+        try
+        {
+            if (Id == 0)
+            {
+                var res = await UsersClient.CreateAsync(new CreateUserDto { Username = _model.Username ?? string.Empty, Phone = _model.Phone, Role = _model.Role ?? UserRole.Normal });
+                if (res != null)
+                {
+                    Snackbar.Add("创建成功", Severity.Success);
+                    Navigation.NavigateTo("/users");
+                }
+                else
+                {
+                    Snackbar.Add("创建失败", Severity.Error);
+                }
+            }
+            else
+            {
+                var res = await UsersClient.UpdateAsync(Id, _model);
+                if (res != null)
+                {
+                    Snackbar.Add("更新成功", Severity.Success);
+                    Navigation.NavigateTo("/users");
+                }
+                else
+                {
+                    Snackbar.Add("更新失败", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/users");
+}

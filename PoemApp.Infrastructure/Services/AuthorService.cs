@@ -16,12 +16,26 @@ public class AuthorService : IAuthorService
         _context = context;
     }
 
-    public async Task<IEnumerable<AuthorDto>> GetAllAuthorsAsync()
+    public async Task<PagedResult<AuthorDto>> GetAllAuthorsAsync(int page = 1, int pageSize = 20, string? search = null)
     {
-        return await _context.Authors
+        var query = _context.Authors
             .Include(a => a.Relationships)
                 .ThenInclude(r => r.ToAuthor)
             .Include(a => a.Poems)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var lowered = search.ToLowerInvariant();
+            query = query.Where(a => a.Name.ToLower().Contains(lowered) || (a.Biography ?? string.Empty).ToLower().Contains(lowered) || a.Dynasty.ToString().ToLower().Contains(lowered));
+        }
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(a => a.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .Select(a => new AuthorDto
             {
                 Id = a.Id,
@@ -54,6 +68,14 @@ public class AuthorService : IAuthorService
                 }).ToList()
             })
             .ToListAsync();
+
+        return new PagedResult<AuthorDto>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = page,
+            PageSize = pageSize
+        };
     }
 
     public async Task<AuthorDto> GetAuthorByIdAsync(int id)

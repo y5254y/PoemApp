@@ -4,11 +4,12 @@
 @using PoemApp.Core.DTOs
 @using PoemApp.Core.Enums
 @using PoemApp.Core.Extensions
+@using Blazored.TextEditor
 @inject AuthorsApiClient AuthorsClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<MudPaper Class="pa-4 mx-auto" Style="max-width:800px">
+<MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
     <MudText Typo="Typo.h5">作者编辑</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid">
@@ -19,16 +20,17 @@
                 <MudSelectItem T="DynastyEnum" Value="@d">@d.GetDisplayName()</MudSelectItem>
             }
         </MudSelect>
-        <MudTextField @bind-Value="_model.Biography" Label="传记" />
 
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">传记（富文本）</MudText>
+        <MudTextField @bind-Value="_model.Biography" />
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Class="mt-3">保存</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel" Class="mt-3">取消</MudButton>
     </EditForm>
 </MudPaper>
 
 @code {
     [Parameter] public int Id { get; set; }
-
     private CreateAuthorDto _model = new();
 
     protected override async Task OnInitializedAsync()
@@ -38,7 +40,12 @@
             var dto = await AuthorsClient.GetByIdAsync(Id);
             if (dto != null)
             {
-                _model = new CreateAuthorDto { Name = dto.Name, Dynasty = dto.Dynasty, Biography = dto.Biography };
+                _model = new CreateAuthorDto
+                {
+                    Name = dto.Name,
+                    Dynasty = dto.Dynasty,
+                    Biography = dto.Biography ?? string.Empty
+                };
             }
         }
     }
@@ -47,32 +54,25 @@
     {
         try
         {
+            // ? _model.Biography 已自动同步，无需手动获取！
+            bool success;
             if (Id == 0)
             {
                 var res = await AuthorsClient.CreateAsync(_model);
-                if (res != null)
-                {
-                    Snackbar.Add("创建成功", Severity.Success);
-                    Navigation.NavigateTo("/authors");
-                }
-                else
-                {
-                    Snackbar.Add("创建失败", Severity.Error);
-                }
+                success = res != null;
             }
             else
             {
-                var ok = await AuthorsClient.UpdateAsync(Id, new UpdateAuthorDto { Name = _model.Name, Dynasty = _model.Dynasty, Biography = _model.Biography });
-                if (ok)
+                success = await AuthorsClient.UpdateAsync(Id, new UpdateAuthorDto
                 {
-                    Snackbar.Add("更新成功", Severity.Success);
-                    Navigation.NavigateTo("/authors");
-                }
-                else
-                {
-                    Snackbar.Add("更新失败", Severity.Error);
-                }
+                    Name = _model.Name,
+                    Dynasty = _model.Dynasty,
+                    Biography = _model.Biography
+                });
             }
+
+            Snackbar.Add(success ? "保存成功" : "保存失败", success ? Severity.Success : Severity.Error);
+            if (success) Navigation.NavigateTo("/authors");
         }
         catch (Exception ex)
         {

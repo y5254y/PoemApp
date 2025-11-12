@@ -13,9 +13,9 @@
     <MudText Typo="Typo.h5">作者管理</MudText>
     <MudDivider Class="my-2" />
 
-    <MudTable Items="_authors" Striped="true" Hover="true">
+    <MudTable Items="@(_usedServerSearch ? _paged?.Items ?? new List<AuthorDto>() : FilteredAuthors)" Striped="true" Hover="true" ServerData="LoadServerData">
         <ToolBarContent>
-            <MudTextField @bind-Value="_search" Placeholder="搜索作者" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" />
+            <MudTextField @bind-Value="_search" Immediate="true" Placeholder="搜索作者（回车触发服务器搜索）" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
             <MudSpacer />
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新建作者</MudButton>
         </ToolBarContent>
@@ -30,33 +30,85 @@
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
             <MudTd>@context.Dynasty.GetDisplayName()</MudTd>
-            <MudTd>@context.Biography</MudTd>
+            <MudTd>@(context.Biography?.Length > 100 ? context.Biography.Substring(0, 100) + "..." : context.Biography)</MudTd>
             <MudTd>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">编辑</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => ManageRelationships(context.Id)">关系</MudButton>
                 <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
             </MudTd>
         </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 </MudPaper>
 
 @code {
     private List<AuthorDto> _authors = new();
+    private PagedResult<AuthorDto>? _paged;
     private string _search = string.Empty;
+    private bool _usedServerSearch = false;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
     }
 
-    private async Task LoadAsync()
+    private async Task LoadAsync(string? search = null)
     {
         try
         {
-            _authors = await AuthorsClient.GetAllAsync();
+            var result = await AuthorsClient.GetAllAsync();
+            _authors = result.Items;
+            _paged = result;
         }
         catch (Exception ex)
         {
             Snackbar.Add("加载作者失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private IEnumerable<AuthorDto> FilteredAuthors =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _authors
+            : _authors.Where(a => (a.Name ?? string.Empty).Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || (a.Biography ?? string.Empty).Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || a.Dynasty.GetDisplayName().Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            // trigger server-side search using current _search
+            _usedServerSearch = true;
+            await LoadServerData(new MudBlazor.TableState { Page = 0, PageSize = 20 }, CancellationToken.None);
+            StateHasChanged();
+        }
+        else
+        {
+            // use client-side filtering while typing
+            _usedServerSearch = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<MudBlazor.TableData<AuthorDto>> LoadServerData(MudBlazor.TableState state, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var page = state.Page + 1;
+            var pageSize = state.PageSize;
+            var result = await AuthorsClient.GetAllAsync(page, pageSize, _search);
+            _paged = result;
+            // populate local cache for client-side default
+            _authors = result.Items;
+            return new MudBlazor.TableData<AuthorDto>() { TotalItems = result.TotalCount, Items = result.Items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("服务端加载失败: " + ex.Message, Severity.Error);
+            return new MudBlazor.TableData<AuthorDto>() { TotalItems = 0, Items = new List<AuthorDto>() };
         }
     }
 
@@ -68,6 +120,11 @@
     private void Edit(int id)
     {
         Navigation.NavigateTo($"/authors/edit/{id}");
+    }
+
+    private void ManageRelationships(int id)
+    {
+        Navigation.NavigateTo($"/authors/{id}/relationships");
     }
 
     private async Task ConfirmDelete(int id)

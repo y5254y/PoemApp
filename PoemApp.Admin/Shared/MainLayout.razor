@@ -7,43 +7,37 @@
 @using Microsoft.JSInterop
 @using System.Net.Http.Headers
 @using System.Net.Http.Json
-<CascadingAuthenticationState>
-    <MudThemeProvider />
-    <MudPopoverProvider />
-    <MudDialogProvider />
-    <MudSnackbarProvider />
 
-    <MudLayout>
-        <!-- Use a primary AppBar so icons/text contrast on mobile -->
-        <MudAppBar Elevation="1" Color="Color.Primary">
-            <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit"  Edge="Edge.Start" OnClick="ToggleDrawer" />
-            <MudSpacer />
-            <MudText Typo="Typo.h6" Color="Color.Inherit">PoemApp 管理后台</MudText>
-            <MudSpacer />
+<MudLayout>
+    <!-- Use a primary AppBar so icons/text contrast on mobile -->
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit"  Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudSpacer />
+        <MudText Typo="Typo.h6" Color="Color.Inherit">PoemApp 管理端</MudText>
+        <MudSpacer />
 
-            <AuthorizeView>
-                <Authorized Context="innerState">
-                    <MudText Typo="Typo.body2" Color="Color.Inherit" Class="mr-3">@innerState.User.Identity?.Name</MudText>
-                    <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Logout">注销</MudButton>
-                </Authorized>
-                <NotAuthorized>
-                    <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoginNavigate">登录</MudButton>
-                </NotAuthorized>
-            </AuthorizeView>
-        </MudAppBar>
+        <AuthorizeView>
+            <Authorized Context="innerState">
+                <MudText Typo="Typo.body2" Color="Color.Inherit" Class="mr-3">@innerState.User.Identity?.Name</MudText>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Logout">注销</MudButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoginNavigate">登录</MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudAppBar>
 
-        <!-- Responsive drawer -->
-        <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive" Breakpoint="Breakpoint.Md">
-            <NavMenu />
-        </MudDrawer>
+    <!-- Responsive drawer -->
+    <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive" Breakpoint="Breakpoint.Md">
+        <NavMenu />
+    </MudDrawer>
 
-        <MudMainContent>
-            <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
-                @Body
-            </MudContainer>
-        </MudMainContent>
-    </MudLayout>
-</CascadingAuthenticationState>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
 
 @code {
     [Inject] private NavigationManager Navigation { get; set; } = null!;

@@ -34,7 +34,10 @@ builder.Services.AddSingleton<LoggingLevelSwitch>(levelSwitch);
 builder.Services.AddSingleton<IAppLogger, AppLogger>();
 
 builder.Services.AddRazorPages();
-builder.Services.AddServerSideBlazor();
+// Register Blazor Server once with circuit options
+builder.Services.AddServerSideBlazor()
+        .AddCircuitOptions(options => { options.DetailedErrors = true; });
+
 builder.Services.AddMudServices();
 
 // Register ProtectedLocalStorage service manually
@@ -55,15 +58,12 @@ builder.Services.AddHttpClient("Api", client =>
     client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"] ?? "https://localhost:5001/");
 }).AddHttpMessageHandler<AuthMessageHandler>();
 
-builder.Services.AddServerSideBlazor()
-        .AddCircuitOptions(options => { options.DetailedErrors = true; });
-
-
 // Register API clients and auth service
 builder.Services.AddScoped<PoemApiClient>();
 builder.Services.AddScoped<AdminAuthService>();
 builder.Services.AddScoped<CategoriesApiClient>();
 builder.Services.AddScoped<AuthorsApiClient>();
+builder.Services.AddScoped<UsersApiClient>();
 
 // Token service (use ProtectedLocalStorage in Blazor Server)
 builder.Services.AddScoped<ITokenService, ProtectedLocalStorageTokenService>();

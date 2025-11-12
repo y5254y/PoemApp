@@ -20,10 +20,7 @@
 
     <MudNavGroup Title="用户管理" Icon="Icons.Material.Filled.People" Expanded="true">
         <MudNavLink Href="/users">用户管理</MudNavLink>
-        <MudNavLink Href="/Account/Logout">
-            <MudIcon Icon="Icons.Material.Filled.ExitToApp" Class="me-3" />
-            注销
-        </MudNavLink>
+        @* Removed duplicate Logout link since header provides logout *@
     </MudNavGroup>
 
     <MudNavGroup Title="系统日志" Icon="Icons.Material.Filled.BugReport" Expanded="true">

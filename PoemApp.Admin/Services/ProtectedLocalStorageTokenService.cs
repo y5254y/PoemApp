@@ -36,22 +36,48 @@ public class ProtectedLocalStorageTokenService : ITokenService
             _cachedToken = token;
             _globalCachedToken = token;
 
-            await _protectedLocalStorage.SetAsync(TokenKey, token);
-            _logger.LogInformation($"ProtectedLocalStorageTokenService: token stored (length={token?.Length ?? 0})");
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError("ProtectedLocalStorageTokenService: failed to set token", ex);
-            // fallback: attempt to write to plain localStorage for dev/debug
+            // Try protected storage (may throw if JS interop unavailable)
             try
             {
-                await _js.InvokeVoidAsync("localStorage.setItem", DebugKey, token);
-                _logger.LogWarning("ProtectedLocalStorageTokenService: fallback wrote token to localStorage debug key");
+                await _protectedLocalStorage.SetAsync(TokenKey, token);
+                _logger.LogInformation($"ProtectedLocalStorageTokenService: token stored (length={token?.Length ?? 0})");
+                return;
+            }
+            catch (JSDisconnectedException jsDisc)
+            {
+                // Circuit disconnected - cannot use JS interop. Keep token in memory only.
+                _logger.LogDebug($"ProtectedLocalStorageTokenService: JS disconnected while setting protected storage; token cached in memory only. {jsDisc.Message}");
+                return;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning($"ProtectedLocalStorageTokenService: failed to set token in protected storage, will attempt fallback to localStorage. {ex.Message}");
+            }
+
+            // fallback: attempt to write to plain localStorage for dev/debug if JS runtime is available
+            try
+            {
+                if (_js != null)
+                {
+                    await _js.InvokeVoidAsync("localStorage.setItem", DebugKey, token);
+                    _logger.LogWarning("ProtectedLocalStorageTokenService: fallback wrote token to localStorage debug key");
+                }
+            }
+            catch (JSDisconnectedException jsDisc)
+            {
+                _logger.LogDebug($"ProtectedLocalStorageTokenService: JS disconnected during fallback write; token cached in memory only. {jsDisc.Message}");
             }
             catch (Exception jsEx)
             {
-                _logger.LogError("ProtectedLocalStorageTokenService: fallback write to localStorage failed", jsEx);
+                _logger.LogWarning($"ProtectedLocalStorageTokenService: fallback write to localStorage failed. {jsEx.Message}");
             }
+        }
+        catch (Exception ex)
+        {
+            // Unexpected errors: keep token in cache and log
+            _cachedToken = token;
+            _globalCachedToken = token;
+            _logger.LogError($"ProtectedLocalStorageTokenService: unexpected error while setting token - token cached in memory. {ex.Message}", ex);
         }
     }
 
@@ -76,7 +102,7 @@ public class ProtectedLocalStorageTokenService : ITokenService
             var result = await _protectedLocalStorage.GetAsync<string>(TokenKey);
             if (result.Success && !string.IsNullOrEmpty(result.Value))
             {
-                _logger.LogInformation("ProtectedLocalStorageTokenService: token retrieved (length={result.Value?.Length ?? 0})");
+                _logger.LogInformation($"ProtectedLocalStorageTokenService: token retrieved (length={result.Value?.Length ?? 0})");
                 _cachedToken = result.Value;
                 _globalCachedToken = result.Value;
                 return result.Value;
@@ -87,51 +113,70 @@ public class ProtectedLocalStorageTokenService : ITokenService
             // Fallback: attempt to read from plain localStorage debug key (useful for debugging or when protected storage isn't available)
             try
             {
-                var debugToken = await _js.InvokeAsync<string>("localStorage.getItem", DebugKey);
-                if (!string.IsNullOrEmpty(debugToken))
+                if (_js != null)
                 {
-                    _logger.LogWarning("ProtectedLocalStorageTokenService: found debug token in localStorage (length={debugToken.Length}), migrating to protected storage");
-                    // Try to migrate into protected storage
-                    try
+                    var debugToken = await _js.InvokeAsync<string>("localStorage.getItem", DebugKey);
+                    if (!string.IsNullOrEmpty(debugToken))
                     {
-                        await _protectedLocalStorage.SetAsync(TokenKey, debugToken);
-                        _logger.LogInformation("ProtectedLocalStorageTokenService: migrated debug token into protected storage");
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogError("ProtectedLocalStorageTokenService: failed to migrate debug token into protected storage", ex);
-                    }
+                        _logger.LogWarning($"ProtectedLocalStorageTokenService: found debug token in localStorage (length={debugToken.Length}), migrating to protected storage");
+                        // Try to migrate into protected storage
+                        try
+                        {
+                            await _protectedLocalStorage.SetAsync(TokenKey, debugToken);
+                            _logger.LogInformation("ProtectedLocalStorageTokenService: migrated debug token into protected storage");
+                        }
+                        catch (JSDisconnectedException jsDisc)
+                        {
+                            _logger.LogDebug($"ProtectedLocalStorageTokenService: JS disconnected while migrating debug token; token kept in memory. {jsDisc.Message}");
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning($"ProtectedLocalStorageTokenService: failed to migrate debug token into protected storage. {ex.Message}");
+                        }
 
-                    _cachedToken = debugToken;
-                    _globalCachedToken = debugToken;
-                    return debugToken;
+                        _cachedToken = debugToken;
+                        _globalCachedToken = debugToken;
+                        return debugToken;
+                    }
                 }
+            }
+            catch (JSDisconnectedException jsDisc)
+            {
+                _logger.LogDebug($"ProtectedLocalStorageTokenService: JS disconnected during fallback read; returning null. {jsDisc.Message}");
             }
             catch (Exception jsEx)
             {
-                _logger.LogError( "ProtectedLocalStorageTokenService: failed to read debug token from localStorage", jsEx);
+                _logger.LogWarning($"ProtectedLocalStorageTokenService: failed to read debug token from localStorage. {jsEx.Message}");
             }
 
             return null;
         }
+        catch (JSDisconnectedException jsDisc)
+        {
+            _logger.LogDebug($"ProtectedLocalStorageTokenService: JS disconnected while accessing protected storage; returning cached token if available. {jsDisc.Message}");
+            return _cachedToken ?? _globalCachedToken;
+        }
         catch (Exception ex)
         {
-            _logger.LogError("ProtectedLocalStorageTokenService: failed to get token from protected storage", ex);
+            _logger.LogWarning($"ProtectedLocalStorageTokenService: failed to get token from protected storage. {ex.Message}");
             // As a last resort, try reading debug key from localStorage
             try
             {
-                var debugToken = await _js.InvokeAsync<string>("localStorage.getItem", DebugKey);
-                if (!string.IsNullOrEmpty(debugToken))
+                if (_js != null)
                 {
-                    _logger.LogError("ProtectedLocalStorageTokenService: recovered debug token from localStorage after exception");
-                    _cachedToken = debugToken;
-                    _globalCachedToken = debugToken;
-                    return debugToken;
+                    var debugToken = await _js.InvokeAsync<string>("localStorage.getItem", DebugKey);
+                    if (!string.IsNullOrEmpty(debugToken))
+                    {
+                        _logger.LogWarning("ProtectedLocalStorageTokenService: recovered debug token from localStorage after exception");
+                        _cachedToken = debugToken;
+                        _globalCachedToken = debugToken;
+                        return debugToken;
+                    }
                 }
             }
             catch { }
 
-            return null;
+            return _cachedToken ?? _globalCachedToken;
         }
     }
 
@@ -146,15 +191,22 @@ public class ProtectedLocalStorageTokenService : ITokenService
             await _protectedLocalStorage.DeleteAsync(TokenKey);
             _logger.LogInformation("ProtectedLocalStorageTokenService: token removed");
         }
+        catch (JSDisconnectedException jsDisc)
+        {
+            _logger.LogDebug($"ProtectedLocalStorageTokenService: JS disconnected while deleting protected storage token; cleared caches. {jsDisc.Message}");
+        }
         catch (Exception ex)
         {
-            _logger.LogError("ProtectedLocalStorageTokenService: failed to remove token from protected storage", ex);
+            _logger.LogWarning($"ProtectedLocalStorageTokenService: failed to remove token from protected storage. {ex.Message}");
         }
 
         try
         {
-            await _js.InvokeVoidAsync("localStorage.removeItem", DebugKey);
-            _logger.LogInformation("ProtectedLocalStorageTokenService: debug token removed from localStorage");
+            if (_js != null)
+            {
+                await _js.InvokeVoidAsync("localStorage.removeItem", DebugKey);
+                _logger.LogInformation("ProtectedLocalStorageTokenService: debug token removed from localStorage");
+            }
         }
         catch { }
     }
