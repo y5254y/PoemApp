@@ -37,7 +37,9 @@ public class PoemService : IPoemService
                 Background = p.Background ?? string.Empty,
                 Translation = p.Translation ?? string.Empty,
                 Annotation = p.Annotation ?? string.Empty,
-                Categories = p.Categories.Select(pc => pc.Category.Name).ToList()
+                Appreciation = p.Appreciation ?? string.Empty,
+                Categories = p.Categories.Select(pc => pc.Category.Name).ToList(),
+                CategoryIds = p.Categories.Select(pc => pc.CategoryId).ToList()
             })
             .ToListAsync();
     }
@@ -65,7 +67,9 @@ public class PoemService : IPoemService
             Background = poem.Background ?? string.Empty,
             Translation = poem.Translation ?? string.Empty,
             Annotation = poem.Annotation ?? string.Empty,
-            Categories = poem.Categories.Select(pc => pc.Category.Name).ToList()
+            Appreciation = poem.Appreciation ?? string.Empty,
+            Categories = poem.Categories.Select(pc => pc.Category.Name).ToList(),
+            CategoryIds = poem.Categories.Select(pc => pc.CategoryId).ToList()
         };
     }
 
@@ -89,7 +93,9 @@ public class PoemService : IPoemService
                 Background = p.Background ?? string.Empty,
                 Translation = p.Translation ?? string.Empty,
                 Annotation = p.Annotation ?? string.Empty,
-                Categories = p.Categories.Select(pc => pc.Category.Name).ToList()
+                Appreciation = p.Appreciation ?? string.Empty,
+                Categories = p.Categories.Select(pc => pc.Category.Name).ToList(),
+                CategoryIds = p.Categories.Select(pc => pc.CategoryId).ToList()
             })
             .ToListAsync();
     }
@@ -114,7 +120,9 @@ public class PoemService : IPoemService
                 Background = p.Background ?? string.Empty,
                 Translation = p.Translation ?? string.Empty,
                 Annotation = p.Annotation ?? string.Empty,
-                Categories = p.Categories.Select(pc => pc.Category.Name).ToList()
+                Appreciation = p.Appreciation ?? string.Empty,
+                Categories = p.Categories.Select(pc => pc.Category.Name).ToList(),
+                CategoryIds = p.Categories.Select(pc => pc.CategoryId).ToList()
             })
             .ToListAsync();
     }
@@ -137,6 +145,7 @@ public class PoemService : IPoemService
             Background = poemDto.Background,
             Translation = poemDto.Translation,
             Annotation = poemDto.Annotation,
+            Appreciation = poemDto.Appreciation,
             Categories = new List<PoemCategory>()
         };
 
@@ -179,6 +188,7 @@ public class PoemService : IPoemService
         poem.Background = poemDto.Background;
         poem.Translation = poemDto.Translation;
         poem.Annotation = poemDto.Annotation;
+        poem.Appreciation = poemDto.Appreciation;
 
         // Update categories
         poem.Categories.Clear();

@@ -2,9 +2,8 @@
 using PoemApp.Infrastructure.Data;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
-using PoemApp.Core.Enums;
-using PoemApp.Core.Extensions;
 using PoemApp.Core.Interfaces;
+using PoemApp.Core.Extensions; // for GetDisplayName on enums used in PoemDto mapping
 
 namespace PoemApp.Infrastructure.Services;
 
@@ -26,9 +25,10 @@ public class CategoryService : ICategoryService
             .Select(c => new CategoryDto
             {
                 Id = c.Id,
-                Type = c.Type,
                 Name = c.Name,
                 Description = c.Description,
+                Group = c.Group,
+                ParentId = c.ParentId,
                 Poems = c.Poems.Select(pc => new PoemDto
                 {
                     Id = pc.Poem.Id,
@@ -40,7 +40,8 @@ public class CategoryService : ICategoryService
                     DynastyDisplayName = pc.Poem.Author.Dynasty.GetDisplayName(),
                     Background = pc.Poem.Background ?? string.Empty,
                     Translation = pc.Poem.Translation ?? string.Empty,
-                    Annotation = pc.Poem.Annotation ?? string.Empty
+                    Annotation = pc.Poem.Annotation ?? string.Empty,
+                    Appreciation = pc.Poem.Appreciation ?? string.Empty
                 }).ToList()
             })
             .ToListAsync();
@@ -59,9 +60,10 @@ public class CategoryService : ICategoryService
         return new CategoryDto
         {
             Id = category.Id,
-            Type = category.Type,
             Name = category.Name,
             Description = category.Description,
+            Group = category.Group,
+            ParentId = category.ParentId,
             Poems = category.Poems.Select(pc => new PoemDto
             {
                 Id = pc.Poem.Id,
@@ -73,66 +75,21 @@ public class CategoryService : ICategoryService
                 DynastyDisplayName = pc.Poem.Author.Dynasty.GetDisplayName(),
                 Background = pc.Poem.Background ?? string.Empty,
                 Translation = pc.Poem.Translation ?? string.Empty,
-                Annotation = pc.Poem.Annotation ?? string.Empty
-            }).ToList()
-        };
-    }
-
-    public async Task<CategoryDto?> GetCategoryByTypeAsync(CategoryTypeEnum type)
-    {
-        var category = await _context.Categories
-            .Include(c => c.Poems)
-                .ThenInclude(pc => pc.Poem)
-                    .ThenInclude(p => p.Author)
-            .FirstOrDefaultAsync(c => c.Type == type);
-
-        if (category == null) return null;
-
-        return new CategoryDto
-        {
-            Id = category.Id,
-            Type = category.Type,
-            Name = category.Name,
-            Description = category.Description,
-            Poems = category.Poems.Select(pc => new PoemDto
-            {
-                Id = pc.Poem.Id,
-                Title = pc.Poem.Title,
-                Content = pc.Poem.Content,
-                AuthorId = pc.Poem.AuthorId,
-                AuthorName = pc.Poem.Author.Name,
-                Dynasty = pc.Poem.Author.Dynasty,
-                DynastyDisplayName = pc.Poem.Author.Dynasty.GetDisplayName(),
-                Background = pc.Poem.Background ?? string.Empty,
-                Translation = pc.Poem.Translation ?? string.Empty,
-                Annotation = pc.Poem.Annotation ?? string.Empty
+                Annotation = pc.Poem.Annotation ?? string.Empty,
+                Appreciation = pc.Poem.Appreciation ?? string.Empty
             }).ToList()
         };
     }
 
     public async Task<CategoryDto> AddCategoryAsync(CreateCategoryDto categoryDto)
     {
-        // Check if category with same type already exists
-        var existingCategory = await _context.Categories
-            .FirstOrDefaultAsync(c => c.Type == categoryDto.Type);
-
-        if (existingCategory != null)
-        {
-            throw new ArgumentException($"Category with type {categoryDto.Type} already exists");
-        }
-
         var category = new Category
         {
-            Type = categoryDto.Type,
-            Description = categoryDto.Description
+            Name = categoryDto.Name,
+            Description = categoryDto.Description,
+            Group = categoryDto.Group,
+            ParentId = categoryDto.ParentId
         };
-
-        // If Category has a writable Name property, populate it from enum display name
-        var nameProp = typeof(Category).GetProperty("Name");
-        if (nameProp != null && nameProp.CanWrite)
-        {
-            nameProp.SetValue(category, categoryDto.Type.GetDisplayName());
-        }
 
         _context.Categories.Add(category);
         await _context.SaveChangesAsync();
@@ -148,24 +105,10 @@ public class CategoryService : ICategoryService
             throw new ArgumentException("Category not found");
         }
 
-        // Check if another category with the same type exists (excluding current category)
-        var existingCategory = await _context.Categories
-            .FirstOrDefaultAsync(c => c.Type == categoryDto.Type && c.Id != id);
-
-        if (existingCategory != null)
-        {
-            throw new ArgumentException($"Another category with type {categoryDto.Type} already exists");
-        }
-
-        category.Type = categoryDto.Type;
+        category.Name = categoryDto.Name;
         category.Description = categoryDto.Description;
-
-        // Update Name if writable
-        var nameProp = typeof(Category).GetProperty("Name");
-        if (nameProp != null && nameProp.CanWrite)
-        {
-            nameProp.SetValue(category, categoryDto.Type.GetDisplayName());
-        }
+        category.Group = categoryDto.Group;
+        category.ParentId = categoryDto.ParentId;
 
         _context.Categories.Update(category);
         await _context.SaveChangesAsync();

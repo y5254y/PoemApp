@@ -1,5 +1,6 @@
 @page "/users/edit/{Id:int}"
 @attribute [Authorize(Roles = "Admin")]
+@using MudBlazor
 @using PoemApp.Admin.Services
 @using PoemApp.Core.DTOs
 @using PoemApp.Core.Enums
@@ -7,13 +8,20 @@
 @inject UsersApiClient UsersClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
+@inject IDialogService DialogService
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:800px">
     <MudText Typo="Typo.h5">用户编辑</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
         <MudTextField @bind-Value="_model.Username" Label="用户名" Required="true" />
+        <MudTextField @bind-Value="_model.WeChatId" Label="微信ID" />
+        <MudTextField @bind-Value="_model.QQId" Label="QQ ID" />
         <MudTextField @bind-Value="_model.Phone" Label="手机号" />
+
         <MudSelect T="UserRole?" Label="角色" @bind-Value="_model.Role">
             @foreach (UserRole r in Enum.GetValues(typeof(UserRole)))
             {
@@ -21,8 +29,36 @@
             }
         </MudSelect>
 
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
-        <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        <MudGrid Class="mt-3">
+            <MudItem xs="12" sm="6">
+                <MudDatePicker @bind-Date="_vipStart" Label="VIP 开始" />
+            </MudItem>
+            <MudItem xs="12" sm="6">
+                <MudDatePicker @bind-Date="_vipEnd" Label="VIP 结束" />
+            </MudItem>
+        </MudGrid>
+
+        <div class="mt-2">
+            <MudButton Variant="Variant.Outlined" OnClick="TogglePasswordFields">@(_showPasswordFields ? "取消修改密码" : "设置/更改密码")</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="OpenResetPasswordDialog" Disabled="@(Id==0)">重置密码</MudButton>
+        </div>
+
+        @if (_showPasswordFields)
+        {
+            <MudTextField @bind-Value="_model.Password" Label="密码" InputType="InputType.Password" Required="@(Id==0)" />
+            <MudTextField @bind-Value="_model.ConfirmPassword" Label="确认密码" InputType="InputType.Password" Required="@(Id==0)" />
+        }
+
+        <MudTextField Value="@_points.ToString()" Label="积分" Disabled="true" />
+
+        <MudText Typo="Typo.caption">创建时间: @(_createdAt?.ToLocalTime().ToString("yyyy-MM-dd HH:mm") ?? "-")</MudText>
+
+        <div class="mt-3">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
+            <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="SetVip">设置 VIP</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="RemoveVip">移除 VIP</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        </div>
     </EditForm>
 </MudPaper>
 
@@ -30,6 +66,11 @@
     [Parameter] public int Id { get; set; }
 
     private UpdateUserDto _model = new();
+    private DateTime? _vipStart;
+    private DateTime? _vipEnd;
+    private DateTime? _createdAt;
+    private int _points = 0;
+    private bool _showPasswordFields = false;
 
     protected override async Task OnInitializedAsync()
     {
@@ -38,7 +79,44 @@
             var dto = await UsersClient.GetByIdAsync(Id);
             if (dto != null)
             {
-                _model = new UpdateUserDto { Username = dto.Username, Phone = dto.Phone, Role = dto.Role };
+                _model = new UpdateUserDto { Username = dto.Username, Phone = dto.Phone, Role = dto.Role, WeChatId = dto.WeChatId, QQId = dto.QQId };
+                _vipStart = dto.VipStartDate;
+                _vipEnd = dto.VipEndDate;
+                _createdAt = dto.CreatedAt;
+                _points = dto.Points;
+            }
+        }
+    }
+
+    private void TogglePasswordFields()
+    {
+        _showPasswordFields = !_showPasswordFields;
+        if (!_showPasswordFields)
+        {
+            _model.Password = null;
+            _model.ConfirmPassword = null;
+        }
+    }
+
+    private async Task OpenResetPasswordDialog()
+    {
+        var parameters = new DialogParameters { ["UserId"] = Id };
+        var options = new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small };
+        // 将同步的 Show<TComponent> 替换为异步的 ShowAsync<TComponent>，并等待其结果
+        var dialog = await DialogService.ShowAsync<ResetPasswordDialog>("重置密码", parameters, options);
+        var result = await dialog.Result;
+        var data = result?.Data?.ToString();
+        if (!string.IsNullOrEmpty(data))
+        {
+            try
+            {
+                var ok = await UsersClient.ChangePasswordAsync(Id, new ChangePasswordDto { NewPassword = data });
+                if (ok) Snackbar.Add("重置密码成功", Severity.Success);
+                else Snackbar.Add("重置密码失败", Severity.Error);
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("重置密码失败: " + ex.Message, Severity.Error);
             }
         }
     }
@@ -47,9 +125,26 @@
     {
         try
         {
+            // If creating, password is required
+            if (Id == 0 && string.IsNullOrEmpty(_model.Password))
+            {
+                Snackbar.Add("创建用户时必须提供密码", Severity.Warning);
+                return;
+            }
+
             if (Id == 0)
             {
-                var res = await UsersClient.CreateAsync(new CreateUserDto { Username = _model.Username ?? string.Empty, Phone = _model.Phone, Role = _model.Role ?? UserRole.Normal });
+                var createDto = new CreateUserDto
+                {
+                    Username = _model.Username ?? string.Empty,
+                    Phone = _model.Phone,
+                    Role = _model.Role ?? UserRole.Normal,
+                    WeChatId = _model.WeChatId,
+                    QQId = _model.QQId,
+                    Password = _model.Password ?? string.Empty
+                };
+
+                var res = await UsersClient.CreateAsync(createDto);
                 if (res != null)
                 {
                     Snackbar.Add("创建成功", Severity.Success);
@@ -65,18 +160,61 @@
                 var res = await UsersClient.UpdateAsync(Id, _model);
                 if (res != null)
                 {
-                    Snackbar.Add("更新成功", Severity.Success);
+                    Snackbar.Add("保存成功", Severity.Success);
                     Navigation.NavigateTo("/users");
                 }
                 else
                 {
-                    Snackbar.Add("更新失败", Severity.Error);
+                    Snackbar.Add("保存失败", Severity.Error);
                 }
             }
         }
         catch (Exception ex)
         {
             Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task SetVip()
+    {
+        if (Id == 0) return;
+        if (!_vipStart.HasValue || !_vipEnd.HasValue)
+        {
+            Snackbar.Add("请填写 VIP 开始和结束日期", Severity.Warning);
+            return;
+        }
+
+        try
+        {
+            var ok = await UsersClient.UpdateVipAsync(Id, new UpdateVipStatusDto { VipStartDate = _vipStart.Value, VipEndDate = _vipEnd.Value });
+            if (ok) Snackbar.Add("设置 VIP 成功", Severity.Success);
+            else Snackbar.Add("设置 VIP 失败", Severity.Error);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("设置 VIP 失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task RemoveVip()
+    {
+        if (Id == 0) return;
+        try
+        {
+            var ok = await UsersClient.RemoveVipAsync(Id);
+            if (ok)
+            {
+                _vipStart = null; _vipEnd = null;
+                Snackbar.Add("移除 VIP 成功", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("移除 VIP 失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("移除 VIP 失败: " + ex.Message, Severity.Error);
         }
     }
 

@@ -86,7 +86,8 @@ public class AuthorService : IAuthorService
             .Include(a => a.Poems)
             .FirstOrDefaultAsync(a => a.Id == id);
 
-        if (author == null) return null;
+        if (author == null)
+            throw new ArgumentException("Author not found");
 
         return new AuthorDto
         {
@@ -200,6 +201,11 @@ public class AuthorService : IAuthorService
             .Include(r => r.FromAuthor)
             .Include(r => r.ToAuthor)
             .FirstOrDefaultAsync(r => r.Id == relationship.Id);
+
+        if (createdRelationship == null)
+        {
+            throw new InvalidOperationException("Created relationship not found.");
+        }
 
         return new AuthorRelationshipDto
         {

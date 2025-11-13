@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Interfaces;
-using PoemApp.Core.Enums;
 using Microsoft.AspNetCore.Authorization;
 
 namespace PoemApp.API.Controllers;
@@ -31,18 +30,6 @@ public class CategoriesController : ControllerBase
     public async Task<ActionResult<CategoryDto>> GetCategory(int id)
     {
         var category = await _categoryService.GetCategoryByIdAsync(id);
-        if (category == null)
-        {
-            return NotFound();
-        }
-        return Ok(category);
-    }
-
-    [HttpGet("type/{type}")]
-    [AllowAnonymous]
-    public async Task<ActionResult<CategoryDto>> GetCategoryByType(CategoryTypeEnum type)
-    {
-        var category = await _categoryService.GetCategoryByTypeAsync(type);
         if (category == null)
         {
             return NotFound();

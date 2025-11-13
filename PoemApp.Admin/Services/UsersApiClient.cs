@@ -1,6 +1,7 @@
 using System.Net.Http.Json;
 using PoemApp.Core.DTOs;
 using Microsoft.Extensions.Logging;
+using PoemApp.Core.Enums;
 
 namespace PoemApp.Admin.Services;
 
@@ -15,12 +16,19 @@ public class UsersApiClient
         _logger = logger;
     }
 
-    public async Task<List<UserDto>> GetAllAsync()
+    public async Task<PagedResult<UserDto>> GetAllAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null)
     {
-        _logger.LogInformation("UsersApiClient.GetAllAsync: calling GET api/users");
-        var list = await _http.GetFromJsonAsync<List<UserDto>>("api/users") ?? new List<UserDto>();
-        _logger.LogInformation("UsersApiClient.GetAllAsync: returned {Count} users", list.Count);
-        return list;
+        var query = new List<string>();
+        if (page > 1) query.Add($"page={page}");
+        if (pageSize != 20) query.Add($"pageSize={pageSize}");
+        if (!string.IsNullOrEmpty(search)) query.Add($"search={Uri.EscapeDataString(search)}");
+        if (role.HasValue) query.Add($"role={role.Value}");
+        if (isVip.HasValue) query.Add($"isVip={isVip.Value}");
+
+        var url = "api/users" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty);
+        _logger.LogInformation("UsersApiClient.GetAllAsync: calling GET {Url}", url);
+        var result = await _http.GetFromJsonAsync<PagedResult<UserDto>>(url);
+        return result ?? new PagedResult<UserDto>();
     }
 
     public async Task<UserDetailDto?> GetByIdAsync(int id)
@@ -52,6 +60,30 @@ public class UsersApiClient
         _logger.LogInformation("UsersApiClient.DeleteAsync: DELETE api/users/{Id}", id);
         var resp = await _http.DeleteAsync($"api/users/{id}");
         _logger.LogInformation("DeleteAsync: response {Status}", resp.StatusCode);
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> UpdateVipAsync(int userId, UpdateVipStatusDto dto)
+    {
+        _logger.LogInformation("UsersApiClient.UpdateVipAsync: PUT api/users/{UserId}/vip", userId);
+        var resp = await _http.PutAsJsonAsync($"api/users/{userId}/vip", dto);
+        _logger.LogInformation("UpdateVipAsync: response {Status}", resp.StatusCode);
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> RemoveVipAsync(int userId)
+    {
+        _logger.LogInformation("UsersApiClient.RemoveVipAsync: DELETE api/users/{UserId}/vip", userId);
+        var resp = await _http.DeleteAsync($"api/users/{userId}/vip");
+        _logger.LogInformation("RemoveVipAsync: response {Status}", resp.StatusCode);
+        return resp.IsSuccessStatusCode;
+    }
+
+    public async Task<bool> ChangePasswordAsync(int userId, ChangePasswordDto dto)
+    {
+        _logger.LogInformation("UsersApiClient.ChangePasswordAsync: POST api/users/{UserId}/change-password", userId);
+        var resp = await _http.PostAsJsonAsync($"api/users/{userId}/change-password", dto);
+        _logger.LogInformation("ChangePasswordAsync: response {Status}", resp.StatusCode);
         return resp.IsSuccessStatusCode;
     }
 }

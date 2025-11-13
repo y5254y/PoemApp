@@ -21,7 +21,11 @@ public static class EnumExtensions
             if (Attribute.GetCustomAttribute(field, typeof(DisplayAttribute)) is DisplayAttribute attribute)
             {
                 if (attribute.Name == displayName)
-                    return (T)field.GetValue(null);
+                {
+                    object? value = field.GetValue(null);
+                    if (value is T enumValue)
+                        return enumValue;
+                }
             }
         }
 

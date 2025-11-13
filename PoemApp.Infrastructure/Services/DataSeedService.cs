@@ -138,9 +138,9 @@ public class DataSeedService : IDataSeedService
 
         var categories = new List<Category>
         {
-            new Category { Type = CategoryTypeEnum.PrimarySchool, Description = "小学" },
-            new Category { Type = CategoryTypeEnum.MiddleSchool, Description = "中学" },
-            new Category { Type = CategoryTypeEnum.HighSchool, Description = "大学" }
+            new Category { Name = "小学", Description = "小学分类" },
+            new Category { Name = "中学", Description = "中学分类" },
+            new Category { Name = "大学", Description = "大学分类" }
         };
 
         _context.Categories.AddRange(categories);

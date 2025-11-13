@@ -2,7 +2,6 @@
 @attribute [Authorize]
 @using PoemApp.Admin.Services
 @using PoemApp.Core.DTOs
-@using PoemApp.Core.Enums
 @using PoemApp.Core.Extensions
 @inject CategoriesApiClient CategoriesClient
 @inject NavigationManager Navigation
@@ -13,13 +12,11 @@
     <MudText Typo="Typo.h5">分类编辑</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid">
-        <MudSelect T="CategoryTypeEnum" Label="类型" @bind-Value="_model.Type" Required="true">
-            @foreach (CategoryTypeEnum t in Enum.GetValues(typeof(CategoryTypeEnum)))
-            {
-                <MudSelectItem T="CategoryTypeEnum" Value="@t">@t.GetDisplayName()</MudSelectItem>
-            }
-        </MudSelect>
-        <MudTextField @bind-Value="_model.Description" Label="描述" />
+        <MudTextField @bind-Value="_model.Name" Label="名称" Required="true" />
+        <MudTextField @bind-Value="_model.Group" Label="分组" />
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">描述</MudText>
+        <QuillEditor @ref="_descriptionEditor" InitialContent="@(_model.Description ?? string.Empty)" />
 
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
         <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
@@ -30,6 +27,7 @@
     [Parameter] public int Id { get; set; }
 
     private CreateCategoryDto _model = new();
+    private QuillEditor? _descriptionEditor;
 
     protected override async Task OnInitializedAsync()
     {
@@ -38,15 +36,20 @@
             var dto = await CategoriesClient.GetByIdAsync(Id);
             if (dto != null)
             {
-                _model = new CreateCategoryDto { Type = dto.Type, Description = dto.Description };
+                _model = new CreateCategoryDto { Name = dto.Name, Description = dto.Description, Group = dto.Group, ParentId = dto.ParentId };
             }
         }
     }
 
     private async Task HandleValid()
     {
-        // Debug: log that handler executed
-        await JS.InvokeVoidAsync("console.log", $"HandleValid called. Id={Id}, Type={_model.Type}, Desc={_model.Description}");
+        // ensure description updated from editor
+        if (_descriptionEditor != null)
+        {
+            _model.Description = await _descriptionEditor.GetHtmlAsync();
+        }
+
+        await JS.InvokeVoidAsync("console.log", $"HandleValid called. Id={Id}, Name={_model.Name}, DescLength={(_model.Description?.Length ?? 0)}");
         Snackbar.Add($"准备保存分类(Id={Id})...", Severity.Info);
 
         try
@@ -54,7 +57,6 @@
             if (Id == 0)
             {
                 var res = await CategoriesClient.CreateAsync(_model);
-                await JS.InvokeVoidAsync("console.log", $"CreateAsync returned: {res != null}");
                 if (res != null)
                 {
                     Snackbar.Add("创建成功", Severity.Success);
@@ -67,8 +69,7 @@
             }
             else
             {
-                var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Type = _model.Type, Description = _model.Description });
-                await JS.InvokeVoidAsync("console.log", $"UpdateAsync returned: {ok}");
+                var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Name = _model.Name, Description = _model.Description, Group = _model.Group, ParentId = _model.ParentId });
                 if (ok)
                 {
                     Snackbar.Add("更新成功", Severity.Success);

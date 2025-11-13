@@ -21,7 +21,7 @@ namespace PoemApp.Core.Enums
         [Display(Name = "隋")]
         Sui,
 
-        [Display(Name = "隋唐")]
+        [Display(Name = "唐")]
         Tang,
 
         [Display(Name = "五代")]

@@ -1,5 +1,4 @@
-﻿
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace PoemApp.Core.Entities;
@@ -13,20 +12,20 @@ public class Poem
     public string Title { get; set; } = null!;
 
     [Required]
-    
     public string Content { get; set; } = null!;
 
     [Required]
     public int AuthorId { get; set; }
     public Author Author { get; set; } = null!;
 
-    
     public string? Background { get; set; } // 写作背景
 
     public string? Translation { get; set; } // 译文
 
-    
     public string? Annotation { get; set; } // 注释
+
+    // 作品鉴赏
+    public string? Appreciation { get; set; }
 
     // 分类目录
     public ICollection<PoemCategory> Categories { get; set; } = [];

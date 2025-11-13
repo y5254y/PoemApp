@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using PoemApp.Infrastructure.Data;
 
@@ -10,9 +11,11 @@ using PoemApp.Infrastructure.Data;
 namespace PoemApp.Infrastructure.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251113055746_AddAppreciationToPoem")]
+    partial class AddAppreciationToPoem
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.0");
@@ -176,20 +179,10 @@ namespace PoemApp.Infrastructure.Data.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Group")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ParentId")
+                    b.Property<int>("Type")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("ParentId");
 
                     b.ToTable("Categories");
                 });
@@ -421,15 +414,6 @@ namespace PoemApp.Infrastructure.Data.Migrations
                     b.Navigation("ToAuthor");
                 });
 
-            modelBuilder.Entity("PoemApp.Core.Entities.Category", b =>
-                {
-                    b.HasOne("PoemApp.Core.Entities.Category", "Parent")
-                        .WithMany("Children")
-                        .HasForeignKey("ParentId");
-
-                    b.Navigation("Parent");
-                });
-
             modelBuilder.Entity("PoemApp.Core.Entities.Poem", b =>
                 {
                     b.HasOne("PoemApp.Core.Entities.Author", "Author")
@@ -504,8 +488,6 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("PoemApp.Core.Entities.Category", b =>
                 {
-                    b.Navigation("Children");
-
                     b.Navigation("Poems");
                 });
 

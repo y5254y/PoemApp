@@ -16,19 +16,19 @@
         <ToolBarContent>
             <MudTextField @bind-Value="_search" Placeholder="搜索分类" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" />
             <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新建分类</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">创建分类</MudButton>
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh>类型</MudTh>
             <MudTh>名称</MudTh>
+            <MudTh>分组</MudTh>
             <MudTh>描述</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd>@context.Type.GetDisplayName()</MudTd>
             <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Group</MudTd>
             <MudTd>@context.Description</MudTd>
             <MudTd>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">编辑</MudButton>
@@ -73,11 +73,10 @@
     {
         try
         {
-            // Use MudBlazor built-in message box to avoid dialog instance issues
             var confirmed = await DialogService.ShowMessageBox(
                 "删除确认",
-                $"确定删除分类 {id} 吗？",
-                yesText: "确定",
+                $"确认删除分类 {id} 吗",
+                yesText: "确认",
                 noText: "取消",
                 options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small }
             );
@@ -97,7 +96,6 @@
     {
         try
         {
-            // debug notifications
             Snackbar.Add($"开始删除分类 {id}...", Severity.Info);
             await JS.InvokeVoidAsync("console.log", $"DoDelete called for {id}");
 
@@ -120,11 +118,5 @@
             Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
             await JS.InvokeVoidAsync("console.error", ex.Message);
         }
-    }
-
-    // simple js confirm
-    private async Task<bool> JsConfirm(string message)
-    {
-        return await JS.InvokeAsync<bool>("confirm", message);
     }
 }

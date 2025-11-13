@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Interfaces;
+using PoemApp.Core.Enums;
 
 namespace PoemApp.API.Controllers;
 
@@ -17,10 +18,10 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<UserDto>>> GetUsers()
+    public async Task<ActionResult<PagedResult<UserDto>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] UserRole? role = null, [FromQuery] bool? isVip = null)
     {
-        var users = await _userService.GetAllUsersAsync();
-        return Ok(users);
+        var result = await _userService.GetUsersAsync(page, pageSize, search, role, isVip);
+        return Ok(result);
     }
 
     [HttpGet("{id}")]
@@ -227,6 +228,20 @@ public class UsersController : ControllerBase
         {
             var audios = await _userService.GetUserUploadedAudiosAsync(userId);
             return Ok(audios);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{userId}/change-password")]
+    public async Task<IActionResult> ChangeUserPassword(int userId, ChangePasswordDto dto)
+    {
+        try
+        {
+            await _userService.UpdateUserPasswordAsync(userId, dto.NewPassword);
+            return NoContent();
         }
         catch (ArgumentException ex)
         {

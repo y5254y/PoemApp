@@ -19,4 +19,10 @@ public class UpdateUserDto
     public string? Phone { get; set; }
 
     public UserRole? Role { get; set; }
+
+    [StringLength(100, MinimumLength = 6)]
+    public string? Password { get; set; }
+
+    [Compare("Password", ErrorMessage = "密码与确认密码不一致")]
+    public string? ConfirmPassword { get; set; }
 }

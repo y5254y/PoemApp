@@ -1,36 +1,83 @@
 @page "/poems"
 @using PoemApp.Core.DTOs
-@inject HttpClient Http
+@using PoemApp.Admin.Services
 @using MudBlazor
+@inject PoemApiClient PoemClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4">
     <MudText Typo="Typo.h5">诗文管理</MudText>
+    <MudDivider Class="my-2" />
 
-    <MudTable Items="_poems" Hover="true" Bordered="true" Striped="true">
+    <MudTable T="PoemDto" ServerData="@(async (TableState s, CancellationToken ct) => await LoadServerData(s, ct))" Striped="true" Hover="true" Bordered="true">
+        <ToolBarContent>
+            <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="搜索标题/作者" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@( () => Navigation.NavigateTo("/poems/edit/0") )">新增诗文</MudButton>
+        </ToolBarContent>
+
         <HeaderContent>
-            <MudTh>Id</MudTh>
             <MudTh>标题</MudTh>
             <MudTh>作者</MudTh>
             <MudTh>朝代</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
+
         <RowTemplate>
-            <MudTd DataLabel="Id">@context.Id</MudTd>
             <MudTd>@context.Title</MudTd>
             <MudTd>@context.AuthorName</MudTd>
-            <MudTd>@context.Dynasty</MudTd>
+            <MudTd>@context.DynastyDisplayName</MudTd>
             <MudTd>
-                <MudButton Color="Color.Primary" Size="Size.Small" Variant="Variant.Text">编辑</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">编辑</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => Delete(context.Id)">删除</MudButton>
             </MudTd>
         </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 </MudPaper>
 
 @code {
-    private List<PoemDto> _poems = new();
+    private string _search = string.Empty;
 
-    protected override async Task OnInitializedAsync()
+    private async Task<TableData<PoemDto>> LoadServerData(TableState state, CancellationToken ct)
     {
-        _poems = await Http.GetFromJsonAsync<List<PoemDto>>("api/poems") ?? new();
+        try
+        {
+            // PoemApiClient currently only has GetAllAsync without paging. Use it and filter client-side until server paging added.
+            var list = await PoemClient.GetAllAsync();
+            var q = list.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var s = _search.Trim().ToLowerInvariant();
+                q = q.Where(p => (p.Title ?? string.Empty).ToLower().Contains(s) || (p.AuthorName ?? string.Empty).ToLower().Contains(s));
+            }
+
+            var items = q.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+            return new TableData<PoemDto> { TotalItems = q.Count(), Items = items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载诗文失败: " + ex.Message, Severity.Error);
+            return new TableData<PoemDto> { TotalItems = 0, Items = new List<PoemDto>() };
+        }
+    }
+
+    private Task OnSearchChanged(string value)
+    {
+        _search = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private void Edit(int id) => Navigation.NavigateTo($"/poems/edit/{id}");
+
+    private async Task Delete(int id)
+    {
+        var ok = await PoemClient.DeleteAsync(id);
+        if (ok) Snackbar.Add("删除成功", Severity.Success);
+        else Snackbar.Add("删除失败", Severity.Error);
     }
 }

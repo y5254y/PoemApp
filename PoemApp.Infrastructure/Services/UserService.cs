@@ -5,10 +5,13 @@ using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Core.Interfaces;
 using PoemApp.Core.Extensions;
+using PoemApp.Core.Enums;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace PoemApp.Infrastructure.Services;
 
-public class UserService : IUserService
+public partial class UserService : IUserService
 {
     private readonly AppDbContext _context;
 
@@ -51,7 +54,8 @@ public class UserService : IUserService
                 .ThenInclude(a => a.Poem)
             .FirstOrDefaultAsync(u => u.Id == id);
 
-        if (user == null) return null;
+        if (user == null)
+            throw new ArgumentException("user not found");
 
         return new UserDetailDto
         {
@@ -91,7 +95,7 @@ public class UserService : IUserService
                 Id = a.Id,
                 PoemId = a.PoemId,
                 PoemTitle = a.Poem.Title,
-                FileUrl = a.FileUrl,
+                FileUrl = a.FileUrl ?? string.Empty, // 修复 CS8601
                 UploaderId = a.UploaderId,
                 UploadTime = a.UploadTime,
                 AverageRating = a.AverageRating,
@@ -134,6 +138,14 @@ public class UserService : IUserService
             Points = 0
         };
 
+        // If password provided, create hash
+        if (!string.IsNullOrEmpty(userDto.Password))
+        {
+            CreatePasswordHash(userDto.Password, out var hash, out var salt);
+            user.PasswordHash = hash;
+            user.PasswordSalt = salt;
+        }
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
@@ -164,6 +176,14 @@ public class UserService : IUserService
         if (userDto.QQId != null) user.QQId = userDto.QQId;
         if (userDto.Phone != null) user.Phone = userDto.Phone;
         if (userDto.Role.HasValue) user.Role = userDto.Role.Value;
+
+        // 如果提供了密码，更新密码
+        if (!string.IsNullOrEmpty(userDto.Password))
+        {
+            CreatePasswordHash(userDto.Password, out var hash, out var salt);
+            user.PasswordHash = hash;
+            user.PasswordSalt = salt;
+        }
 
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
@@ -235,6 +255,11 @@ public class UserService : IUserService
             .Include(uf => uf.Poem)
                 .ThenInclude(p => p.Author)
             .FirstOrDefaultAsync(uf => uf.UserId == userId && uf.PoemId == favoriteDto.PoemId);
+
+        if (createdFavorite == null || createdFavorite.Poem == null || createdFavorite.Poem.Author == null)
+        {
+            throw new InvalidOperationException("Failed to retrieve created favorite with related data.");
+        }
 
         return new UserFavoriteDto
         {
@@ -394,11 +419,90 @@ public class UserService : IUserService
             Id = a.Id,
             PoemId = a.PoemId,
             PoemTitle = a.Poem.Title,
-            FileUrl = a.FileUrl,
+            FileUrl = a.FileUrl ?? string.Empty, // 修复 CS8601
             UploaderId = a.UploaderId,
             UploadTime = a.UploadTime,
             AverageRating = a.AverageRating,
             RatingCount = a.Ratings.Count
         }).ToList();
+    }
+
+    public async Task<PagedResult<UserDto>> GetUsersAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null)
+    {
+        var query = _context.Users.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLowerInvariant();
+            query = query.Where(u => u.Username.ToLower().Contains(s) || (u.Phone ?? string.Empty).ToLower().Contains(s) || (u.WeChatId ?? string.Empty).ToLower().Contains(s) || (u.QQId ?? string.Empty).ToLower().Contains(s));
+        }
+
+        if (role.HasValue)
+        {
+            query = query.Where(u => u.Role == role.Value);
+        }
+
+        if (isVip.HasValue)
+        {
+            if (isVip.Value)
+                query = query.Where(u => u.VipEndDate.HasValue && u.VipEndDate.Value > DateTime.UtcNow);
+            else
+                query = query.Where(u => !u.VipEndDate.HasValue || u.VipEndDate.Value <= DateTime.UtcNow);
+        }
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .OrderBy(u => u.Username)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(u => new UserDto
+            {
+                Id = u.Id,
+                Username = u.Username,
+                WeChatId = u.WeChatId,
+                QQId = u.QQId,
+                Phone = u.Phone,
+                CreatedAt = u.CreatedAt,
+                Role = u.Role,
+                RoleDisplayName = u.Role.GetDisplayName(),
+                VipStartDate = u.VipStartDate,
+                VipEndDate = u.VipEndDate,
+                IsVip = u.VipEndDate.HasValue && u.VipEndDate.Value > DateTime.UtcNow,
+                Points = u.Points
+            })
+            .ToListAsync();
+
+        return new PagedResult<UserDto>
+        {
+            Items = items,
+            Page = page,
+            PageSize = pageSize,
+            TotalCount = total
+        };
+    }
+
+    public async Task UpdateUserPasswordAsync(int userId, string newPassword)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) throw new ArgumentException("User not found");
+
+        if (string.IsNullOrWhiteSpace(newPassword) || newPassword.Length < 6)
+            throw new ArgumentException("Password must be at least 6 characters");
+
+        CreatePasswordHash(newPassword, out var hash, out var salt);
+        user.PasswordHash = hash;
+        user.PasswordSalt = salt;
+
+        _context.Users.Update(user);
+        await _context.SaveChangesAsync();
+    }
+
+    // Helper
+    private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
+    {
+        using var hmac = new HMACSHA512();
+        passwordSalt = hmac.Key;
+        passwordHash = hmac.ComputeHash(Encoding.UTF8.GetBytes(password));
     }
 }

@@ -20,4 +20,8 @@ public class CreateUserDto
     public string? Phone { get; set; }
 
     public UserRole Role { get; set; } = UserRole.Normal;
+
+    [Required]
+    [StringLength(100, MinimumLength = 6)]
+    public string Password { get; set; } = null!;
 }

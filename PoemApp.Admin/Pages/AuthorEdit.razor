@@ -4,7 +4,6 @@
 @using PoemApp.Core.DTOs
 @using PoemApp.Core.Enums
 @using PoemApp.Core.Extensions
-@using Blazored.TextEditor
 @inject AuthorsApiClient AuthorsClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -22,7 +21,9 @@
         </MudSelect>
 
         <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">传记（富文本）</MudText>
-        <MudTextField @bind-Value="_model.Biography" />
+        <div style="min-height:300px; border:1px solid var(--mud-palette-divider);">
+            <QuillEditor @ref="_quill" InitialContent="@_model.Biography" Placeholder="请输入作者传记..." />
+        </div>
 
         <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Class="mt-3">保存</MudButton>
         <MudButton Variant="Variant.Text" OnClick="Cancel" Class="mt-3">取消</MudButton>
@@ -32,6 +33,7 @@
 @code {
     [Parameter] public int Id { get; set; }
     private CreateAuthorDto _model = new();
+    private Shared.QuillEditor? _quill;
 
     protected override async Task OnInitializedAsync()
     {
@@ -54,7 +56,19 @@
     {
         try
         {
-            // ? _model.Biography 已自动同步，无需手动获取！
+            if (_quill != null)
+            {
+                try
+                {
+                    var html = await _quill.GetHtmlAsync();
+                    _model.Biography = html ?? string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Quill GetHtml failed: " + ex.Message);
+                }
+            }
+
             bool success;
             if (Id == 0)
             {

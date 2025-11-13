@@ -122,7 +122,7 @@ window.editorInterop = (function () {
         return document.body;
     }
 
-    async function initializeEditor(id, htmlContent, options) {
+    async function initializeEditor(id, htmlContent, options, dotNetRef) {
         // accept either an element or an id string
         // ensure Quill is loaded (if not yet, try to load it)
         if (!window.Quill) {
@@ -165,7 +165,7 @@ window.editorInterop = (function () {
             const parent = findBestParentForEditor();
             const newContainer = document.createElement('div');
             // determine an id to use
-            const assignedId = (typeof id === 'string' && id) ? id : ('quill-' + Math.random().toString(36).substr(2, 9));
+            const assignedId = (typeof id === 'string' && id) ? id : ('quill-' + Math.random().toString(36).slice(2, 11));
             newContainer.id = assignedId;
             newContainer.style.minHeight = '200px';
             newContainer.style.border = '1px dashed #ccc';
@@ -199,7 +199,7 @@ window.editorInterop = (function () {
             // attach custom image handler if image button exists
             const toolbar = quill.getModule('toolbar');
             if (toolbar && toolbar.container) {
-                toolbar.addHandler('image', function() { 
+                toolbar.addHandler('image', function() {
                     const input = document.createElement('input');
                     input.setAttribute('type', 'file');
                     input.setAttribute('accept', 'image/*');
@@ -221,6 +221,18 @@ window.editorInterop = (function () {
 
             instances[elementId] = quill;
             console.log('Quill editor instance created for', elementId);
+
+            // If a DotNet reference is provided, wire up change events to call back
+            if (dotNetRef && typeof dotNetRef.invokeMethodAsync === 'function') {
+                quill.on('text-change', function() {
+                    try {
+                        const html = quill.root.innerHTML;
+                        dotNetRef.invokeMethodAsync('NotifyContentChanged', html).catch(e => console.error('dotNet Invoke failed', e));
+                    } catch (e) {
+                        console.warn('Failed to invoke NotifyContentChanged:', e);
+                    }
+                });
+            }
         }
 
         if (htmlContent) {

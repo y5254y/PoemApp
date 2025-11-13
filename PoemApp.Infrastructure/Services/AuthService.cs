@@ -9,6 +9,8 @@ using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
+using PoemApp.Core.Extensions;
+using System.ComponentModel.DataAnnotations;
 
 namespace PoemApp.Infrastructure.Services;
 
@@ -80,6 +82,12 @@ public class AuthService : IAuthService
                 user = await _context.Users.FindAsync(newUser.Id);
             }
 
+            // 新增非空检查
+            if (user == null)
+            {
+                return new LoginResultDto { Success = false, Message = "用户创建失败" };
+            }
+
             var token = GenerateJwtToken(user);
             var userDto = await _userService.GetUserByIdAsync(user.Id);
 
@@ -126,6 +134,12 @@ public class AuthService : IAuthService
                 user = await _context.Users.FindAsync(newUser.Id);
             }
 
+            // 新增非空检查
+            if (user == null)
+            {
+                return new LoginResultDto { Success = false, Message = "用户创建失败" };
+            }
+
             var token = GenerateJwtToken(user);
             var userDto = await _userService.GetUserByIdAsync(user.Id);
 
@@ -167,6 +181,12 @@ public class AuthService : IAuthService
 
             var newUser = await _userService.CreateUserAsync(createUserDto);
             user = await _context.Users.FindAsync(newUser.Id);
+        }
+
+        // 新增非空检查
+        if (user == null)
+        {
+            return new LoginResultDto { Success = false, Message = "用户创建失败" };
         }
 
         var token = GenerateJwtToken(user);
@@ -286,6 +306,9 @@ public class AuthService : IAuthService
 
     private string GenerateJwtToken(User user)
     {
+        if (user == null)
+            throw new ArgumentNullException(nameof(user), "用户对象不能为 null");
+
         try
         {
             // 确保密钥长度足够（至少 64 字节/512 位）
@@ -296,9 +319,6 @@ public class AuthService : IAuthService
             {
                 // 使用一个足够长的默认密钥（开发环境）
                 jwtKey = "ThisIsAVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast64BytesLongToMeetHMACSHA512Requirements";
-
-                // 或者生成一个随机密钥
-                // jwtKey = GenerateRandomKey(64);
             }
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512);
@@ -308,10 +328,6 @@ public class AuthService : IAuthService
             new Claim(ClaimTypes.Name, user.Username),
             new Claim(ClaimTypes.Role, user.Role.ToString())
         };
-
-            //var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            //    _configuration.GetSection("Jwt:Key").Value));
-            //var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha512Signature);
 
             var tokenDescriptor = new SecurityTokenDescriptor
             {
@@ -478,7 +494,9 @@ public class AuthService : IAuthService
                     WeChatId = userEntity.WeChatId,
                     QQId = userEntity.QQId,
                     Phone = userEntity.Phone,
-                    Points = userEntity.Points
+                    Points = userEntity.Points,
+                    Role = userEntity.Role,
+                    RoleDisplayName = userEntity.Role.GetDisplayName()
                 };
             }
             return null;
@@ -526,7 +544,9 @@ public class AuthService : IAuthService
                 WeChatId = userEntity.WeChatId,
                 QQId = userEntity.QQId,
                 Phone = userEntity.Phone,
-                Points = userEntity.Points
+                Points = userEntity.Points,
+                Role = userEntity.Role,
+                RoleDisplayName = userEntity.Role.GetDisplayName()
             };
         }
         catch (Exception ex)
@@ -540,15 +560,15 @@ public class AuthService : IAuthService
 // 微信用户信息DTO
 public class WeChatUserInfo
 {
-    public string OpenId { get; set; }
-    public string Nickname { get; set; }
-    public string HeadImgUrl { get; set; }
+    public string OpenId { get; set; } = string.Empty;
+    public string Nickname { get; set; } = string.Empty;
+    public string HeadImgUrl { get; set; } = string.Empty;
 }
 
 // QQ用户信息DTO
 public class QQUserInfo
 {
-    public string OpenId { get; set; }
-    public string Nickname { get; set; }
-    public string HeadImgUrl { get; set; }
+    public string OpenId { get; set; } = string.Empty;
+    public string Nickname { get; set; } = string.Empty;
+    public string HeadImgUrl { get; set; } = string.Empty;
 }
