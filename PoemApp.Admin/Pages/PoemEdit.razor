@@ -82,7 +82,7 @@
     private List<CategoryDto> _categories = new();
 
     // selection wrapper so each checkbox binds to a concrete property
-    private record CategorySelection(int Id, string Name)
+    private record CategorySelection(int Id, string Name, int? ParentId)
     {
         public bool Checked { get; set; }
     }
@@ -95,7 +95,7 @@
         _categories = await CategoriesClient.GetAllAsync();
 
         // initialize selections from categories (unchecked by default)
-        _categorySelections = _categories.Select(c => new CategorySelection(c.Id, c.Name)).ToList();
+        _categorySelections = _categories.Select(c => new CategorySelection(c.Id, c.Name, c.ParentId)).ToList();
 
         if (Id != 0)
         {
@@ -133,6 +133,11 @@
                 _model.AuthorId = _authors.First().Id;
             }
         }
+    }
+
+    private void OnCategoryToggled(int categoryId, bool isChecked)
+    {
+        // kept for any side-effects; actual saving reads from _categorySelections
     }
 
     private void HandleInvalid(EditContext editContext)
@@ -266,6 +271,21 @@
             // sometimes checkbox returns "on" or "true"
             sel.Checked = s == "true" || s == "on";
         }
+
+        // if checked, ensure parent chain is also checked
+        if (sel.Checked && sel.ParentId.HasValue)
+        {
+            var parentId = sel.ParentId.Value;
+            while (true)
+            {
+                var parentSel = _categorySelections.FirstOrDefault(x => x.Id == parentId);
+                if (parentSel == null) break;
+                if (!parentSel.Checked) parentSel.Checked = true;
+                if (!parentSel.ParentId.HasValue) break;
+                parentId = parentSel.ParentId.Value;
+            }
+        }
+
         await InvokeAsync(StateHasChanged);
     }
 }

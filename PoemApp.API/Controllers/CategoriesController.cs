@@ -25,6 +25,14 @@ public class CategoriesController : ControllerBase
         return Ok(categories);
     }
 
+    [HttpGet("paged")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PagedResult<CategoryDto>>> GetCategoriesPaged([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null)
+    {
+        var result = await _categoryService.GetCategoriesPagedAsync(page, pageSize, search);
+        return Ok(result);
+    }
+
     [HttpGet("{id}")]
     [AllowAnonymous]
     public async Task<ActionResult<CategoryDto>> GetCategory(int id)

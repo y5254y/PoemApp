@@ -24,6 +24,19 @@ public class CategoriesApiClient
         return list;
     }
 
+    public async Task<PagedResult<CategoryDto>> GetPagedAsync(int page = 1, int pageSize = 20, string? search = null)
+    {
+        var q = System.Web.HttpUtility.ParseQueryString(string.Empty);
+        q["page"] = page.ToString();
+        q["pageSize"] = pageSize.ToString();
+        if (!string.IsNullOrWhiteSpace(search)) q["search"] = search;
+        var url = "api/categories/paged?" + q.ToString();
+        _logger.LogInformation("CategoriesApiClient.GetPagedAsync: GET {Url}", url);
+        var res = await _http.GetFromJsonAsync<PagedResult<CategoryDto>>(url) ?? new PagedResult<CategoryDto>();
+        _logger.LogInformation("CategoriesApiClient.GetPagedAsync: returned {Count}/{Total}", res.Items.Count, res.TotalCount);
+        return res;
+    }
+
     public async Task<CategoryDto?> GetByIdAsync(int id)
     {
         _logger.LogInformation("CategoriesApiClient.GetByIdAsync: GET api/categories/{Id}", id);

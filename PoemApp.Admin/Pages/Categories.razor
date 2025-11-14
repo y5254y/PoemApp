@@ -12,46 +12,49 @@
     <MudText Typo="Typo.h5">分类管理</MudText>
     <MudDivider Class="my-2" />
 
-    <MudTable Items="_categories" Striped="true" Hover="true">
-        <ToolBarContent>
-            <MudTextField @bind-Value="_search" Placeholder="搜索分类" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" />
-            <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">创建分类</MudButton>
-        </ToolBarContent>
+    <div class="d-flex mb-2">
+        <MudTextField @bind-Value="_search" Placeholder="搜索分类" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" />
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">创建分类</MudButton>
+    </div>
 
-        <HeaderContent>
-            <MudTh>名称</MudTh>
-            <MudTh>分组</MudTh>
-            <MudTh>描述</MudTh>
-            <MudTh></MudTh>
-        </HeaderContent>
+    <MudExpansionPanels>
+        @foreach (var root in _roots.OrderBy(r => r.Name))
+        {
+            <CategoryPanelMud Category="root" Children="GetChildren(root.Id)" OnEdit="Edit" OnDelete="ConfirmDelete" GetChildren="GetChildrenDelegate" />
+        }
+    </MudExpansionPanels>
 
-        <RowTemplate>
-            <MudTd>@context.Name</MudTd>
-            <MudTd>@context.Group</MudTd>
-            <MudTd>@context.Description</MudTd>
-            <MudTd>
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">编辑</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
-            </MudTd>
-        </RowTemplate>
-    </MudTable>
+    <div class="d-flex justify-center mt-3">
+        <MudButton Variant="Variant.Outlined" OnClick="PrevPage" Disabled="@(_page<=1)">上一页</MudButton>
+        <MudText Class="mx-2">第 @_page 页 / 共 @_totalPages 页</MudText>
+        <MudButton Variant="Variant.Outlined" OnClick="NextPage" Disabled="@(_page>=_totalPages)">下一页</MudButton>
+    </div>
 </MudPaper>
 
 @code {
     private List<CategoryDto> _categories = new();
     private string _search = string.Empty;
 
+    private List<CategoryDto> _roots = new();
+
+    private int _page = 1;
+    private int _pageSize = 20;
+    private int _totalPages = 1;
+
     protected override async Task OnInitializedAsync()
     {
-        await LoadAsync();
+        await LoadPagedAsync();
     }
 
-    private async Task LoadAsync()
+    private async Task LoadPagedAsync()
     {
         try
         {
-            _categories = await CategoriesClient.GetAllAsync();
+            var res = await CategoriesClient.GetPagedAsync(_page, _pageSize, _search);
+            _categories = res.Items;
+            _totalPages = (int)Math.Ceiling((double)res.TotalCount / _pageSize);
+            BuildRoots();
         }
         catch (Exception ex)
         {
@@ -59,64 +62,43 @@
         }
     }
 
-    private void OpenCreate()
+    private void BuildRoots()
     {
-        Navigation.NavigateTo("/categories/edit/0");
+        var lookup = _categories.ToDictionary(c => c.Id);
+        _roots.Clear();
+        foreach (var c in _categories)
+        {
+            if (c.ParentId.HasValue && lookup.ContainsKey(c.ParentId.Value)) continue;
+            _roots.Add(c);
+        }
     }
 
-    private void Edit(int id)
-    {
-        Navigation.NavigateTo($"/categories/edit/{id}");
-    }
+    private List<CategoryDto> GetChildren(int parentId) => _categories.Where(c => c.ParentId == parentId).OrderBy(c => c.Name).ToList();
+    private Func<int, List<CategoryDto>> GetChildrenDelegate => id => GetChildren(id);
+
+    private void OpenCreate() => Navigation.NavigateTo("/categories/edit/0");
+    private void Edit(int id) => Navigation.NavigateTo($"/categories/edit/{id}");
 
     private async Task ConfirmDelete(int id)
     {
-        try
-        {
-            var confirmed = await DialogService.ShowMessageBox(
-                "删除确认",
-                $"确认删除分类 {id} 吗",
-                yesText: "确认",
-                noText: "取消",
-                options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small }
-            );
-
-            if (confirmed == true)
-            {
-                await DoDelete(id);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
-        }
+        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确认删除分类 {id} 吗", yesText: "确认", noText: "取消");
+        if (confirmed == true) await DoDelete(id);
     }
 
     private async Task DoDelete(int id)
     {
-        try
-        {
-            Snackbar.Add($"开始删除分类 {id}...", Severity.Info);
-            await JS.InvokeVoidAsync("console.log", $"DoDelete called for {id}");
+        var ok = await CategoriesClient.DeleteAsync(id);
+        if (ok) { Snackbar.Add("删除成功", Severity.Success); await LoadPagedAsync(); }
+        else Snackbar.Add("删除失败", Severity.Error);
+    }
 
-            var ok = await CategoriesClient.DeleteAsync(id);
+    private async Task PrevPage()
+    {
+        if (_page > 1) { _page--; await LoadPagedAsync(); }
+    }
 
-            await JS.InvokeVoidAsync("console.log", $"Delete response ok={ok}");
-
-            if (ok)
-            {
-                Snackbar.Add("删除成功", Severity.Success);
-                await LoadAsync();
-            }
-            else
-            {
-                Snackbar.Add("删除失败", Severity.Error);
-            }
-        }
-        catch (Exception ex)
-        {
-            Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
-            await JS.InvokeVoidAsync("console.error", ex.Message);
-        }
+    private async Task NextPage()
+    {
+        if (_page < _totalPages) { _page++; await LoadPagedAsync(); }
     }
 }

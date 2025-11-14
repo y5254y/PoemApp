@@ -7,5 +7,6 @@ public class CategoryDto
     public string? Description { get; set; }
     public string? Group { get; set; }
     public int? ParentId { get; set; }
+    public string? ParentName { get; set; }
     public List<PoemDto> Poems { get; set; } = new List<PoemDto>();
 }

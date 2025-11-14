@@ -94,5 +94,23 @@ public class AppDbContext : DbContext
             .HasOne(pr => pr.User)
             .WithMany(u => u.PointsRecords)
             .HasForeignKey(pr => pr.UserId);
+
+        // Category self-reference (Parent/Children) and indexes for lookup/uniqueness
+        modelBuilder.Entity<Category>()
+            .HasOne(c => c.Parent)
+            .WithMany(p => p.Children)
+            .HasForeignKey(c => c.ParentId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Index on Name for fast lookup
+        modelBuilder.Entity<Category>()
+            .HasIndex(c => c.Name)
+            .HasDatabaseName("IX_Categories_Name");
+
+        // Composite unique index on (Group, Name) to prevent duplicates within the same group
+        modelBuilder.Entity<Category>()
+            .HasIndex(c => new { c.Group, c.Name })
+            .IsUnique()
+            .HasDatabaseName("UX_Categories_Group_Name");
     }
 }

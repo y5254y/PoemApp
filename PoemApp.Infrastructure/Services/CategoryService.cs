@@ -18,33 +18,36 @@ public class CategoryService : ICategoryService
 
     public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync()
     {
-        return await _context.Categories
+        var cats = await _context.Categories
             .Include(c => c.Poems)
                 .ThenInclude(pc => pc.Poem)
                     .ThenInclude(p => p.Author)
-            .Select(c => new CategoryDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Description = c.Description,
-                Group = c.Group,
-                ParentId = c.ParentId,
-                Poems = c.Poems.Select(pc => new PoemDto
-                {
-                    Id = pc.Poem.Id,
-                    Title = pc.Poem.Title,
-                    Content = pc.Poem.Content,
-                    AuthorId = pc.Poem.AuthorId,
-                    AuthorName = pc.Poem.Author.Name,
-                    Dynasty = pc.Poem.Author.Dynasty,
-                    DynastyDisplayName = pc.Poem.Author.Dynasty.GetDisplayName(),
-                    Background = pc.Poem.Background ?? string.Empty,
-                    Translation = pc.Poem.Translation ?? string.Empty,
-                    Annotation = pc.Poem.Annotation ?? string.Empty,
-                    Appreciation = pc.Poem.Appreciation ?? string.Empty
-                }).ToList()
-            })
+            .Include(c => c.Parent)
             .ToListAsync();
+
+        return cats.Select(c => new CategoryDto
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Description = c.Description,
+            Group = c.Group,
+            ParentId = c.ParentId,
+            ParentName = c.Parent?.Name,
+            Poems = c.Poems.Select(pc => new PoemDto
+            {
+                Id = pc.Poem.Id,
+                Title = pc.Poem.Title,
+                Content = pc.Poem.Content,
+                AuthorId = pc.Poem.AuthorId,
+                AuthorName = pc.Poem.Author.Name,
+                Dynasty = pc.Poem.Author.Dynasty,
+                DynastyDisplayName = pc.Poem.Author.Dynasty.GetDisplayName(),
+                Background = pc.Poem.Background ?? string.Empty,
+                Translation = pc.Poem.Translation ?? string.Empty,
+                Annotation = pc.Poem.Annotation ?? string.Empty,
+                Appreciation = pc.Poem.Appreciation ?? string.Empty
+            }).ToList()
+        }).ToList();
     }
 
     public async Task<CategoryDto?> GetCategoryByIdAsync(int id)
@@ -53,6 +56,7 @@ public class CategoryService : ICategoryService
             .Include(c => c.Poems)
                 .ThenInclude(pc => pc.Poem)
                     .ThenInclude(p => p.Author)
+            .Include(c => c.Parent)
             .FirstOrDefaultAsync(c => c.Id == id);
 
         if (category == null) return null;
@@ -64,6 +68,7 @@ public class CategoryService : ICategoryService
             Description = category.Description,
             Group = category.Group,
             ParentId = category.ParentId,
+            ParentName = category.Parent?.Name,
             Poems = category.Poems.Select(pc => new PoemDto
             {
                 Id = pc.Poem.Id,
@@ -79,6 +84,13 @@ public class CategoryService : ICategoryService
                 Appreciation = pc.Poem.Appreciation ?? string.Empty
             }).ToList()
         };
+    }
+
+    // helper to get all categories as DTO for selection UI
+    public async Task<List<CategoryDto>> GetAllCategoryOptionsAsync()
+    {
+        var cats = await _context.Categories.Include(c => c.Parent).ToListAsync();
+        return cats.Select(c => new CategoryDto { Id = c.Id, Name = c.Name, ParentId = c.ParentId, ParentName = c.Parent?.Name }).ToList();
     }
 
     public async Task<CategoryDto> AddCategoryAsync(CreateCategoryDto categoryDto)
@@ -103,6 +115,14 @@ public class CategoryService : ICategoryService
         if (category == null)
         {
             throw new ArgumentException("Category not found");
+        }
+
+        // validate parent is not itself or its descendant
+        if (categoryDto.ParentId.HasValue)
+        {
+            if (categoryDto.ParentId.Value == id) throw new ArgumentException("Category cannot be its own parent");
+            var descendants = await GetDescendantIdsAsync(id);
+            if (descendants.Contains(categoryDto.ParentId.Value)) throw new ArgumentException("Cannot set parent to a descendant category");
         }
 
         category.Name = categoryDto.Name;
@@ -177,5 +197,67 @@ public class CategoryService : ICategoryService
 
         _context.PoemCategories.Remove(poemCategory);
         await _context.SaveChangesAsync();
+    }
+
+    public async Task<PagedResult<CategoryDto>> GetCategoriesPagedAsync(int page, int pageSize, string? search = null)
+    {
+        if (page < 1) page = 1;
+        if (pageSize <= 0) pageSize = 20;
+
+        var query = _context.Categories.AsQueryable();
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim();
+            query = query.Where(c => c.Name.Contains(s) || (c.Group != null && c.Group.Contains(s)));
+        }
+
+        var total = await query.CountAsync();
+
+        var items = await query
+            .Include(c => c.Parent)
+            .OrderBy(c => c.Name)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .Select(c => new CategoryDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Description = c.Description,
+                Group = c.Group,
+                ParentId = c.ParentId,
+                ParentName = c.Parent != null ? c.Parent.Name : null,
+                Poems = c.Poems.Select(pc => new PoemDto
+                {
+                    Id = pc.Poem.Id,
+                    Title = pc.Poem.Title,
+                    Content = pc.Poem.Content,
+                    AuthorId = pc.Poem.AuthorId,
+                    AuthorName = pc.Poem.Author.Name,
+                    Dynasty = pc.Poem.Author.Dynasty,
+                    DynastyDisplayName = pc.Poem.Author.Dynasty.GetDisplayName(),
+                    Background = pc.Poem.Background ?? string.Empty,
+                    Translation = pc.Poem.Translation ?? string.Empty,
+                    Annotation = pc.Poem.Annotation ?? string.Empty,
+                    Appreciation = pc.Poem.Appreciation ?? string.Empty
+                }).ToList()
+            }).ToListAsync();
+
+        return new PagedResult<CategoryDto> { Items = items, TotalCount = total, Page = page, PageSize = pageSize };
+    }
+
+    // get all descendant ids for cycle check
+    private async Task<HashSet<int>> GetDescendantIdsAsync(int id)
+    {
+        var result = new HashSet<int>();
+        var children = await _context.Categories.Where(c => c.ParentId == id).Select(c => c.Id).ToListAsync();
+        foreach (var childId in children)
+        {
+            if (result.Add(childId))
+            {
+                var sub = await GetDescendantIdsAsync(childId);
+                foreach (var s in sub) result.Add(s);
+            }
+        }
+        return result;
     }
 }

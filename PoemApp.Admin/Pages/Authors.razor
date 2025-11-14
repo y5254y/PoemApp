@@ -13,17 +13,17 @@
     <MudText Typo="Typo.h5">作者管理</MudText>
     <MudDivider Class="my-2" />
 
-    <MudTable Items="@(_usedServerSearch ? _paged?.Items ?? new List<AuthorDto>() : FilteredAuthors)" Striped="true" Hover="true" ServerData="LoadServerData">
+    <MudTable @ref="_table" Items="@(_usedServerSearch ? _paged?.Items ?? new List<AuthorDto>() : FilteredAuthors)" Striped="true" Hover="true" ServerData="LoadServerData">
         <ToolBarContent>
-            <MudTextField @bind-Value="_search" Immediate="true" Placeholder="搜索作者（回车触发服务器搜索）" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
+            <MudTextField @bind-Value="_search" Immediate="true" Placeholder="搜索作者或简介" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
             <MudSpacer />
             <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新建作者</MudButton>
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh>姓名</MudTh>
+            <MudTh>名称</MudTh>
             <MudTh>朝代</MudTh>
-            <MudTh>传记</MudTh>
+            <MudTh>简介</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
 
@@ -45,6 +45,7 @@
 </MudPaper>
 
 @code {
+    private MudTable<AuthorDto>? _table;
     private List<AuthorDto> _authors = new();
     private PagedResult<AuthorDto>? _paged;
     private string _search = string.Empty;
@@ -107,7 +108,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("服务端加载失败: " + ex.Message, Severity.Error);
+            Snackbar.Add("服务器加载作者失败: " + ex.Message, Severity.Error);
             return new MudBlazor.TableData<AuthorDto>() { TotalItems = 0, Items = new List<AuthorDto>() };
         }
     }
@@ -129,7 +130,7 @@
 
     private async Task ConfirmDelete(int id)
     {
-        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确定删除作者 {id} 吗？", yesText: "确定", noText: "取消", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
+        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确认删除作者 {id} 吗", yesText: "确认", noText: "取消", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
         if (confirmed == true)
         {
             await DoDelete(id);
@@ -144,7 +145,14 @@
             if (ok)
             {
                 Snackbar.Add("删除成功", Severity.Success);
-                await LoadAsync();
+                if (_usedServerSearch && _table != null)
+                {
+                    await _table.ReloadServerData();
+                }
+                else
+                {
+                    await LoadAsync();
+                }
             }
             else
             {

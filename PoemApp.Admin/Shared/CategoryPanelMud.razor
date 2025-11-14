@@ -1,0 +1,36 @@
+@using PoemApp.Core.DTOs
+@using MudBlazor
+
+<MudExpansionPanel DisableGutters="true">
+    <TitleContent>
+        <div class="d-flex align-center" style="gap:8px; width:100%; justify-content:space-between;">
+            <div>@Category.Name</div>
+            <div>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(async () => await OnEdit.InvokeAsync(Category.Id))">±à¼­</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@(async () => await OnDelete.InvokeAsync(Category.Id))">É¾³ý</MudButton>
+            </div>
+        </div>
+    </TitleContent>
+
+    <ChildContent>
+        <div style="margin-bottom:8px; color:rgba(0,0,0,0.6);">·Ö×é: @(@Category.Group ?? "-") | ¸¸: @(@Category.ParentName ?? "-")</div>
+
+        @if (Children != null && Children.Any())
+        {
+            <MudExpansionPanels>
+                @foreach (var child in Children.OrderBy(c => c.Name))
+                {
+                    <CategoryPanelMud Category="child" Children="GetChildren(child.Id)" OnEdit="OnEdit" OnDelete="OnDelete" GetChildren="GetChildren" />
+                }
+            </MudExpansionPanels>
+        }
+    </ChildContent>
+</MudExpansionPanel>
+
+@code {
+    [Parameter] public CategoryDto Category { get; set; } = null!;
+    [Parameter] public List<CategoryDto>? Children { get; set; }
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+    [Parameter] public Func<int, List<CategoryDto>>? GetChildren { get; set; }
+}

@@ -16,7 +16,7 @@ public class Category
     // 可选：用于标识分类所属的“维度”或“组”，便于前端分组展示或过滤
     public string? Group { get; set; } // 如 "EducationLevel", "LiteraryForm", "Theme" 等
 
-    // 可选：支持树形结构（如需要）
+    // 
     public int? ParentId { get; set; }
     public Category? Parent { get; set; }
     public ICollection<Category> Children { get; set; } = new List<Category>();
