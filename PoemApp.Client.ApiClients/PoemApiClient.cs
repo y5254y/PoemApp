@@ -22,6 +22,11 @@ public class PoemApiClient
         return await _http.GetFromJsonAsync<PoemDto>($"api/poems/{id}");
     }
 
+    public async Task<List<PoemDto>> GetByAuthorAsync(int authorId)
+    {
+        return await _http.GetFromJsonAsync<List<PoemDto>>($"api/poems/author/{authorId}") ?? new List<PoemDto>();
+    }
+
     public async Task<PoemDto?> CreateAsync(CreatePoemDto dto)
     {
         var resp = await _http.PostAsJsonAsync("api/poems", dto);

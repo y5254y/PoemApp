@@ -1,4 +1,4 @@
-@page "/poem/{Id:int}"
+﻿@page "/poem/{Id:int}"
 @using MudBlazor
 @using PoemApp.Core.DTOs
 @using PoemApp.Core.Enums
@@ -11,7 +11,7 @@
 @inject ISnackbar Snackbar
 @inject IJSRuntime JS
 
-<PageTitle>@(poem?.Title ?? "Poem Detail") - PoemApp</PageTitle>
+<PageTitle>@(poem?.Title ?? "Poem Detail") - 古诗文赏析</PageTitle>
 
 @if (poem == null)
 {
@@ -40,30 +40,29 @@ else
 
         <!-- Poem Content -->
         <MudGrid>
-            <MudItem xs="12" lg="8">
+            <MudItem xs="12">
                 <MudPaper Class="pa-4" Elevation="2" Style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
-                    <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Primary">Original Text</MudText>
+                    <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Primary">正文</MudText>
                     <MudText Typo="Typo.body1" Style="line-height: 2; font-family: 'KaiTi', serif; font-size: 1.1rem;">
                         @((MarkupString)poem.Content)
                     </MudText>
                 </MudPaper>
 
-                @if (!string.IsNullOrEmpty(poem.Translation))
-                {
-                    <MudPaper Class="pa-4 mt-4" Elevation="2">
-                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Info">Modern Translation</MudText>
-                        <MudText Typo="Typo.body1" Style="line-height: 1.8;">
-                            @((MarkupString)poem.Translation)
-                        </MudText>
-                    </MudPaper>
-                }
-
                 @if (!string.IsNullOrEmpty(poem.Annotation))
                 {
                     <MudPaper Class="pa-4 mt-4" Elevation="2">
-                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Warning">Annotations</MudText>
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Warning">注释</MudText>
                         <MudText Typo="Typo.body1" Style="line-height: 1.8;">
                             @((MarkupString)poem.Annotation)
+                        </MudText>
+                    </MudPaper>
+                }
+                @if (!string.IsNullOrEmpty(poem.Translation))
+                {
+                    <MudPaper Class="pa-4 mt-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Info">译文</MudText>
+                        <MudText Typo="Typo.body1" Style="line-height: 1.8;">
+                            @((MarkupString)poem.Translation)
                         </MudText>
                     </MudPaper>
                 }
@@ -71,7 +70,7 @@ else
                 @if (!string.IsNullOrEmpty(poem.Background))
                 {
                     <MudPaper Class="pa-4 mt-4" Elevation="2">
-                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Success">Background</MudText>
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Success">写作背景</MudText>
                         <MudText Typo="Typo.body1" Style="line-height: 1.8;">
                             @((MarkupString)poem.Background)
                         </MudText>
@@ -81,7 +80,7 @@ else
                 @if (!string.IsNullOrEmpty(poem.Appreciation))
                 {
                     <MudPaper Class="pa-4 mt-4" Elevation="2">
-                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Secondary">Appreciation</MudText>
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Secondary">鉴赏</MudText>
                         <MudText Typo="Typo.body1" Style="line-height: 1.8;">
                             @((MarkupString)poem.Appreciation)
                         </MudText>
@@ -89,8 +88,8 @@ else
                 }
             </MudItem>
 
-            <!-- Sidebar -->
-            <MudItem xs="12" lg="4">
+            <!-- Author info and related works placed below main content -->
+            <MudItem xs="12">
                 <!-- Author Card -->
                 <MudCard Class="mb-4" Elevation="4">
                     <MudCardHeader>
@@ -100,8 +99,8 @@ else
                             </MudAvatar>
                         </CardHeaderAvatar>
                         <CardHeaderContent>
-                            <MudText Typo="Typo.h6">@author?.Name</MudText>
-                            <MudText Typo="Typo.body2" Color="Color.Secondary">@author?.Dynasty.GetDisplayName()</MudText>
+                            <MudText Typo="Typo.h6">作者： @author?.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">朝代： @author?.Dynasty.GetDisplayName()</MudText>
                         </CardHeaderContent>
                     </MudCardHeader>
                     <MudCardContent>
@@ -114,9 +113,11 @@ else
                         }
                     </MudCardContent>
                     <MudCardActions>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="() => ViewAuthor()">
-                            View Author
-                        </MudButton>
+                        <NavLink href="@($"/author/{author?.Id}")" style="text-decoration:none;width:100%;">
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true">
+                                查看作者
+                            </MudButton>
+                        </NavLink>
                     </MudCardActions>
                 </MudCard>
 
@@ -126,15 +127,17 @@ else
                     <MudCard Elevation="4">
                         <MudCardHeader>
                             <CardHeaderContent>
-                                <MudText Typo="Typo.h6">Other Works by Author</MudText>
+                                <MudText Typo="Typo.h6">作者其他作品</MudText>
                             </CardHeaderContent>
                         </MudCardHeader>
                         <MudCardContent Class="pa-0">
                             <MudList Clickable="true" T="PoemDto">
                                 @foreach (var relatedPoem in relatedPoems.Take(5))
                                 {
-                                    <MudListItem OnClick="() => ViewPoem(relatedPoem.Id)" T="PoemDto">
-                                        <MudText>@relatedPoem.Title</MudText>
+                                    <MudListItem>
+                                        <NavLink href="@($"/poem/{relatedPoem.Id}")" style="text-decoration:none;color:inherit;display:block;width:100%;">
+                                            <MudText Class="pa-2">@relatedPoem.Title</MudText>
+                                        </NavLink>
                                     </MudListItem>
                                 }
                             </MudList>
@@ -154,8 +157,9 @@ else
     private List<PoemDto>? relatedPoems;
     private List<BreadcrumbItem> _breadcrumbs = new();
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnParametersSetAsync()
     {
+        // Load or reload when route parameter changes (component reused by Blazor)
         await LoadPoemAsync();
     }
 
@@ -177,8 +181,8 @@ else
                 // Set breadcrumbs
                 _breadcrumbs = new List<BreadcrumbItem>
                 {
-                    new BreadcrumbItem("Home", href: "/"),
-                    new BreadcrumbItem("Poems", href: "/poems"),
+                    new BreadcrumbItem("首页", href: "/"),
+                    new BreadcrumbItem("诗文赏析", href: "/poems"),
                     new BreadcrumbItem(poem.Title, href: null)
                 };
             }
@@ -206,7 +210,7 @@ else
     {
         if (poem != null)
         {
-            var shareText = $"Check out this poem: ??{poem.Title}?? by {poem.AuthorName}";
+            var shareText = $"快来看看这首诗：《{poem.Title}》，作者 {poem.AuthorName}";
             await JS.InvokeVoidAsync("navigator.share", new { title = poem.Title, text = shareText, url = Navigation.Uri });
         }
     }

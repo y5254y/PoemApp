@@ -1,0 +1,77 @@
+@page "/author/{Id:int}"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Client.ApiClients
+@inject AuthorsApiClient AuthorsClient
+@inject PoemApiClient PoemClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(author?.Name ?? "作者") - 诗人介绍</PageTitle>
+
+@if (author == null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudText Typo="Typo.h4" Class="mb-2">@author.Name</MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">朝代： @author.Dynasty.GetDisplayName()</MudText>
+
+        <MudPaper Class="pa-4 mt-4" Elevation="1">
+            <MudText Typo="Typo.h6" Class="mb-2">生平简介</MudText>
+            <MudText Typo="Typo.body1">@((MarkupString)(author.Biography ?? string.Empty))</MudText>
+        </MudPaper>
+
+        <MudPaper Class="pa-4 mt-4" Elevation="1">
+            <MudText Typo="Typo.h6" Class="mb-2">作品（部分）</MudText>
+            <MudList T="PoemDto">
+                @if (author.Poems != null && author.Poems.Any())
+                {
+                    @foreach (var poem in author.Poems.Take(50))
+                    {
+                        <MudListItem T="PoemDto">
+                            <NavLink href="@($"/poem/{poem.Id}")" style="text-decoration:none;color:inherit;">@poem.Title</NavLink>
+                        </MudListItem>
+                    }
+                }
+                else
+                {
+                    <MudText Typo="Typo.body2" Color="Color.Secondary">暂无作品信息</MudText>
+                }
+            </MudList>
+        </MudPaper>
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private AuthorDto? author;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadAuthorAsync();
+    }
+
+    private async Task LoadAuthorAsync()
+    {
+        try
+        {
+            author = await AuthorsClient.GetByIdAsync(Id);
+            if (author != null)
+            {
+                if (author.Poems == null || !author.Poems.Any())
+                {
+                    var poems = await PoemClient.GetByAuthorAsync(author.Id);
+                    author.Poems = poems?.ToList() ?? new List<PoemDto>();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载作者信息失败: " + ex.Message, Severity.Error);
+        }
+    }
+}
