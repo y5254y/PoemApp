@@ -23,7 +23,7 @@ public class AppLogger : IAppLogger
         _logger.Warning(message);
     }
 
-    public void LogError(string message, Exception ex = null)
+    public void LogError(string message, Exception? ex = null)
     {
         if (ex == null)
             _logger.Error(message);
@@ -36,7 +36,7 @@ public class AppLogger : IAppLogger
         _logger.Debug(message);
     }
 
-    public void LogCritical(string message, Exception ex = null)
+    public void LogCritical(string message, Exception? ex = null)
     {
         if (ex == null)
             _logger.Fatal(message);

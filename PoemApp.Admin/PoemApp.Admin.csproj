@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PoemApp.Core\PoemApp.Core.csproj" />
     <ProjectReference Include="..\PoemApp.Infrastructure\PoemApp.Infrastructure.csproj" />
+    <ProjectReference Include="..\PoemApp.Client.ApiClients\PoemApp.Client.ApiClients.csproj" />
   </ItemGroup>
 
   <ItemGroup>

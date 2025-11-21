@@ -4,6 +4,7 @@
 @using PoemApp.Core.DTOs
 @using PoemApp.Core.Enums
 @using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
 @inject AuthorsApiClient AuthorsClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
@@ -13,7 +14,7 @@
     <MudText Typo="Typo.h5">作者管理</MudText>
     <MudDivider Class="my-2" />
 
-    <MudTable @ref="_table" Items="@(_usedServerSearch ? _paged?.Items ?? new List<AuthorDto>() : FilteredAuthors)" Striped="true" Hover="true" ServerData="LoadServerData">
+    <MudTable @ref="_table" Striped="true" Hover="true" ServerData="LoadServerData">
         <ToolBarContent>
             <MudTextField @bind-Value="_search" Immediate="true" Placeholder="搜索作者或简介" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
             <MudSpacer />
@@ -30,7 +31,13 @@
         <RowTemplate>
             <MudTd>@context.Name</MudTd>
             <MudTd>@context.Dynasty.GetDisplayName()</MudTd>
-            <MudTd>@(context.Biography?.Length > 100 ? context.Biography.Substring(0, 100) + "..." : context.Biography)</MudTd>
+            <MudTd>
+                @if (!string.IsNullOrEmpty(context.Biography))
+                {
+                    var bioPreview = StripHtml(context.Biography);
+                    @((bioPreview.Length > 100) ? bioPreview.Substring(0, 100) + "..." : bioPreview)
+                }
+            </MudTd>
             <MudTd>
                 <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">编辑</MudButton>
                 <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => ManageRelationships(context.Id)">关系</MudButton>
@@ -145,13 +152,9 @@
             if (ok)
             {
                 Snackbar.Add("删除成功", Severity.Success);
-                if (_usedServerSearch && _table != null)
+                if (_table != null)
                 {
                     await _table.ReloadServerData();
-                }
-                else
-                {
-                    await LoadAsync();
                 }
             }
             else
@@ -163,5 +166,11 @@
         {
             Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
         }
+    }
+
+    private static string StripHtml(string? html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        return System.Net.WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty)).Trim();
     }
 }

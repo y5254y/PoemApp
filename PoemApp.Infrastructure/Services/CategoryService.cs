@@ -4,6 +4,9 @@ using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Core.Interfaces;
 using PoemApp.Core.Extensions; // for GetDisplayName on enums used in PoemDto mapping
+using System.Text.RegularExpressions;
+using System.Net;
+using Ganss.Xss;
 
 namespace PoemApp.Infrastructure.Services;
 
@@ -15,6 +18,7 @@ public class CategoryService : ICategoryService
     {
         _context = context;
     }
+
 
     public async Task<IEnumerable<CategoryDto>> GetAllCategoriesAsync()
     {
@@ -98,7 +102,7 @@ public class CategoryService : ICategoryService
         var category = new Category
         {
             Name = categoryDto.Name,
-            Description = categoryDto.Description,
+            Description = HtmlSanitizerHelper.SanitizeHtml(categoryDto.Description),
             Group = categoryDto.Group,
             ParentId = categoryDto.ParentId
         };
@@ -126,7 +130,7 @@ public class CategoryService : ICategoryService
         }
 
         category.Name = categoryDto.Name;
-        category.Description = categoryDto.Description;
+        category.Description = HtmlSanitizerHelper.SanitizeHtml(categoryDto.Description);
         category.Group = categoryDto.Group;
         category.ParentId = categoryDto.ParentId;
 

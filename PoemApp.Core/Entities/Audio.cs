@@ -12,7 +12,6 @@ public class Audio
     public int PoemId { get; set; }
     public Poem Poem { get; set; } = null!;
 
-    [Required]
     [StringLength(255)]
     public string? FileUrl { get; set; }
 

@@ -128,7 +128,7 @@ public class AuthorService : IAuthorService
         {
             Name = authorDto.Name,
             Dynasty = authorDto.Dynasty,
-            Biography = authorDto.Biography
+            Biography = HtmlSanitizerHelper.SanitizeHtml(authorDto.Biography)
         };
 
         _context.Authors.Add(author);
@@ -147,7 +147,7 @@ public class AuthorService : IAuthorService
 
         author.Name = authorDto.Name;
         author.Dynasty = authorDto.Dynasty;
-        author.Biography = authorDto.Biography;
+        author.Biography = HtmlSanitizerHelper.SanitizeHtml(authorDto.Biography);
 
         _context.Authors.Update(author);
         await _context.SaveChangesAsync();

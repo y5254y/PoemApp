@@ -140,12 +140,12 @@ public class PoemService : IPoemService
         var poem = new Poem
         {
             Title = poemDto.Title,
-            Content = poemDto.Content,
+            Content = HtmlSanitizerHelper.SanitizeHtml(poemDto.Content),
             AuthorId = poemDto.AuthorId,
-            Background = poemDto.Background,
-            Translation = poemDto.Translation,
-            Annotation = poemDto.Annotation,
-            Appreciation = poemDto.Appreciation,
+            Background = HtmlSanitizerHelper.SanitizeHtml(poemDto.Background),
+            Translation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Translation),
+            Annotation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Annotation),
+            Appreciation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Appreciation),
             Categories = new List<PoemCategory>()
         };
 
@@ -183,12 +183,12 @@ public class PoemService : IPoemService
 
         // Update basic properties
         poem.Title = poemDto.Title;
-        poem.Content = poemDto.Content;
+        poem.Content = HtmlSanitizerHelper.SanitizeHtml(poemDto.Content);
         poem.AuthorId = poemDto.AuthorId;
-        poem.Background = poemDto.Background;
-        poem.Translation = poemDto.Translation;
-        poem.Annotation = poemDto.Annotation;
-        poem.Appreciation = poemDto.Appreciation;
+        poem.Background = HtmlSanitizerHelper.SanitizeHtml(poemDto.Background);
+        poem.Translation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Translation);
+        poem.Annotation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Annotation);
+        poem.Appreciation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Appreciation);
 
         // Update categories
         poem.Categories.Clear();

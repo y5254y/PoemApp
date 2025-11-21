@@ -12,8 +12,8 @@ public class User
     public string Username { get; set; } = null!;
 
     // 密码相关字段（如果需要用户名密码登录）
-    public byte[] PasswordHash { get; set; }
-    public byte[] PasswordSalt { get; set; }
+    public byte[] PasswordHash { get; set; } = null!;
+    public byte[] PasswordSalt { get; set; } = null!;
 
     [StringLength(50)]
     public string? WeChatId { get; set; }

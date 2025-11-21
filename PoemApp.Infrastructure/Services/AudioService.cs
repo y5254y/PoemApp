@@ -27,7 +27,7 @@ public class AudioService : IAudioService
                 Id = a.Id,
                 PoemId = a.PoemId,
                 PoemTitle = a.Poem.Title,
-                FileUrl = a.FileUrl,
+                FileUrl = a.FileUrl ?? string.Empty,
                 UploaderId = a.UploaderId,
                 UploaderName = a.Uploader != null ? a.Uploader.Username : "系统",
                 UploadTime = a.UploadTime,
@@ -48,12 +48,13 @@ public class AudioService : IAudioService
 
         if (audio == null) return null;
 
+        // 将 AudioDetailDto 的 FileUrl 赋值改为非 null 安全方式
         return new AudioDetailDto
         {
             Id = audio.Id,
             PoemId = audio.PoemId,
             PoemTitle = audio.Poem.Title,
-            FileUrl = audio.FileUrl,
+            FileUrl = audio.FileUrl ?? string.Empty, // 修复 CS8601
             UploaderId = audio.UploaderId,
             UploaderName = audio.Uploader != null ? audio.Uploader.Username : "系统",
             UploadTime = audio.UploadTime,
@@ -84,7 +85,7 @@ public class AudioService : IAudioService
                 Id = a.Id,
                 PoemId = a.PoemId,
                 PoemTitle = a.Poem.Title,
-                FileUrl = a.FileUrl,
+                FileUrl = a.FileUrl ?? string.Empty,
                 UploaderId = a.UploaderId,
                 UploaderName = a.Uploader != null ? a.Uploader.Username : "系统",
                 UploadTime = a.UploadTime,
@@ -106,7 +107,7 @@ public class AudioService : IAudioService
                 Id = a.Id,
                 PoemId = a.PoemId,
                 PoemTitle = a.Poem.Title,
-                FileUrl = a.FileUrl,
+                FileUrl = a.FileUrl != null ? a.FileUrl : string.Empty,
                 UploaderId = a.UploaderId,
                 UploaderName = a.Uploader != null ? a.Uploader.Username : "系统",
                 UploadTime = a.UploadTime,
@@ -219,10 +220,15 @@ public class AudioService : IAudioService
         // 更新音频的平均评分
         await UpdateAudioAverageRating(audioId);
 
-        // 返回创建的评分
+        // 返回创建的评分，增加空值检查
         var createdRating = await _context.AudioRatings
             .Include(r => r.User)
             .FirstOrDefaultAsync(r => r.Id == rating.Id);
+
+        if (createdRating == null || createdRating.User == null)
+        {
+            throw new InvalidOperationException("Created rating or user not found after creation.");
+        }
 
         return new AudioRatingDto
         {

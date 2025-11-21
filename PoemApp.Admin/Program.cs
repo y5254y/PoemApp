@@ -9,6 +9,7 @@ using PoemApp.Infrastructure.Services;
 using Serilog;
 using Serilog.Core;
 using Serilog.Events;
+using PoemApp.Client.ApiClients;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -49,21 +50,14 @@ builder.Services.AddAuthorizationCore();
 // Register only the abstraction to avoid multiple instances; concrete type will be created by DI
 builder.Services.AddScoped<AuthenticationStateProvider, ApiAuthenticationStateProvider>();
 
-// Register AuthMessageHandler
-builder.Services.AddTransient<AuthMessageHandler>();
+// Use shared AddPoemAppApiClients - configure base URL from configuration
+var apiBase = builder.Configuration["Api:BaseUrl"] ?? "https://localhost:5001/";
+builder.Services.AddPoemAppApiClients(apiBase);
 
-// HttpClient for API calls, with AuthMessageHandler
-builder.Services.AddHttpClient("Api", client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["Api:BaseUrl"] ?? "https://localhost:5001/");
-}).AddHttpMessageHandler<AuthMessageHandler>();
-
-// Register API clients and auth service
+// Register API clients and auth service (if additional admin-specific clients exist)
 builder.Services.AddScoped<PoemApiClient>();
+// AuthorsApiClient, CategoriesApiClient, UsersApiClient now provided by shared library registration
 builder.Services.AddScoped<AdminAuthService>();
-builder.Services.AddScoped<CategoriesApiClient>();
-builder.Services.AddScoped<AuthorsApiClient>();
-builder.Services.AddScoped<UsersApiClient>();
 
 // Token service (use ProtectedLocalStorage in Blazor Server)
 builder.Services.AddScoped<ITokenService, ProtectedLocalStorageTokenService>();

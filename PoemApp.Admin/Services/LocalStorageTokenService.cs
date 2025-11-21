@@ -1,4 +1,5 @@
 using Microsoft.JSInterop;
+using PoemApp.Core.Interfaces;
 
 namespace PoemApp.Admin.Services;
 
@@ -12,9 +13,12 @@ public class LocalStorageTokenService : ITokenService
         _js = js;
     }
 
-    public async Task SetTokenAsync(string token)
+    public async Task SetTokenAsync(string? token)
     {
-        await _js.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
+        if (token == null)
+            await _js.InvokeVoidAsync("localStorage.removeItem", TokenKey);
+        else
+            await _js.InvokeVoidAsync("localStorage.setItem", TokenKey, token);
     }
 
     public async Task<string?> GetTokenAsync()

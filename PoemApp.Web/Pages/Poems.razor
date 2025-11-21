@@ -1,0 +1,226 @@
+@page "/poems"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Client.ApiClients
+@using System.Text.RegularExpressions
+@using System.Net
+@inject PoemApiClient PoemClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>诗文赏析 - PoemApp</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">诗文赏析</MudText>
+
+    <!-- 搜索和筛选 -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="_searchText"
+                              Label="搜索诗文"
+                              Placeholder="输入诗文标题、内容或作者名"
+                              Adornment="Adornment.Start"
+                              AdornmentIcon="@Icons.Material.Filled.Search"
+                              Variant="Variant.Outlined"
+                              Clearable="true"
+                              OnKeyUp="OnSearchKeyUp" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudSelect @bind-Value="_selectedDynasty"
+                           Label="朝代筛选"
+                           Variant="Variant.Outlined"
+                           Clearable="true"
+                           Items="DynastyItems" />
+            </MudItem>
+            <MudItem xs="12" md="3">
+                <MudButton Variant="Variant.Filled"
+                           Color="Color.Primary"
+                           FullWidth="true"
+                           StartIcon="@Icons.Material.Filled.Search"
+                           OnClick="ApplyFilters">
+                    搜索
+                </MudButton>
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+
+    <!-- 诗文列表 -->
+    @if (_isLoading)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+    }
+    else if (_filteredPoems?.Any() != true)
+    {
+        <MudPaper Class="pa-8 text-center" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary">暂无诗文数据</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudGrid Spacing="4">
+            @foreach (var poem in _filteredPoems)
+            {
+                <MudItem xs="12" sm="6" lg="4">
+                    <MudCard Class="h-100" Elevation="4" Style="cursor: pointer;" OnClick="() => ViewPoem(poem.Id)">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">@poem.Title</MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@poem.AuthorName</MudText>
+                            </CardHeaderContent>
+                            <CardHeaderActions>
+                                <MudChip Label="true" Size="Size.Small" Color="Color.Info" T="string">@poem.DynastyDisplayName</MudChip>
+                            </CardHeaderActions>
+                        </MudCardHeader>
+                        <MudCardContent Class="flex-grow-1">
+                            @if (!string.IsNullOrEmpty(poem.Content))
+                            {
+                                var preview = StripHtml(poem.Content);
+                                <MudText Typo="Typo.body2" Style="line-height: 1.6;" Class="mb-2">
+                                    @(preview.Length > 120 ? preview.Substring(0, 120) + "..." : preview)
+                                </MudText>
+                            }
+                            @if (poem.Categories?.Any() == true)
+                            {
+                                <div>
+                                    @foreach (var category in poem.Categories.Take(2))
+                                    {
+                                        <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined" Class="mr-1 mb-1" T="string">@category</MudChip>
+                                    }
+                                    @if (poem.Categories.Count > 2)
+                                    {
+                                        <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined" T="string">+@(poem.Categories.Count - 2)</MudChip>
+                                    }
+                                </div>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">
+                                阅读全文
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+
+        <!-- 分页 -->
+        @if (_totalPages > 1)
+        {
+            <div class="d-flex justify-center mt-6">
+                <MudPagination @bind-Selected="_currentPage"
+                              Count="@_totalPages"
+                              Color="Color.Primary"
+                              Size="Size.Large"
+                              OnClick="OnPageChanged" />
+            </div>
+        }
+    }
+</MudContainer>
+
+@code {
+    private List<PoemDto>? _allPoems;
+    private List<PoemDto>? _filteredPoems;
+    private bool _isLoading = true;
+    private string _searchText = string.Empty;
+    private string _selectedDynasty = string.Empty;
+    private int _currentPage = 1;
+    private int _pageSize = 12;
+    private int _totalPages = 1;
+
+    private IEnumerable<string> DynastyItems => Enum.GetValues<DynastyEnum>().Select(d => d.GetDisplayName());
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Poems page OnInitializedAsync called");
+        await LoadPoemsAsync();
+    }
+
+    private async Task LoadPoemsAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            Console.WriteLine("Loading poems...");
+            _allPoems = await PoemClient.GetAllAsync();
+            Console.WriteLine($"Loaded {_allPoems?.Count ?? 0} poems");
+            ApplyFiltersInternal();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading poems: {ex.Message}");
+            Snackbar.Add("加载诗文数据失败，请稍后重试", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ApplyFiltersInternal()
+    {
+        if (_allPoems == null) return;
+
+        var query = _allPoems.AsQueryable();
+
+        // 搜索过滤
+        if (!string.IsNullOrWhiteSpace(_searchText))
+        {
+            var search = _searchText.Trim().ToLowerInvariant();
+            query = query.Where(p =>
+                (p.Title ?? string.Empty).ToLower().Contains(search) ||
+                (p.AuthorName ?? string.Empty).ToLower().Contains(search) ||
+                (StripHtml(p.Content ?? string.Empty) ?? string.Empty).ToLower().Contains(search));
+        }
+
+        // 朝代过滤
+        if (!string.IsNullOrWhiteSpace(_selectedDynasty))
+        {
+            var dynasty = PoemApp.Core.Extensions.EnumExtensions.GetEnumFromDisplayName<DynastyEnum>(_selectedDynasty);
+            query = query.Where(p => p.Dynasty == dynasty);
+        }
+
+        var filtered = query.ToList();
+        _totalPages = (int)Math.Ceiling((double)filtered.Count / _pageSize);
+
+        // 分页
+        _filteredPoems = filtered
+            .Skip((_currentPage - 1) * _pageSize)
+            .Take(_pageSize)
+            .ToList();
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await ApplyFilters();
+        }
+    }
+
+    private async Task ApplyFilters()
+    {
+        _currentPage = 1; // 重置到第一页
+        ApplyFiltersInternal();
+    }
+
+    private async Task OnPageChanged(int page)
+    {
+        _currentPage = page;
+        ApplyFiltersInternal();
+    }
+
+    private void ViewPoem(int poemId)
+    {
+        Navigation.NavigateTo($"/poem/{poemId}");
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = Regex.Replace(html, "<.*?>", string.Empty);
+        return WebUtility.HtmlDecode(text).Trim();
+    }
+}

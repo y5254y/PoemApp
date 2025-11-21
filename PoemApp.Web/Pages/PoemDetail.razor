@@ -1,0 +1,220 @@
+@page "/poem/{Id:int}"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@using Microsoft.JSInterop
+@inject PoemApiClient PoemClient
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IJSRuntime JS
+
+<PageTitle>@(poem?.Title ?? "Poem Detail") - PoemApp</PageTitle>
+
+@if (poem == null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+}
+else
+{
+    <MudBreadcrumbs Items="_breadcrumbs" Class="mb-4" />
+
+    <MudPaper Class="pa-6 mb-6" Elevation="4">
+        <!-- Poem Title and Basic Info -->
+        <div class="text-center mb-6">
+            <MudText Typo="Typo.h3" Class="mb-2" Color="Color.Primary">@poem.Title</MudText>
+            <MudText Typo="Typo.h5" Class="mb-1">@poem.AuthorName</MudText>
+            <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@poem.DynastyDisplayName</MudText>
+            @if (poem.Categories?.Any() == true)
+            {
+                <div class="mt-3">
+                    @foreach (var category in poem.Categories)
+                    {
+                        <MudChip Label="true" Size="Size.Small" Color="Color.Info" Class="mr-1" T="string">@category</MudChip>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- Poem Content -->
+        <MudGrid>
+            <MudItem xs="12" lg="8">
+                <MudPaper Class="pa-4" Elevation="2" Style="background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);">
+                    <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Primary">Original Text</MudText>
+                    <MudText Typo="Typo.body1" Style="line-height: 2; font-family: 'KaiTi', serif; font-size: 1.1rem;">
+                        @((MarkupString)poem.Content)
+                    </MudText>
+                </MudPaper>
+
+                @if (!string.IsNullOrEmpty(poem.Translation))
+                {
+                    <MudPaper Class="pa-4 mt-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Info">Modern Translation</MudText>
+                        <MudText Typo="Typo.body1" Style="line-height: 1.8;">
+                            @((MarkupString)poem.Translation)
+                        </MudText>
+                    </MudPaper>
+                }
+
+                @if (!string.IsNullOrEmpty(poem.Annotation))
+                {
+                    <MudPaper Class="pa-4 mt-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Warning">Annotations</MudText>
+                        <MudText Typo="Typo.body1" Style="line-height: 1.8;">
+                            @((MarkupString)poem.Annotation)
+                        </MudText>
+                    </MudPaper>
+                }
+
+                @if (!string.IsNullOrEmpty(poem.Background))
+                {
+                    <MudPaper Class="pa-4 mt-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Success">Background</MudText>
+                        <MudText Typo="Typo.body1" Style="line-height: 1.8;">
+                            @((MarkupString)poem.Background)
+                        </MudText>
+                    </MudPaper>
+                }
+
+                @if (!string.IsNullOrEmpty(poem.Appreciation))
+                {
+                    <MudPaper Class="pa-4 mt-4" Elevation="2">
+                        <MudText Typo="Typo.h6" Class="mb-3" Color="Color.Secondary">Appreciation</MudText>
+                        <MudText Typo="Typo.body1" Style="line-height: 1.8;">
+                            @((MarkupString)poem.Appreciation)
+                        </MudText>
+                    </MudPaper>
+                }
+            </MudItem>
+
+            <!-- Sidebar -->
+            <MudItem xs="12" lg="4">
+                <!-- Author Card -->
+                <MudCard Class="mb-4" Elevation="4">
+                    <MudCardHeader>
+                        <CardHeaderAvatar>
+                            <MudAvatar Size="Size.Large" Color="Color.Primary">
+                                <MudText Color="Color.Surface">@(author?.Name?.Substring(0, 1) ?? "?")</MudText>
+                            </MudAvatar>
+                        </CardHeaderAvatar>
+                        <CardHeaderContent>
+                            <MudText Typo="Typo.h6">@author?.Name</MudText>
+                            <MudText Typo="Typo.body2" Color="Color.Secondary">@author?.Dynasty.GetDisplayName()</MudText>
+                        </CardHeaderContent>
+                    </MudCardHeader>
+                    <MudCardContent>
+                        @if (!string.IsNullOrEmpty(author?.Biography))
+                        {
+                            var bioPreview = StripHtml(author.Biography);
+                            <MudText Typo="Typo.body2" Style="line-height: 1.6;">
+                                @(bioPreview.Length > 150 ? bioPreview.Substring(0, 150) + "..." : bioPreview)
+                            </MudText>
+                        }
+                    </MudCardContent>
+                    <MudCardActions>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" OnClick="() => ViewAuthor()">
+                            View Author
+                        </MudButton>
+                    </MudCardActions>
+                </MudCard>
+
+                <!-- Related Poems -->
+                @if (relatedPoems?.Any() == true)
+                {
+                    <MudCard Elevation="4">
+                        <MudCardHeader>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">Other Works by Author</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Class="pa-0">
+                            <MudList Clickable="true" T="PoemDto">
+                                @foreach (var relatedPoem in relatedPoems.Take(5))
+                                {
+                                    <MudListItem OnClick="() => ViewPoem(relatedPoem.Id)" T="PoemDto">
+                                        <MudText>@relatedPoem.Title</MudText>
+                                    </MudListItem>
+                                }
+                            </MudList>
+                        </MudCardContent>
+                    </MudCard>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private PoemDto? poem;
+    private AuthorDto? author;
+    private List<PoemDto>? relatedPoems;
+    private List<BreadcrumbItem> _breadcrumbs = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPoemAsync();
+    }
+
+    private async Task LoadPoemAsync()
+    {
+        try
+        {
+            poem = await PoemClient.GetByIdAsync(Id);
+            if (poem != null)
+            {
+                // Load author info
+                var authorsResult = await AuthorsClient.GetAllAsync();
+                author = authorsResult.Items.FirstOrDefault(a => a.Id == poem.AuthorId);
+
+                // Load related poems
+                var allPoems = await PoemClient.GetAllAsync();
+                relatedPoems = allPoems.Where(p => p.AuthorId == poem.AuthorId && p.Id != poem.Id).ToList();
+
+                // Set breadcrumbs
+                _breadcrumbs = new List<BreadcrumbItem>
+                {
+                    new BreadcrumbItem("Home", href: "/"),
+                    new BreadcrumbItem("Poems", href: "/poems"),
+                    new BreadcrumbItem(poem.Title, href: null)
+                };
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Failed to load poem: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void ViewAuthor()
+    {
+        if (poem != null)
+        {
+            Navigation.NavigateTo($"/author/{poem.AuthorId}");
+        }
+    }
+
+    private void ViewPoem(int poemId)
+    {
+        Navigation.NavigateTo($"/poem/{poemId}");
+    }
+
+    private async Task SharePoem()
+    {
+        if (poem != null)
+        {
+            var shareText = $"Check out this poem: ??{poem.Title}?? by {poem.AuthorName}";
+            await JS.InvokeVoidAsync("navigator.share", new { title = poem.Title, text = shareText, url = Navigation.Uri });
+        }
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty);
+        return System.Net.WebUtility.HtmlDecode(text).Trim();
+    }
+}

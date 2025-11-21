@@ -1,0 +1,232 @@
+@page "/search"
+@page "/search/{Query}"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@inject PoemApiClient PoemClient
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>搜索结果 - PoemApp</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">
+        搜索结果 @(string.IsNullOrWhiteSpace(_query) ? "" : $"- \"{_query}\"")
+    </MudText>
+
+    <!-- 搜索框 -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudTextField @bind-Value="_searchText"
+                      Label="搜索诗文、作者"
+                      Placeholder="输入关键词搜索..."
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined"
+                      OnKeyUp="OnSearchKeyUp" />
+        <MudButton Variant="Variant.Filled"
+                   Color="Color.Primary"
+                   StartIcon="@Icons.Material.Filled.Search"
+                   OnClick="PerformSearch"
+                   Class="mt-3">
+            搜索
+        </MudButton>
+    </MudPaper>
+
+    @if (_isSearching)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+    }
+    else if (string.IsNullOrWhiteSpace(_query))
+    {
+        <!-- 搜索提示 -->
+        <MudPaper Class="pa-8 text-center" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+            <MudText Typo="Typo.h6" Class="mb-2">开始您的诗文之旅</MudText>
+            <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
+                输入诗文标题、作者姓名、内容关键词或朝代，即可找到心仪的作品
+            </MudText>
+            <MudText Typo="Typo.body2" Color="Color.Secondary">
+                例如：静夜思、李白、唐诗、思念等
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- 搜索结果 -->
+        @if ((_poemResults?.Any() != true) && (_authorResults?.Any() != true))
+        {
+            <MudPaper Class="pa-8 text-center" Elevation="2">
+                <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+                <MudText Typo="Typo.h6" Class="mb-2">未找到相关结果</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    尝试使用不同的关键词，或检查拼写是否正确
+                </MudText>
+            </MudPaper>
+        }
+        else
+        {
+            <!-- 诗文结果 -->
+            @if (_poemResults?.Any() == true)
+            {
+                <MudPaper Class="pa-4 mb-6" Elevation="4">
+                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Primary">
+                        诗文结果 (@_poemResults.Count)
+                    </MudText>
+                    <MudGrid Spacing="3">
+                        @foreach (var poem in _poemResults)
+                        {
+                            <MudItem xs="12" md="6">
+                                <MudCard Elevation="2" Style="cursor: pointer;" OnClick="() => ViewPoem(poem.Id)">
+                                    <MudCardHeader>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.h6">@poem.Title</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@poem.AuthorName</MudText>
+                                        </CardHeaderContent>
+                                        <CardHeaderActions>
+                                            <MudChip Label="true" Size="Size.Small" Color="Color.Info" T="string">@poem.DynastyDisplayName</MudChip>
+                                        </CardHeaderActions>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        <MudText Typo="Typo.body2" Style="line-height: 1.6;">
+                                            @(poem.Content?.Length > 100 ? poem.Content.Substring(0, 100) + "..." : poem.Content)
+                                        </MudText>
+                                    </MudCardContent>
+                                    <MudCardActions>
+                                        <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">
+                                            阅读全文
+                                        </MudButton>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            }
+
+            <!-- 作者结果 -->
+            @if (_authorResults?.Any() == true)
+            {
+                <MudPaper Class="pa-4" Elevation="4">
+                    <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Secondary">
+                        诗人结果 (@_authorResults.Count)
+                    </MudText>
+                    <MudGrid Spacing="3">
+                        @foreach (var author in _authorResults)
+                        {
+                            <MudItem xs="12" sm="6" md="4">
+                                <MudCard Elevation="2" Style="cursor: pointer;" OnClick="() => ViewAuthor(author.Id)">
+                                    <MudCardHeader>
+                                        <CardHeaderAvatar>
+                                            <MudAvatar Color="Color.Secondary">
+                                                <MudText Color="Color.Surface">@author.Name?.Substring(0, 1)</MudText>
+                                            </MudAvatar>
+                                        </CardHeaderAvatar>
+                                        <CardHeaderContent>
+                                            <MudText Typo="Typo.h6">@author.Name</MudText>
+                                            <MudText Typo="Typo.body2" Color="Color.Secondary">@author.Dynasty.GetDisplayName()</MudText>
+                                        </CardHeaderContent>
+                                    </MudCardHeader>
+                                    <MudCardContent>
+                                        @if (!string.IsNullOrEmpty(author.Biography))
+                                        {
+                                            <MudText Typo="Typo.body2" Style="line-height: 1.6;">
+                                                @(author.Biography.Length > 80 ? author.Biography.Substring(0, 80) + "..." : author.Biography)
+                                            </MudText>
+                                        }
+                                    </MudCardContent>
+                                    <MudCardActions>
+                                        <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small">
+                                            查看详情
+                                        </MudButton>
+                                    </MudCardActions>
+                                </MudCard>
+                            </MudItem>
+                        }
+                    </MudGrid>
+                </MudPaper>
+            }
+        }
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public string? Query { get; set; }
+
+    private string _query = string.Empty;
+    private string _searchText = string.Empty;
+    private bool _isSearching = false;
+    private List<PoemDto>? _poemResults;
+    private List<AuthorDto>? _authorResults;
+    private string _searchQuery = string.Empty;
+    private List<PoemDto> _searchResults = new List<PoemDto>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Search page OnInitializedAsync called");
+        var uri = new Uri(Navigation.Uri);
+        var queryParams = System.Web.HttpUtility.ParseQueryString(uri.Query);
+        var query = queryParams.Get("q");
+        if (!string.IsNullOrEmpty(query))
+        {
+            _searchQuery = query;
+            await PerformSearch();
+        }
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            await PerformSearch();
+        }
+    }
+
+    private async Task PerformSearch()
+    {
+        if (string.IsNullOrWhiteSpace(_searchQuery))
+        {
+            _searchResults = new List<PoemDto>();
+            return;
+        }
+
+        _isSearching = true;
+        try
+        {
+            Console.WriteLine($"Performing search for: {_searchQuery}");
+            // 这里可以调用搜索 API，或者在客户端过滤
+            var allPoems = await PoemClient.GetAllAsync();
+            var query = _searchQuery.Trim().ToLowerInvariant();
+
+            _searchResults = allPoems.Where(p =>
+                (p.Title ?? string.Empty).ToLower().Contains(query) ||
+                (p.AuthorName ?? string.Empty).ToLower().Contains(query) ||
+                (p.Content ?? string.Empty).ToLower().Contains(query) ||
+                p.Categories?.Any(c => c.ToLower().Contains(query)) == true).ToList();
+
+            Console.WriteLine($"Found {_searchResults.Count} results");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error performing search: {ex.Message}");
+            Snackbar.Add("搜索失败，请稍后重试", Severity.Error);
+            _searchResults = new List<PoemDto>();
+        }
+        finally
+        {
+            _isSearching = false;
+        }
+    }
+
+    private void ViewPoem(int poemId)
+    {
+        Navigation.NavigateTo($"/poem/{poemId}");
+    }
+
+    private void ViewAuthor(int authorId)
+    {
+        Navigation.NavigateTo($"/author/{authorId}");
+    }
+}

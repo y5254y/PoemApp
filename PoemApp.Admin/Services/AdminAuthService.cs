@@ -3,6 +3,7 @@ using System.Security.Claims;
 using PoemApp.Core.DTOs;
 using Microsoft.Extensions.Logging;
 using Microsoft.JSInterop;
+using PoemApp.Core.Interfaces;
 
 namespace PoemApp.Admin.Services;
 

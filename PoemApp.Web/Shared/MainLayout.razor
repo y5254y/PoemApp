@@ -1,0 +1,98 @@
+@using MudBlazor
+@inherits LayoutComponentBase
+
+@inject NavigationManager Navigation
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+<MudAppBar Color="Color.Info" Elevation="4" Dense="true">
+    <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Error" Edge="Edge.Start" OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+    <MudText Typo="Typo.h6" Class="ml-3">古诗文欣赏</MudText>
+    <MudSpacer />
+    <MudTextField @bind-Value="_searchText"
+                  Placeholder="搜索诗文、作者..."
+                  Adornment="Adornment.Start"
+                  AdornmentIcon="@Icons.Material.Filled.Search"
+                  Variant="Variant.Outlined"
+                  Dense="true"
+                  Class="mr-2"
+                  OnKeyUp="OnSearchKeyUp"
+                  Style="max-width: 300px;" />
+</MudAppBar>
+
+<MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4">
+    <MudDrawerHeader>
+        <MudText Typo="Typo.h5">导航菜单</MudText>
+    </MudDrawerHeader>
+    <MudNavMenu>
+        <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">
+            <MudText>首页</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/poems" Icon="@Icons.Material.Filled.LibraryBooks" IconColor="Color.Secondary">
+            <MudText>诗文赏析</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/authors" Icon="@Icons.Material.Filled.Person" IconColor="Color.Tertiary">
+            <MudText>诗人介绍</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category" IconColor="Color.Info">
+            <MudText>分类浏览</MudText>
+        </MudNavLink>
+        <MudNavLink Href="/search" Icon="@Icons.Material.Filled.Search" IconColor="Color.Warning">
+            <MudText>智能搜索</MudText>
+        </MudNavLink>
+    </MudNavMenu>
+</MudDrawer>
+
+<MudMainContent Class="pt-16">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="px-4">
+        @Body
+    </MudContainer>
+</MudMainContent>
+
+<footer class="mud-footer mt-8 py-4" style="background-color: #f5f5f5;">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.h6" Class="mb-2">古诗文欣赏</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    传承经典，品味诗韵
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">快速链接</MudText>
+                <MudNavMenu Class="pa-0">
+                    <MudNavLink Href="/poems" Class="pa-0">诗文赏析</MudNavLink>
+                    <MudNavLink Href="/authors" Class="pa-0">诗人介绍</MudNavLink>
+                    <MudNavLink Href="/categories" Class="pa-0">分类浏览</MudNavLink>
+                </MudNavMenu>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">关于我们</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    致力于传承中华优秀传统文化，让更多人感受诗词之美。
+                </MudText>
+            </MudItem>
+        </MudGrid>
+        <MudDivider Class="my-3" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">
+            ? 2024 PoemApp. All rights reserved.
+        </MudText>
+    </MudContainer>
+</footer>
+
+@code {
+    private bool _drawerOpen = false;
+    private string _searchText = string.Empty;
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(_searchText))
+        {
+            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(_searchText)}");
+            _searchText = string.Empty;
+        }
+    }
+}

@@ -4,7 +4,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using PoemApp.Core.DTOs;
 using Microsoft.Extensions.Logging;
-
+using PoemApp.Core.Interfaces;
 namespace PoemApp.Admin.Services;
 
 public class ApiAuthenticationStateProvider : AuthenticationStateProvider
@@ -54,8 +54,9 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
 
             _logger.LogInformation("GetAuthenticationStateAsync: authenticated as {Username}", user.Username);
 
+            // 在所有 user.Username 访问前添加 null 检查，避免空引用异常
             var identity = new ClaimsIdentity(new[] {
-                new Claim(ClaimTypes.Name, user.Username),
+                new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
                 new Claim("id", user.Id.ToString()),
                 new Claim(ClaimTypes.Role, user.Role.ToString())
             }, "apiauth");
@@ -81,8 +82,9 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
                 _logger.LogDebug("NotifyUserAuthenticationAsync: token stored");
             }
 
+            // 在所有 user.Username 访问前添加 null 检查，避免空引用异常
             var identity = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.Name, user.Username),
+                    new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
                     new Claim("id", user.Id.ToString()),
                     new Claim(ClaimTypes.Role, user.Role.ToString())
                 }, "apiauth");

@@ -1,0 +1,222 @@
+@page "/"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@inject PoemApiClient PoemClient
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>古诗文欣赏 - PoemApp</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
+    <!-- 精选诗文轮播 -->
+   @*  <MudPaper Class="pa-4 mb-6" Elevation="4">
+        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">精选诗文</MudText>
+        <MudCarousel ShowArrows="true" ShowBullets="true" AutoCycle="true" CycleTime="5000" TData="PoemDto" Style="height: 500px;">
+            @if (featuredPoems != null)
+            {
+                @foreach (var poem in featuredPoems)
+                {
+                    <MudCarouselItem>
+                        <MudCard Class="pa-4 h-100" Elevation="8" Style="display: flex; flex-direction: column;">
+                            <MudCardHeader Class="pb-2">
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h5" Class="mb-1">@poem.Title</MudText>
+                                    <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@poem.AuthorName · @poem.DynastyDisplayName</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="flex-grow-1" Style="overflow: hidden;">
+                                <MudText Typo="Typo.body1" Class="mb-3" Style="line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;">
+                                    @GetPlainTextContent(poem.Content)
+                                </MudText>
+                                @if (!string.IsNullOrEmpty(poem.Translation))
+                                {
+                                    <MudText Typo="Typo.body2" Color="Color.Info" Class="mb-2">
+                                        译文：@GetPlainTextContent(poem.Translation)
+                                    </MudText>
+                                }
+                            </MudCardContent>
+                            <MudCardActions Class="pt-2">
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="() => ViewPoem(poem.Id)">
+                                    阅读全文
+                                </MudButton>
+                                <MudButton Variant="Variant.Text" OnClick="() => ViewAuthor(poem.AuthorId)">
+                                    查看作者
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudCarouselItem>
+                }
+            }
+        </MudCarousel>
+    </MudPaper> *@
+
+    <!-- 功能卡片 -->
+    <MudGrid Class="mb-6">
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4 text-center" Elevation="4" Style="cursor: pointer;" @onclick="() => NavigateToPoems()">
+                <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" Size="Size.Large" Color="Color.Primary" Class="mb-2" />
+                <MudText Typo="Typo.h6">诗文赏析</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">浏览经典诗文作品</MudText>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4 text-center" Elevation="4" Style="cursor: pointer;" @onclick="() => NavigateToAuthors()">
+                <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Secondary" Class="mb-2" />
+                <MudText Typo="Typo.h6">诗人介绍</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">了解著名诗人</MudText>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4 text-center" Elevation="4" Style="cursor: pointer;" @onclick="() => NavigateToCategories()">
+                <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Tertiary" Class="mb-2" />
+                <MudText Typo="Typo.h6">分类浏览</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">按主题分类欣赏</MudText>
+            </MudCard>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudCard Class="pa-4 text-center" Elevation="4" Style="cursor: pointer;" @onclick="() => NavigateToSearch()">
+                <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Color="Color.Info" Class="mb-2" />
+                <MudText Typo="Typo.h6">智能搜索</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">快速找到心仪诗文</MudText>
+            </MudCard>
+        </MudItem>
+    </MudGrid>
+
+    <!-- 最新诗文 -->
+    <MudPaper Class="pa-4 mb-6" Elevation="4">
+        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">最新诗文</MudText>
+        <MudGrid>
+            @if (latestPoems != null)
+            {
+                @foreach (var poem in latestPoems)
+                {
+                    <MudItem xs="12" md="6" lg="4" Class="mb-4">
+                        <MudCard Class="h-100" Elevation="4">
+                            <MudCardHeader>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@poem.Title</MudText>
+                                    <MudText Typo="Typo.body2" Color="Color.Secondary">@poem.AuthorName</MudText>
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="flex-grow-1">
+                                <MudText Typo="Typo.body2" Style="line-height: 1.6;">
+                                    @(GetPlainTextContent(poem.Content)?.Length > 100 ? GetPlainTextContent(poem.Content).Substring(0, 100) + "..." : GetPlainTextContent(poem.Content))
+                                </MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => ViewPoem(poem.Id)">
+                                    阅读全文
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    </MudPaper>
+
+    <!-- 热门诗人 -->
+    <MudPaper Class="pa-4" Elevation="4">
+        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">著名诗人</MudText>
+        <MudGrid>
+            @if (featuredAuthors != null)
+            {
+                @foreach (var author in featuredAuthors)
+                {
+                    <MudItem xs="6" sm="4" md="3" lg="2" Class="mb-3">
+                        <MudCard Class="text-center pa-3" Elevation="2" Style="cursor: pointer;" OnClick="() => ViewAuthor(author.Id)">
+                            <MudAvatar Size="Size.Large" Color="Color.Primary" Class="mb-2">
+                                <MudText Typo="Typo.h6" Color="Color.Surface">@author.Name?.Substring(0, 1)</MudText>
+                            </MudAvatar>
+                            <MudText Typo="Typo.body1">@author.Name</MudText>
+                            <MudText Typo="Typo.caption" Color="Color.Secondary">@author.Dynasty.GetDisplayName()</MudText>
+                        </MudCard>
+                    </MudItem>
+                }
+            }
+        </MudGrid>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private List<PoemDto>? featuredPoems;
+    private List<PoemDto>? latestPoems;
+    private List<AuthorDto>? featuredAuthors;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Index page OnInitializedAsync called");
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        try
+        {
+            Console.WriteLine("Loading index data...");
+            // 加载精选诗文（这里可以根据某种算法选择）
+            var allPoems = await PoemClient.GetAllAsync();
+            featuredPoems = allPoems.Take(5).ToList();
+
+            // 最新诗文（模拟，这里可以按创建时间排序）
+            latestPoems = allPoems.Take(6).ToList();
+
+            // 著名诗人
+            var authorsResult = await AuthorsClient.GetAllAsync(1, 12);
+            featuredAuthors = authorsResult.Items;
+
+            Console.WriteLine($"Loaded {featuredPoems.Count} featured poems, {latestPoems.Count} latest poems, {featuredAuthors.Count} authors");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading index data: {ex.Message}");
+            Snackbar.Add("加载数据失败，请检查网络连接", Severity.Error);
+        }
+    }
+
+    private void ViewPoem(int poemId)
+    {
+        Navigation.NavigateTo($"/poem/{poemId}");
+    }
+
+    private void ViewAuthor(int authorId)
+    {
+        Navigation.NavigateTo($"/author/{authorId}");
+    }
+
+    private void NavigateToPoems()
+    {
+        Navigation.NavigateTo("/poems");
+    }
+
+    private void NavigateToAuthors()
+    {
+        Navigation.NavigateTo("/authors");
+    }
+
+    private void NavigateToCategories()
+    {
+        Navigation.NavigateTo("/categories");
+    }
+
+    private void NavigateToSearch()
+    {
+        Navigation.NavigateTo("/search");
+    }
+
+    private string GetPlainTextContent(string? htmlContent)
+    {
+        if (string.IsNullOrEmpty(htmlContent))
+            return string.Empty;
+
+        // 简单的 HTML 标签移除，转换为纯文本
+        var plainText = System.Text.RegularExpressions.Regex.Replace(htmlContent, "<[^>]*>", string.Empty);
+        // 解码 HTML 实体
+        plainText = System.Net.WebUtility.HtmlDecode(plainText);
+        return plainText.Trim();
+    }
+}
