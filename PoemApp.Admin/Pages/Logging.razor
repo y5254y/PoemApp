@@ -1,0 +1,90 @@
+@page "/logging"
+@inject HttpClient Http
+@inject PoemApp.Core.Interfaces.IAppLogger AppLogger
+
+<h3>Runtime Logging Level</h3>
+<p>当前级别: @currentLevel</p>
+<select @bind="selectedLevel">
+    @foreach (var lvl in levels)
+    {
+        <option value="@lvl">@lvl</option>
+    }
+</select>
+<button @onclick="SetLevel">设置级别</button>
+
+<h3>查看日志</h3>
+<label>最近行数: <input type="number" min="1" @bind="lines" style="width:80px" /></label>
+<button @onclick="LoadLogs">刷新日志</button>
+<button @onclick="OpenLogsFolder">打开日志目录</button>
+<pre style="max-height:400px;overflow:auto;background:#f8f8f8;padding:10px">@logContent</pre>
+
+@code {
+    private string[] levels = new[] { "Verbose", "Debug", "Information", "Warning", "Error", "Fatal" };
+    private string selectedLevel = "Information";
+    private string currentLevel = "Unknown";
+
+    private int lines = 200;
+    private string logContent = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadLevel();
+        await LoadLogs();
+    }
+
+    private async Task LoadLevel()
+    {
+        try
+        {
+            var res = await Http.GetFromJsonAsync<LevelDto>("/admin/logging");
+            currentLevel = res?.Level ?? "Unknown";
+            selectedLevel = currentLevel;
+        }
+        catch (Exception ex)
+        {
+            AppLogger.LogError("获取日志级别失败", ex);
+        }
+    }
+
+    private async Task SetLevel()
+    {
+        try
+        {
+            var resp = await Http.PostAsync($"/admin/logging/level?level={selectedLevel}", null);
+            if (resp.IsSuccessStatusCode)
+            {
+                var res = await resp.Content.ReadFromJsonAsync<LevelDto>();
+                currentLevel = res?.Level ?? selectedLevel;
+            }
+            else
+            {
+                AppLogger.LogWarning($"设置日志级别失败: {resp.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            AppLogger.LogError("设置日志级别失败", ex);
+        }
+    }
+
+    private async Task LoadLogs()
+    {
+        try
+        {
+            logContent = await Http.GetStringAsync($"/admin/logs?lines={lines}");
+        }
+        catch (Exception ex)
+        {
+            AppLogger.LogError("加载日志失败", ex);
+            logContent = $"加载日志失败: {ex.Message}";
+        }
+    }
+
+    private void OpenLogsFolder()
+    {
+        // 在 Blazor Server 中无法直接在客户端打开服务器目录；给用户一个提示或在未来实现下载/导航功能。
+        AppLogger.LogInformation("请求打开日志目录（服务器端操作），请在服务器上查看 logs 目录。");
+    }
+
+    private class LevelDto { public string Level { get; set; } = string.Empty; }
+}

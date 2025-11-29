@@ -1,0 +1,168 @@
+@page "/users"
+@attribute [Authorize(Roles = "Admin")]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@inject UsersApiClient UsersClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">用户管理</MudText>
+    <MudDivider Class="my-2" />
+
+    <MudTable T="UserDto" ServerData="@((TableState s, CancellationToken ct) => ServerReload(s, ct))" @ref="_table" Striped="true" Hover="true" RowsPerPageOptions="new int[]{5,10,20}" Bordered="true">
+        <ToolBarContent>
+            <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="搜索用户" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+
+            <MudSelect T="UserRole?" Label="角色" Value="@_filterRole" ValueChanged="@(EventCallback.Factory.Create<UserRole?>(this, OnFilterRoleChanged))" Dense="true" Class="mx-2">
+                <MudSelectItem T="UserRole?" Value="@((UserRole?)null)">全部</MudSelectItem>
+                @foreach (UserRole r in Enum.GetValues(typeof(UserRole)))
+                {
+                    <MudSelectItem T="UserRole?" Value="@(r)">@r.GetDisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+
+            <MudSelect T="bool?" Label="VIP" Value="@_filterVipBool" ValueChanged="@(EventCallback.Factory.Create<bool?>(this, OnFilterVipChanged))" Dense="true" Class="mx-2">
+                <MudSelectItem T="bool?" Value="@((bool?)null)">全部</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@(true)">是</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@(false)">否</MudSelectItem>
+            </MudSelect>
+
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新增用户</MudButton>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh>用户名</MudTh>
+            <MudTh>微信</MudTh>
+            <MudTh>QQ</MudTh>
+            <MudTh>手机号</MudTh>
+            <MudTh>角色</MudTh>
+            <MudTh>VIP期间</MudTh>
+            <MudTh>是否VIP</MudTh>
+            <MudTh>积分</MudTh>
+            <MudTh>注册时间</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd DataLabel="用户名">@context.Username</MudTd>
+            <MudTd DataLabel="微信">@context.WeChatId</MudTd>
+            <MudTd DataLabel="QQ">@context.QQId</MudTd>
+            <MudTd DataLabel="手机号">@context.Phone</MudTd>
+            <MudTd DataLabel="角色">@context.RoleDisplayName</MudTd>
+            <MudTd DataLabel="VIP期间">
+                @if (context.VipStartDate.HasValue || context.VipEndDate.HasValue)
+                {
+                    @((context.VipStartDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-") + " → " + (context.VipEndDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-"))
+                }
+                else
+                {
+                    <span>-</span>
+                }
+            </MudTd>
+            <MudTd DataLabel="是否VIP">@((context.IsVip) ? "是" : "否")</MudTd>
+            <MudTd DataLabel="积分">@context.Points</MudTd>
+            <MudTd DataLabel="注册时间">@context.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">编辑</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
+            </MudTd>
+        </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private MudTable<UserDto>? _table;
+
+    private string _search = string.Empty;
+    private UserRole? _filterRole = null;
+    private bool? _filterVipBool = null; // null=all, true=yes, false=no
+
+    private async Task OnSearchChanged(string value)
+    {
+        _search = value ?? string.Empty;
+        await ReloadTable();
+    }
+
+    private async Task OnFilterRoleChanged(UserRole? value)
+    {
+        _filterRole = value;
+        await ReloadTable();
+    }
+
+    private async Task OnFilterVipChanged(bool? value)
+    {
+        _filterVipBool = value;
+        await ReloadTable();
+    }
+
+    private async Task<TableData<UserDto>> ServerReload(TableState state, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var page = state.Page + 1; // MudTable uses zero-based page index
+            var pageSize = state.PageSize;
+            var res = await UsersClient.GetAllAsync(page, pageSize, _search, _filterRole, _filterVipBool);
+            return new TableData<UserDto>() { TotalItems = res.TotalCount, Items = res.Items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载用户失败: " + ex.Message, Severity.Error);
+            return new TableData<UserDto>() { TotalItems = 0, Items = new List<UserDto>() };
+        }
+    }
+
+    private async Task ReloadTable()
+    {
+        if (_table != null) await _table.ReloadServerData();
+    }
+
+    private void OpenCreate()
+    {
+        Navigation.NavigateTo("/users/edit/0");
+    }
+
+    private void Edit(int id)
+    {
+        Navigation.NavigateTo($"/users/edit/{id}");
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确认删除用户 {id} 吗", yesText: "确认", noText: "取消");
+        if (confirmed == true)
+        {
+            await DoDelete(id);
+            if (_table != null) await _table.ReloadServerData();
+        }
+    }
+
+    private async Task DoDelete(int id)
+    {
+        try
+        {
+            var ok = await UsersClient.DeleteAsync(id);
+            if (ok)
+            {
+                Snackbar.Add("删除成功", Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add("删除失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
+        }
+    }
+}

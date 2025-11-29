@@ -1,0 +1,160 @@
+@page "/categories/edit/{Id:int}"
+@attribute [Authorize]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Extensions
+@using PoemApp.Core.Enums
+@using PoemApp.Client.ApiClients
+@using System.Linq
+@using Microsoft.AspNetCore.WebUtilities
+@inject CategoriesApiClient CategoriesClient
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:800px">
+    <MudText Typo="Typo.h5">分类编辑</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleValid">
+        <MudTextField @bind-Value="_model.Name" Label="名称" Required="true" />
+
+        <MudSelect T="CategoryGroup?" Label="分组" @bind-Value="_model.Group">
+            <MudSelectItem T="CategoryGroup?" Value="@(null)">未指定</MudSelectItem>
+            @foreach (var val in Enum.GetValues(typeof(CategoryGroup)).Cast<CategoryGroup>())
+            {
+                <MudSelectItem T="CategoryGroup?" Value="@(val)">@val.GetDisplayName()</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="int?" Label="父分类" @bind-Value="_model.ParentId">
+            <MudSelectItem T="int?" Value="@(null)">无父级</MudSelectItem>
+            @foreach (var opt in _parentOptions)
+            {
+                <MudSelectItem T="int?" Value="@opt.Id">@opt.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">描述</MudText>
+        <QuillEditor @ref="_descriptionEditor" InitialContent="@(_model.Description ?? string.Empty)" />
+
+        <div class="mt-3">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        </div>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CreateCategoryDto _model = new();
+    private QuillEditor? _descriptionEditor;
+
+    private List<CategoryDto> _allCategories = new();
+    private List<CategoryDto> _parentOptions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // load all categories for parent selection
+        _allCategories = await CategoriesClient.GetAllAsync();
+
+        // if navigated with query ?group=..., prefill group when creating
+        if (Id == 0)
+        {
+            try
+            {
+                var uri = new Uri(Navigation.Uri);
+                var q = QueryHelpers.ParseQuery(uri.Query);
+                if (q.TryGetValue("group", out var groupVals))
+                {
+                    var groupStr = groupVals.FirstOrDefault();
+                    if (!string.IsNullOrWhiteSpace(groupStr) && Enum.TryParse<CategoryGroup>(groupStr, out var g))
+                    {
+                        _model.Group = g;
+                    }
+                }
+            }
+            catch { /* ignore parse errors */ }
+        }
+
+        if (Id != 0)
+        {
+            var dto = await CategoriesClient.GetByIdAsync(Id);
+            if (dto != null)
+            {
+                _model = new CreateCategoryDto { Name = dto.Name, Description = dto.Description, Group = dto.Group, ParentId = dto.ParentId };
+            }
+        }
+
+        BuildParentOptions();
+    }
+
+    private void BuildParentOptions()
+    {
+        // exclude current and descendants
+        var exclude = new HashSet<int>();
+        if (Id != 0)
+        {
+            exclude.Add(Id);
+            var childrenLookup = _allCategories.ToLookup(c => c.ParentId);
+            var stack = new Stack<int>(childrenLookup[Id].Select(c => c.Id));
+            while (stack.Count > 0)
+            {
+                var cur = stack.Pop();
+                if (!exclude.Add(cur)) continue;
+                foreach (var child in childrenLookup[cur]) stack.Push(child.Id);
+            }
+        }
+
+        _parentOptions = _allCategories.Where(c => !exclude.Contains(c.Id)).OrderBy(c => c.Name).ToList();
+    }
+
+    private async Task HandleValid()
+    {
+        // ensure description updated from editor
+        if (_descriptionEditor != null)
+        {
+            _model.Description = await _descriptionEditor.GetHtmlAsync();
+        }
+
+        await JS.InvokeVoidAsync("console.log", $"HandleValid called. Id={Id}, Name={_model.Name}, DescLength={(_model.Description?.Length ?? 0)}");
+        Snackbar.Add($"准备保存分类(Id={Id})...", Severity.Info);
+
+        try
+        {
+            if (Id == 0)
+            {
+                var res = await CategoriesClient.CreateAsync(_model);
+                if (res != null)
+                {
+                    Snackbar.Add("创建成功", Severity.Success);
+                    Navigation.NavigateTo("/categories");
+                }
+                else
+                {
+                    Snackbar.Add("创建失败", Severity.Error);
+                }
+            }
+            else
+            {
+                var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Name = _model.Name, Description = _model.Description, Group = _model.Group, ParentId = _model.ParentId });
+                if (ok)
+                {
+                    Snackbar.Add("更新成功", Severity.Success);
+                    Navigation.NavigateTo("/categories");
+                }
+                else
+                {
+                    Snackbar.Add("更新失败", Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+            await JS.InvokeVoidAsync("console.error", ex.Message);
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/categories");
+}

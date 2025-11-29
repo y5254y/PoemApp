@@ -1,0 +1,94 @@
+@page "/mud-sample"
+@using System.Linq
+@using MudBlazor
+@inject ISnackbar Snackbar
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-6">
+  <MudPaper Class="pa-4">
+    <MudText Typo="Typo.h4">MudBlazor Demo Template</MudText>
+
+    <MudGrid Class="mt-4" GutterSize="3">
+      <MudItem xs="12" md="8">
+        <MudTextField @bind-Value="_search" Placeholder="Search..." Adornment="Adornment.Start" AdornmentIcon="@Icons.Material.Filled.Search" Immediate="true" OnImmediateValueChanged="@OnSearchChanged" />
+      </MudItem>
+      <MudItem xs="12" md="4" Class="d-flex justify-end">
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@AddItem">New Item</MudButton>
+      </MudItem>
+    </MudGrid>
+
+    <MudTable Items="@_items" Hover="true" Dense="false" Class="mt-4">
+      <HeaderContent>
+        <MudTh>Id</MudTh>
+        <MudTh>Title</MudTh>
+        <MudTh>Author</MudTh>
+        <MudTh>Actions</MudTh>
+      </HeaderContent>
+      <RowTemplate>
+        <MudTd DataLabel="Id">@context.Id</MudTd>
+        <MudTd DataLabel="Title">@context.Title</MudTd>
+        <MudTd DataLabel="Author">@context.Author</MudTd>
+        <MudTd>
+          <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" OnClick="@(() => Edit(context))" />
+          <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Delete(context))" />
+        </MudTd>
+      </RowTemplate>
+    </MudTable>
+
+    <MudDivider Class="my-4" />
+
+    <MudGrid>
+      @foreach(var card in _items.Take(3))
+      {
+        <MudItem xs="12" md="4">
+          <MudCard>
+            <MudCardHeader>
+              <MudText Typo="Typo.h6">@card.Title</MudText>
+              <MudText Typo="Typo.subtitle2">@card.Author</MudText>
+            </MudCardHeader>
+            <MudCardContent>
+              <MudText Typo="Typo.body2">@card.Summary</MudText>
+            </MudCardContent>
+            <MudCardActions>
+              <MudButton Variant="Variant.Outlined" OnClick="@(() => Snackbar.Add("View " + card.Title, Severity.Info))">View</MudButton>
+            </MudCardActions>
+          </MudCard>
+        </MudItem>
+      }
+    </MudGrid>
+
+  </MudPaper>
+</MudContainer>
+
+@code {
+  private string? _search;
+  private List<SampleItem> _items = new();
+
+  protected override void OnInitialized()
+  {
+     _items = Enumerable.Range(1,8).Select(i => new SampleItem{ Id=i, Title=$"Poem {i}", Author=$"Author {i}", Summary="A short beautiful excerpt..." }).ToList();
+  }
+
+  private void OnSearchChanged(string value)
+  {
+     if(string.IsNullOrWhiteSpace(value))
+     {
+         _items = Enumerable.Range(1,8).Select(i => new SampleItem{ Id=i, Title=$"Poem {i}", Author=$"Author {i}", Summary="A short beautiful excerpt..." }).ToList();
+     }
+     else
+     {
+         _items = _items.Where(x=>x.Title.Contains(value, System.StringComparison.OrdinalIgnoreCase) || x.Author.Contains(value, System.StringComparison.OrdinalIgnoreCase)).ToList();
+     }
+  }
+
+  private void AddItem()
+  {
+     var id = (_items.Count>0?_items.Max(x=>x.Id):0)+1;
+     _items.Insert(0,new SampleItem{ Id=id, Title=$"New Poem {id}", Author="You", Summary="Newly created..."});
+     Snackbar.Add("Item created", Severity.Success);
+  }
+
+  private void Edit(SampleItem item){ Snackbar.Add("Edit " + item.Title, Severity.Info); }
+  private void Delete(SampleItem item){ _items.Remove(item); Snackbar.Add("Deleted " + item.Title, Severity.Warning); }
+
+  public class SampleItem { public int Id {get;set;} public string Title{get;set;} = ""; public string Author{get;set;} = ""; public string Summary{get;set;} = ""; }
+}

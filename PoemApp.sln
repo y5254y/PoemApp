@@ -1,0 +1,55 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.API", "PoemApp.API\PoemApp.API.csproj", "{0D35D663-2DBD-4F38-A867-1C40C94E4839}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Core", "PoemApp.Core\PoemApp.Core.csproj", "{1463BF06-BC67-41FF-876E-683B9CBC71CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Infrastructure", "PoemApp.Infrastructure\PoemApp.Infrastructure.csproj", "{E600FC89-3E4D-44D7-949A-96EC3200694D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Admin", "PoemApp.Admin\PoemApp.Admin.csproj", "{28429041-F877-5814-6552-BFD3C3A350D6}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Web", "PoemApp.Web\PoemApp.Web.csproj", "{86647A4B-DEE3-3817-AC76-B9C2784A4595}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PoemApp.Client.ApiClients", "PoemApp.Client.ApiClients\PoemApp.Client.ApiClients.csproj", "{B016880E-5310-4227-B01D-D55781205AD5}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0D35D663-2DBD-4F38-A867-1C40C94E4839}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1463BF06-BC67-41FF-876E-683B9CBC71CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E600FC89-3E4D-44D7-949A-96EC3200694D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{28429041-F877-5814-6552-BFD3C3A350D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86647A4B-DEE3-3817-AC76-B9C2784A4595}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86647A4B-DEE3-3817-AC76-B9C2784A4595}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86647A4B-DEE3-3817-AC76-B9C2784A4595}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86647A4B-DEE3-3817-AC76-B9C2784A4595}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B016880E-5310-4227-B01D-D55781205AD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B016880E-5310-4227-B01D-D55781205AD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B016880E-5310-4227-B01D-D55781205AD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B016880E-5310-4227-B01D-D55781205AD5}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DDFEA590-4E1A-4335-ACE5-718FA25FEDF2}
+	EndGlobalSection
+EndGlobal

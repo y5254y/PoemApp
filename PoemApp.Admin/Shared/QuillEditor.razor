@@ -1,0 +1,115 @@
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+<div id="@_id" class="quill-editor" style="min-height:200px;"></div>
+
+@code {
+    [Parameter] public string? InitialContent { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public EventCallback<string> OnContentChanged { get; set; }
+    [Inject] private IJSRuntime Js { get; set; } = default!;
+
+    private readonly string _id = "quill-" + Guid.NewGuid().ToString("N");
+    private bool _initialized;
+    private string? _lastContent;
+    private DotNetObjectReference<QuillEditor>? _dotNetRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !_initialized)
+        {
+            try
+            {
+                _dotNetRef = DotNetObjectReference.Create(this);
+                // Pass initial content, options and dotnetRef; editorInterop will load Quill if needed
+                await Js.InvokeAsync<bool>("editorInterop.initializeEditor", _id, InitialContent ?? string.Empty, new { }, _dotNetRef);
+                _initialized = true;
+                _lastContent = InitialContent;
+            }
+            catch (JSException jsEx)
+            {
+                Console.WriteLine("Quill initialize JS error: " + jsEx.Message);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Quill initialize error: " + ex.Message);
+            }
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // If the InitialContent changed after initialization, update the editor content.
+        if (_initialized)
+        {
+            if (!string.Equals(_lastContent, InitialContent, StringComparison.Ordinal))
+            {
+                try
+                {
+                    await SetHtmlAsync(InitialContent ?? string.Empty);
+                    _lastContent = InitialContent;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Failed to update editor content after parameter change: " + ex.Message);
+                }
+            }
+        }
+    }
+
+    public async Task<string> GetHtmlAsync()
+    {
+        if (!_initialized) return InitialContent ?? string.Empty;
+        try
+        {
+            return await Js.InvokeAsync<string>("editorInterop.getEditorContent", _id);
+        }
+        catch
+        {
+            return InitialContent ?? string.Empty;
+        }
+    }
+
+    public async Task SetHtmlAsync(string html)
+    {
+        if (!_initialized)
+        {
+            InitialContent = html;
+            _lastContent = html;
+            return;
+        }
+        try
+        {
+            await Js.InvokeVoidAsync("editorInterop.setEditorContent", _id, html ?? string.Empty);
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+
+    [JSInvokable]
+    public async Task NotifyContentChanged(string html)
+    {
+        _lastContent = html;
+        if (OnContentChanged.HasDelegate)
+        {
+            await OnContentChanged.InvokeAsync(html);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            if (_initialized)
+            {
+                await Js.InvokeVoidAsync("editorInterop.destroyEditor", _id);
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+        _dotNetRef?.Dispose();
+    }
+}

@@ -1,0 +1,152 @@
+@page "/categories"
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Extensions
+@using PoemApp.Core.Enums
+@using PoemApp.Client.ApiClients
+@using System.Linq
+@using Microsoft.AspNetCore.Components.Web
+@inject CategoriesApiClient CategoriesClient
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">分类管理</MudText>
+    <MudDivider Class="my-2" />
+
+    <div class="d-flex mb-2">
+        <MudTextField @bind-Value="_search" Immediate="true" OnImmediateValueChanged="OnSearchChanged" Placeholder="搜索分类" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" @onkeydown="OnSearchKeyDown" />
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新建分类</MudButton>
+    </div>
+
+    @* 按 Group 分组显示，顺序固定为：教学阶段、文体、朝代、题材、风格 *@
+    @foreach (var group in _displayOrder)
+    {
+        var groupCats = _categories.Where(c => c.Group == group).ToList();
+        if (!groupCats.Any()) continue;
+
+        <MudPaper Class="pa-3 mb-3" Elevation="1">
+            <div class="d-flex" style="align-items:center;justify-content:space-between;">
+                <MudText Typo="Typo.h6">@group.GetDisplayName() (@groupCats.Count())</MudText>
+                <div>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => OpenCreateGroup(group)">新建该组分类</MudButton>
+                </div>
+            </div>
+
+            <MudExpansionPanels Class="mt-2">
+                @foreach (var root in groupCats.Where(c => c.ParentId == null || !groupCats.Any(gc => gc.Id == c.ParentId)).OrderBy(r => r.Name))
+                {
+                    <CategoryPanelMud Category="root"
+                                     Children="GetChildrenForGroup(root.Id, group)"
+                                     OnEdit="Edit"
+                                     OnDelete="ConfirmDelete"
+                                     GetChildren="GetChildrenDelegateForGroup(group)" />
+                }
+            </MudExpansionPanels>
+        </MudPaper>
+    }
+
+</MudPaper>
+
+@code {
+    private List<CategoryDto> _allCategories = new();
+    private List<CategoryDto> _categories = new();
+    private string _search = string.Empty;
+
+    // 分组显示顺序
+    private readonly CategoryGroup[] _displayOrder = new[]
+    {
+        CategoryGroup.EducationLevel,
+        CategoryGroup.LiteraryForm,
+        CategoryGroup.Dynasty,
+        CategoryGroup.Theme,
+        CategoryGroup.Style
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAllAsync();
+    }
+
+    private async Task LoadAllAsync()
+    {
+        try
+        {
+            _allCategories = await CategoriesClient.GetAllAsync();
+            ApplyFilter();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载分类失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private void ApplyFilter()
+    {
+        if (string.IsNullOrWhiteSpace(_search))
+        {
+            _categories = _allCategories.OrderBy(c => c.Name).ToList();
+        }
+        else
+        {
+            var s = _search.Trim();
+            _categories = _allCategories
+                .Where(c => (c.Name != null && c.Name.Contains(s, StringComparison.OrdinalIgnoreCase))
+                            || (c.ParentName != null && c.ParentName.Contains(s, StringComparison.OrdinalIgnoreCase))
+                            || (c.Group.HasValue && c.Group.Value.ToString().Contains(s, StringComparison.OrdinalIgnoreCase))
+                            || (c.Group.HasValue && c.Group.Value.GetDisplayName().Contains(s, StringComparison.OrdinalIgnoreCase)))
+                .OrderBy(c => c.Name)
+                .ToList();
+        }
+    }
+
+    private void OnSearchChanged(string value)
+    {
+        _search = value ?? string.Empty;
+        ApplyFilter();
+    }
+
+    private void OnSearchKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            ApplyFilter();
+        }
+    }
+
+    // 返回指定 group 下的子项（供 CategoryPanelMud 使用）
+    private List<CategoryDto> GetChildrenForGroup(int parentId, CategoryGroup group)
+    {
+        return _categories
+            .Where(c => c.ParentId == parentId && c.Group == group)
+            .OrderBy(c => c.Name)
+            .ToList();
+    }
+
+    // 为组件提供闭包委托，绑定当前 group
+    private Func<int, List<CategoryDto>> GetChildrenDelegateForGroup(CategoryGroup group) => id => GetChildrenForGroup(id, group);
+
+    private void OpenCreate() => Navigation.NavigateTo("/categories/edit/0");
+    private void OpenCreateGroup(CategoryGroup group) => Navigation.NavigateTo($"/categories/edit/0?group={group}");
+    private void Edit(int id) => Navigation.NavigateTo($"/categories/edit/{id}");
+
+    private async Task ConfirmDelete(int id)
+    {
+        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确认删除分类 {id} 吗？", yesText: "确认", noText: "取消");
+        if (confirmed == true) await DoDelete(id);
+    }
+
+    private async Task DoDelete(int id)
+    {
+        var ok = await CategoriesClient.DeleteAsync(id);
+        if (ok)
+        {
+            Snackbar.Add("删除成功", Severity.Success);
+            await LoadAllAsync();
+        }
+        else Snackbar.Add("删除失败", Severity.Error);
+    }
+}

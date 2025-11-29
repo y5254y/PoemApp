@@ -1,0 +1,338 @@
+@page "/poems/edit/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using Microsoft.AspNetCore.Components.Forms
+@using PoemApp.Client.ApiClients
+@using System.Collections.Generic
+@inject PoemApiClient PoemClient
+@inject AuthorsApiClient AuthorsClient
+@inject CategoriesApiClient CategoriesClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
+    <MudText Typo="Typo.h5">诗文编辑</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleValid" OnInvalidSubmit="HandleInvalid">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <MudTextField @bind-Value="_model.Title" Label="标题" Required="true" />
+        <MudSelect T="int" Label="作者" @bind-Value="_model.AuthorId" Required="true">
+            @foreach (var a in _authors)
+            {
+                <MudSelectItem T="int" Value="@a.Id">@a.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="DynastyEnum" Label="朝代" @bind-Value="_model.Dynasty" Required="true">
+            @foreach (DynastyEnum d in Enum.GetValues(typeof(DynastyEnum)))
+            {
+                <MudSelectItem T="DynastyEnum" Value="@(d)">@PoemApp.Core.Extensions.EnumExtensions.GetDisplayName(d)</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">分类</MudText>
+
+        @* 按 Group 分组显示分类，保留父子层级并显示复选框 *@
+        @foreach (var group in _displayOrder)
+        {
+            var groupNodes = BuildTreeListForGroup(group);
+            if (!groupNodes.Any()) continue;
+
+            <MudPaper Class="pa-2 mb-2" Elevation="0">
+                <MudText Typo="Typo.subtitle2" Class="mb-1">@group.GetDisplayName()</MudText>
+
+                <div>
+                    @foreach (var node in groupNodes)
+                    {
+                        var sel = _categorySelections.FirstOrDefault(s => s.Id == node.Id);
+                        <div class="d-flex align-center" style="gap:8px; padding-left:@(node.Level * 16)px;">
+                            <input type="checkbox" id="cat-@node.Id" checked="@sel?.Checked" @onchange="@(e => ToggleCategoryChangedById(node.Id, e))" />
+                            <label for="cat-@node.Id">@node.Name</label>
+                        </div>
+                    }
+                </div>
+            </MudPaper>
+        }
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">内容</MudText>
+        <QuillEditor @ref="_editor" InitialContent="@(_model.Content ?? string.Empty)" OnContentChanged="OnEditorContentChanged" />
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">译文</MudText>
+        <QuillEditor @ref="_translationEditor" InitialContent="@(_model.Translation ?? string.Empty)" OnContentChanged="OnTranslationChanged" />
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">注释</MudText>
+        <QuillEditor @ref="_annotationEditor" InitialContent="@(_model.Annotation ?? string.Empty)" OnContentChanged="OnAnnotationChanged" />
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">作品鉴赏</MudText>
+        <QuillEditor @ref="_appreciationEditor" InitialContent="@(_model.Appreciation ?? string.Empty)" OnContentChanged="OnAppreciationChanged" />
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">背景</MudText>
+        <QuillEditor @ref="_backgroundEditor" InitialContent="@(_model.Background ?? string.Empty)" OnContentChanged="OnBackgroundChanged" />
+
+        <div class="mt-3">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Delete">删除</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        </div>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CreatePoemDto _model = new();
+    private QuillEditor? _editor;
+    private QuillEditor? _translationEditor;
+    private QuillEditor? _annotationEditor;
+    private QuillEditor? _appreciationEditor;
+    private QuillEditor? _backgroundEditor;
+    private List<AuthorDto> _authors = new();
+    private List<CategoryDto> _categories = new();
+
+    // selection wrapper so each checkbox binds to a concrete property
+    private record CategorySelection(int Id, string Name, int? ParentId)
+    {
+        public bool Checked { get; set; }
+    }
+
+    private List<CategorySelection> _categorySelections = new();
+
+    // 分组显示顺序
+    private readonly CategoryGroup[] _displayOrder = new[]
+    {
+        CategoryGroup.EducationLevel,
+        CategoryGroup.LiteraryForm,
+        CategoryGroup.Dynasty,
+        CategoryGroup.Theme,
+        CategoryGroup.Style
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authors = (await AuthorsClient.GetAllAsync()).Items.ToList();
+        _categories = await CategoriesClient.GetAllAsync();
+
+        // initialize selections from categories (unchecked by default)
+        _categorySelections = _categories.Select(c => new CategorySelection(c.Id, c.Name, c.ParentId)).ToList();
+
+        if (Id != 0)
+        {
+            var dto = await PoemClient.GetByIdAsync(Id);
+            if (dto != null)
+            {
+                _model = new CreatePoemDto
+                {
+                    Title = dto.Title,
+                    AuthorId = dto.AuthorId,
+                    Dynasty = dto.Dynasty,
+                    Background = dto.Background,
+                    Translation = dto.Translation,
+                    Annotation = dto.Annotation,
+                    Appreciation = dto.Appreciation,
+                    Content = dto.Content,
+                    CategoryIds = (dto.CategoryIds != null && dto.CategoryIds.Count > 0)
+                        ? dto.CategoryIds
+                        : dto.Categories.Select(cn => _categories.FirstOrDefault(c => c.Name == cn)?.Id ?? 0).Where(x => x > 0).ToList()
+                };
+
+                // mark selections checked according to model.CategoryIds
+                var set = new HashSet<int>(_model.CategoryIds);
+                foreach (var sel in _categorySelections)
+                {
+                    sel.Checked = set.Contains(sel.Id);
+                }
+            }
+        }
+        else
+        {
+            // If creating and authors list not empty, optionally preselect first author to help validation UX
+            if (_authors.Any())
+            {
+                _model.AuthorId = _authors.First().Id;
+            }
+        }
+    }
+
+    private void OnCategoryToggled(int categoryId, bool isChecked)
+    {
+        // kept for any side-effects; actual saving reads from _categorySelections
+    }
+
+    private void HandleInvalid(EditContext editContext)
+    {
+        var errors = editContext.GetValidationMessages().ToList();
+        if (errors.Any())
+        {
+            var msg = string.Join(';', errors.Take(5));
+            Snackbar.Add("表单验证失败: " + msg, Severity.Warning);
+        }
+        else
+        {
+            Snackbar.Add("表单验证失败，请检查输入", Severity.Warning);
+        }
+    }
+
+    private Task OnEditorContentChanged(string html)
+    {
+        _model.Content = html;
+        return Task.CompletedTask;
+    }
+
+    private Task OnTranslationChanged(string html)
+    {
+        _model.Translation = html;
+        return Task.CompletedTask;
+    }
+
+    private Task OnAnnotationChanged(string html)
+    {
+        _model.Annotation = html;
+        return Task.CompletedTask;
+    }
+
+    private Task OnAppreciationChanged(string html)
+    {
+        _model.Appreciation = html;
+        return Task.CompletedTask;
+    }
+
+    private Task OnBackgroundChanged(string html)
+    {
+        _model.Background = html;
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleValid()
+    {
+        // get content from editors (redundant if OnContentChanged already updated model, kept for safety)
+        if (_editor != null)
+        {
+            _model.Content = await _editor.GetHtmlAsync();
+        }
+
+        if (_translationEditor != null)
+        {
+            _model.Translation = await _translationEditor.GetHtmlAsync();
+        }
+
+        if (_annotationEditor != null)
+        {
+            _model.Annotation = await _annotationEditor.GetHtmlAsync();
+        }
+
+        if (_appreciationEditor != null)
+        {
+            _model.Appreciation = await _appreciationEditor.GetHtmlAsync();
+        }
+
+        if (_backgroundEditor != null)
+        {
+            _model.Background = await _backgroundEditor.GetHtmlAsync();
+        }
+
+        // sync selected categories into model from selection wrappers
+        _model.CategoryIds = _categorySelections.Where(s => s.Checked).Select(s => s.Id).ToList();
+
+        try
+        {
+            if (Id == 0)
+            {
+                var created = await PoemClient.CreateAsync(_model);
+                if (created != null)
+                {
+                    Snackbar.Add("创建成功", Severity.Success);
+                    Navigation.NavigateTo("/poems");
+                }
+                else Snackbar.Add("创建失败", Severity.Error);
+            }
+            else
+            {
+                var ok = await PoemClient.UpdateAsync(Id, new UpdatePoemDto {
+                    Title = _model.Title,
+                    Content = _model.Content,
+                    AuthorId = _model.AuthorId,
+                    Dynasty = _model.Dynasty,
+                    Background = _model.Background,
+                    Translation = _model.Translation,
+                    Annotation = _model.Annotation,
+                    Appreciation = _model.Appreciation,
+                    CategoryIds = _model.CategoryIds
+                });
+                if (ok) { Snackbar.Add("更新成功", Severity.Success); Navigation.NavigateTo("/poems"); }
+                else Snackbar.Add("更新失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private async Task Delete()
+    {
+        if (Id == 0) return;
+        var ok = await PoemClient.DeleteAsync(Id);
+        if (ok) { Snackbar.Add("删除成功", Severity.Success); Navigation.NavigateTo("/poems"); }
+        else Snackbar.Add("删除失败", Severity.Error);
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/poems");
+
+    private async Task ToggleCategoryChangedById(int id, ChangeEventArgs e)
+    {
+        bool isChecked = false;
+        if (e?.Value is bool b) isChecked = b;
+        else if (e?.Value is string s) isChecked = s == "true" || s == "on";
+
+        var sel = _categorySelections.FirstOrDefault(x => x.Id == id);
+        if (sel != null) sel.Checked = isChecked;
+
+        // if checked, ensure parent chain is also checked
+        if (isChecked && sel?.ParentId.HasValue == true)
+        {
+            var parentId = sel.ParentId.Value;
+            while (true)
+            {
+                var parentSel = _categorySelections.FirstOrDefault(x => x.Id == parentId);
+                if (parentSel == null) break;
+                if (!parentSel.Checked) parentSel.Checked = true;
+                if (!parentSel.ParentId.HasValue) break;
+                parentId = parentSel.ParentId.Value;
+            }
+        }
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // 构建指定 group 的树形列表，返回(ID, Name, Level)
+    private List<(int Id, string Name, int Level)> BuildTreeListForGroup(CategoryGroup group)
+    {
+        var list = new List<(int, string, int)>();
+        var groupCats = _categories.Where(c => c.Group == group).ToList();
+        var lookup = groupCats.ToLookup(c => c.ParentId);
+
+        // roots: parent is null or parent not in same group
+        var roots = groupCats.Where(c => !c.ParentId.HasValue || !groupCats.Any(gc => gc.Id == c.ParentId)).OrderBy(c => c.Name).ToList();
+
+        void Traverse(CategoryDto node, int level)
+        {
+            list.Add((node.Id, node.Name, level));
+            foreach (var child in lookup[node.Id].OrderBy(c => c.Name))
+            {
+                Traverse(child, level + 1);
+            }
+        }
+
+        foreach (var r in roots)
+        {
+            Traverse(r, 0);
+        }
+
+        return list;
+    }
+}

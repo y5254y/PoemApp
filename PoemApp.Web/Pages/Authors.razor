@@ -1,0 +1,160 @@
+@page "/authors"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@using System.Text.RegularExpressions
+@using System.Net
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>诗人介绍 - PoemApp</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">诗人介绍</MudText>
+
+    <!-- 搜索 -->
+    <MudPaper Class="pa-4 mb-6" Elevation="2">
+        <MudTextField @bind-Value="_searchText"
+                      Label="搜索诗人"
+                      Placeholder="输入诗人姓名或简介"
+                      Adornment="Adornment.Start"
+                      AdornmentIcon="@Icons.Material.Filled.Search"
+                      Variant="Variant.Outlined"
+                      Clearable="true"
+                      OnKeyDown="OnSearchKeyDown" />
+    </MudPaper>
+
+    <!-- 诗人列表 -->
+    @if (_filteredAuthors == null)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+    }
+    else if (!_filteredAuthors.Any())
+    {
+        <MudPaper Class="pa-8 text-center" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary">暂无诗人数据</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <MudGrid Spacing="4">
+            @foreach (var author in _filteredAuthors)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <MudCard Class="h-100" Elevation="4" Style="cursor: pointer;" OnClick="() => ViewAuthor(author.Id)">
+                        <MudCardHeader>
+                            <CardHeaderAvatar>
+                                <MudAvatar Size="Size.Large" Color="Color.Primary">
+                                    <MudText Color="Color.Surface">@author.Name?.Substring(0, 1)</MudText>
+                                </MudAvatar>
+                            </CardHeaderAvatar>
+                            <CardHeaderContent>
+                                <MudText Typo="Typo.h6">
+                                    <NavLink href="@($"/author/{author.Id}")" style="text-decoration:none;color:inherit;">@author.Name</NavLink>
+                                </MudText>
+                                <MudText Typo="Typo.body2" Color="Color.Secondary">@author.Dynasty.GetDisplayName()</MudText>
+                            </CardHeaderContent>
+                        </MudCardHeader>
+                        <MudCardContent Class="flex-grow-1">
+                            @if (!string.IsNullOrEmpty(author.Biography))
+                            {
+                                var bioPreview = StripHtml(author.Biography);
+                                <MudText Typo="Typo.body2" Style="line-height: 1.6;">
+                                    <NavLink href="@($"/author/{author.Id}")" style="text-decoration:none;color:inherit;">@(bioPreview.Length > 120 ? bioPreview.Substring(0, 120) + "..." : bioPreview)</NavLink>
+                                </MudText>
+                            }
+                            else
+                            {
+                                <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style: italic;">
+                                    该诗人暂无详细介绍
+                                </MudText>
+                            }
+                        </MudCardContent>
+                        <MudCardActions>
+                            <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => ViewAuthor(author.Id)">
+                                查看详情
+                            </MudButton>
+                        </MudCardActions>
+                    </MudCard>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<AuthorDto>? _allAuthors;
+    private List<AuthorDto>? _filteredAuthors;
+    private string _searchText = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Authors page OnInitializedAsync called");
+        await LoadAuthorsAsync();
+    }
+
+    private async Task LoadAuthorsAsync()
+    {
+        try
+        {
+            Console.WriteLine("Loading authors...");
+            var result = await AuthorsClient.GetAllAsync();
+            _allAuthors = result.Items;
+            ApplyFilters();
+            Console.WriteLine($"Loaded {_allAuthors?.Count ?? 0} authors");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading authors: {ex.Message}");
+            Snackbar.Add("加载诗人数据失败，请稍后重试", Severity.Error);
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        if (_allAuthors == null) return;
+
+        if (string.IsNullOrWhiteSpace(_searchText))
+        {
+            _filteredAuthors = _allAuthors;
+        }
+        else
+        {
+            var search = _searchText.Trim().ToLowerInvariant();
+            _filteredAuthors = _allAuthors.Where(a =>
+                (a.Name ?? string.Empty).ToLower().Contains(search) ||
+                (StripHtml(a.Biography ?? string.Empty) ?? string.Empty).ToLower().Contains(search) ||
+                a.Dynasty.GetDisplayName().ToLower().Contains(search)).ToList();
+        }
+    }
+
+    private async Task OnSearchKeyDown(KeyboardEventArgs args)
+    {
+        if (args?.Key == "Enter" || args?.Code == "Enter")
+        {
+            ApplyFilters();
+        }
+    }
+
+    private void OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        // keep for compatibility if needed
+        if (args?.Key == "Enter") ApplyFilters();
+    }
+
+    private void ViewAuthor(int authorId)
+    {
+        Navigation.NavigateTo($"/author/{authorId}");
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = Regex.Replace(html, "<.*?>", string.Empty);
+        return WebUtility.HtmlDecode(text).Trim();
+    }
+}

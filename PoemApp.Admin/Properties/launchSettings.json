@@ -1,0 +1,12 @@
+{
+  "profiles": {
+    "PoemApp.Admin": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "applicationUrl": "http://0.0.0.0:7002;http://localhost:7003"
+    }
+  }
+}

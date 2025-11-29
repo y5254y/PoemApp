@@ -1,0 +1,99 @@
+@page "/authors/edit/{Id:int}"
+@attribute [Authorize]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
+    <MudText Typo="Typo.h5">作者编辑</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleValid">
+        <MudTextField @bind-Value="_model.Name" Label="姓名" Required="true" />
+        <MudSelect T="DynastyEnum" Label="朝代" @bind-Value="_model.Dynasty" Required="true">
+            @foreach (DynastyEnum d in Enum.GetValues(typeof(DynastyEnum)))
+            {
+                <MudSelectItem T="DynastyEnum" Value="@d">@d.GetDisplayName()</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">传记（富文本）</MudText>
+        <div style="min-height:300px; border:1px solid var(--mud-palette-divider);">
+            <QuillEditor @ref="_quill" InitialContent="@_model.Biography" Placeholder="请输入作者传记..." />
+        </div>
+
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Class="mt-3">保存</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel" Class="mt-3">取消</MudButton>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private CreateAuthorDto _model = new();
+    private Shared.QuillEditor? _quill;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != 0)
+        {
+            var dto = await AuthorsClient.GetByIdAsync(Id);
+            if (dto != null)
+            {
+                _model = new CreateAuthorDto
+                {
+                    Name = dto.Name,
+                    Dynasty = dto.Dynasty,
+                    Biography = dto.Biography ?? string.Empty
+                };
+            }
+        }
+    }
+
+    private async Task HandleValid()
+    {
+        try
+        {
+            if (_quill != null)
+            {
+                try
+                {
+                    var html = await _quill.GetHtmlAsync();
+                    _model.Biography = html ?? string.Empty;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Quill GetHtml failed: " + ex.Message);
+                }
+            }
+
+            bool success;
+            if (Id == 0)
+            {
+                var res = await AuthorsClient.CreateAsync(_model);
+                success = res != null;
+            }
+            else
+            {
+                success = await AuthorsClient.UpdateAsync(Id, new UpdateAuthorDto
+                {
+                    Name = _model.Name,
+                    Dynasty = _model.Dynasty,
+                    Biography = _model.Biography
+                });
+            }
+
+            Snackbar.Add(success ? "保存成功" : "保存失败", success ? Severity.Success : Severity.Error);
+            if (success) Navigation.NavigateTo("/authors");
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/authors");
+}

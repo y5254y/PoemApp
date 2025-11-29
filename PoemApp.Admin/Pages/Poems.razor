@@ -1,0 +1,124 @@
+@page "/poems"
+@using PoemApp.Core.DTOs
+@using PoemApp.Admin.Services
+@using MudBlazor
+@using PoemApp.Client.ApiClients
+@using Microsoft.AspNetCore.Components.Web
+@inject PoemApiClient PoemClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">诗文管理</MudText>
+    <MudDivider Class="my-2" />
+
+    <MudTable T="PoemDto" @ref="_table" ServerData="@(async (TableState s, CancellationToken ct) => await LoadServerData(s, ct))" Striped="true" Hover="true" Bordered="true">
+        <ToolBarContent>
+            <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="搜索标题/作者" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" @onkeyup="OnSearchKeyUp" />
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@( () => Navigation.NavigateTo("/poems/edit/0") )">新建诗文</MudButton>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh>标题</MudTh>
+            <MudTh>作者</MudTh>
+            <MudTh>朝代</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.Title</MudTd>
+            <MudTd>@context.AuthorName</MudTd>
+            <MudTd>@context.DynastyDisplayName</MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">编辑</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
+            </MudTd>
+        </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private MudTable<PoemDto>? _table;
+    private string _search = string.Empty;
+
+    private async Task<TableData<PoemDto>> LoadServerData(TableState state, CancellationToken ct)
+    {
+        try
+        {
+            // PoemApiClient currently only has GetAllAsync without paging. Use it and filter client-side until server paging added.
+            var list = await PoemClient.GetAllAsync();
+            var q = list.AsQueryable();
+            if (!string.IsNullOrWhiteSpace(_search))
+            {
+                var s = _search.Trim().ToLowerInvariant();
+                q = q.Where(p => (p.Title ?? string.Empty).ToLower().Contains(s) || (p.AuthorName ?? string.Empty).ToLower().Contains(s));
+            }
+
+            var items = q.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
+            return new TableData<PoemDto> { TotalItems = q.Count(), Items = items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载诗文失败: " + ex.Message, Severity.Error);
+            return new TableData<PoemDto> { TotalItems = 0, Items = new List<PoemDto>() };
+        }
+    }
+
+    private Task OnSearchChanged(string value)
+    {
+        _search = value ?? string.Empty;
+        return Task.CompletedTask;
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
+        }
+    }
+
+    private void Edit(int id) => Navigation.NavigateTo($"/poems/edit/{id}");
+
+    private async Task ConfirmDelete(int id)
+    {
+        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确认删除这篇诗文吗？", yesText: "确认", noText: "取消", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
+        if (confirmed == true)
+        {
+            await DoDelete(id);
+        }
+    }
+
+    private async Task DoDelete(int id)
+    {
+        try
+        {
+            var ok = await PoemClient.DeleteAsync(id);
+            if (ok)
+            {
+                Snackbar.Add("删除成功", Severity.Success);
+                if (_table != null)
+                {
+                    await _table.ReloadServerData();
+                }
+            }
+            else
+            {
+                Snackbar.Add("删除失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
+        }
+    }
+}

@@ -1,0 +1,236 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry;
+using OpenTelemetry.Exporter;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using PoemApp.Core.Interfaces;
+//using Microsoft.OpenApi;
+using PoemApp.Infrastructure.Data;
+using PoemApp.Infrastructure.Extensions;
+using PoemApp.Infrastructure.Services;
+using Serilog;
+using Serilog.Core;
+using Serilog.Events;
+using System.Diagnostics;
+using System.Reflection;
+using System.Security.Claims;
+using System.Text;
+
+
+namespace PoemApp.API;
+
+public class Program
+{
+    public static async Task Main(string[] args)
+    {
+        var builder = WebApplication.CreateBuilder(args);
+
+        // Create a LoggingLevelSwitch so we can change the level at runtime
+        var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Information);
+
+        // Configure Serilog with async file sink and controlled level
+        var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-api.log");
+        Log.Logger = new LoggerConfiguration()
+            .MinimumLevel.ControlledBy(levelSwitch)
+            .Enrich.FromLogContext()
+            .WriteTo.Console()
+            .WriteTo.Async(a => a.File(logFilePath, rollingInterval: RollingInterval.Day))
+            .CreateLogger();
+
+        builder.Host.UseSerilog();
+
+        // expose Serilog.ILogger and LoggingLevelSwitch to DI so controllers can change level
+        builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
+        builder.Services.AddSingleton<LoggingLevelSwitch>(levelSwitch);
+
+        // 注册基础设施服务
+        try
+        {
+            builder.Services.AddInfrastructure(builder.Configuration);
+            Console.WriteLine("基础设施服务注册成功");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"基础设施服务注册失败: {ex.Message}");
+            Console.WriteLine($"异常详情: {ex}");
+        }
+        // 检查 IAuthService 是否已注册
+        var serviceCollection = builder.Services;
+        var authServiceDescriptor = serviceCollection.FirstOrDefault(d => d.ServiceType == typeof(IAuthService));
+        Console.WriteLine($"IAuthService 注册状态: {(authServiceDescriptor != null ? "已注册" : "未注册")}");
+
+        // 如果是已注册，显示实现类型
+        if (authServiceDescriptor != null)
+        {
+            Console.WriteLine($"IAuthService 实现类型: {authServiceDescriptor.ImplementationType?.Name}");
+        }
+
+
+        // === 应用名（必须符合腾讯规范）===
+        const string serviceName = "poemapp-api"; // 小写，可含 -，≤63字符
+
+        // === 腾讯云 APM 配置 ===
+        const string token = "kWFYHaWKfOzEGoNBsnJq";
+        const string endpoint = "http://ap-guangzhou.apm.tencentcs.com:4319";
+
+
+
+        //builder.Services.AddOpenTelemetry()
+        //    .ConfigureResource(resource => resource
+        //        .AddService(serviceName: builder.Environment.ApplicationName)
+        //        .AddAttributes(new Dictionary<string, object>
+        //        {
+        //            ["token"] = token, // <token>替换成前置步骤中获得的 Token
+        //            ["host.name"] = Environment.MachineName// <host>替换成自定义主机名
+        //        }))
+        //    .WithTracing(tracing => tracing
+        //        .AddAspNetCoreInstrumentation()
+
+        //        .AddConsoleExporter()
+        //        .AddOtlpExporter()
+
+        //        .AddOtlpExporter(otlpOptions =>
+        //        {
+        //            otlpOptions.Endpoint = new Uri(endpoint); // <endpoint>替换成前置步骤中获得的接入点信息
+        //            otlpOptions.Protocol = OtlpExportProtocol.Grpc;
+
+        //        }))
+        //    .WithMetrics(metrics => metrics
+        //        .AddAspNetCoreInstrumentation()
+        //        .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+        //            {
+        //                metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+        //            })
+        //        .AddOtlpExporter(otlpOptions =>
+        //        {
+        //            otlpOptions.Endpoint = new Uri(endpoint); // <endpoint>替换成前置步骤中获得的接入点信息
+        //            otlpOptions.Protocol = OtlpExportProtocol.Grpc;
+        //        }));
+
+        builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource
+        .AddService(serviceName: builder.Environment.ApplicationName))
+        .WithTracing(tracing => tracing
+        .AddAspNetCoreInstrumentation()
+
+        .AddConsoleExporter()
+        .AddOtlpExporter()
+
+        .AddOtlpExporter(otlpOptions =>
+        {
+            otlpOptions.Endpoint = new Uri("http://tracing-analysis-dc-hz-internal.aliyuncs.com/adapt_f1pfgeadvy@a75a87db5bc9eb3_f1pfgeadvy@53df7ad2afe8301/api/otlp/traces");
+            otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+
+        }))
+    .WithMetrics(metrics => metrics
+        .AddAspNetCoreInstrumentation()
+        .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+        {
+            metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+        })
+        .AddOtlpExporter(otlpOptions =>
+        {
+            otlpOptions.Endpoint = new Uri("http://tracing-analysis-dc-hz-internal.aliyuncs.com/adapt_f1pfgeadvy@a75a87db5bc9eb3_f1pfgeadvy@53df7ad2afe8301/api/otlp/traces");
+            otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
+            
+        }));
+
+
+        // 添加服务到容器
+        builder.Services.AddAuthorization();
+        builder.Services.AddControllers();
+
+        // 添加 JWT 认证
+        var jwtKey = builder.Configuration["Jwt:Key"];
+        if (string.IsNullOrEmpty(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 64)
+        {
+            jwtKey = "ThisIsAVeryLongSecretKeyForJWTTokenGenerationThatIsAtLeast64BytesLongToMeetHMACSHA512Requirements";
+        }
+
+        builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = builder.Configuration["Jwt:Issuer"],
+                    ValidAudience = builder.Configuration["Jwt:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey)),
+                    // Ensure role/name claim mapping matches tokens created in AuthService
+                    RoleClaimType = ClaimTypes.Role,
+                    NameClaimType = ClaimTypes.Name,
+                    // 放宽时钟偏差，避免时间同步问题
+                    ClockSkew = TimeSpan.FromMinutes(5)
+                };
+
+                options.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine($"认证失败: {context.Exception.Message}");
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine("Token 验证成功");
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
+        builder.Services.AddOpenApiDocument(config =>
+        {
+            config.Title = "PoemApp API";
+            config.Version = "v1";
+        });
+
+        // 配置CORS
+        builder.Services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            });
+        });
+
+        var app = builder.Build();
+
+
+        // 种子数据（仅在开发环境）
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseOpenApi();
+            app.UseSwaggerUi();
+            using var scope = app.Services.CreateScope();
+            try
+            {
+                var seedService = scope.ServiceProvider.GetRequiredService<IDataSeedService>();
+                await seedService.SeedTestDataAsync();
+            }
+            catch (Exception ex)
+            {
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "种子数据执行失败");
+            }
+        }
+
+        //app.UseHttpsRedirection();
+        app.UseAuthentication();    // 重要：添加认证中间件
+        app.UseCors("AllowAll");
+        app.UseAuthorization();
+        app.MapControllers();
+        //app.MapHealthChecks("/health"); // Map health check endpoint
+
+        app.Run();
+    }
+}

@@ -1,0 +1,100 @@
+@page "/category/{Id:int}"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Client.ApiClients
+@using Microsoft.AspNetCore.Components
+@using System.Text.RegularExpressions
+@using System.Net
+@inject CategoriesApiClient CategoriesClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>@(category?.Name ?? "Category") - PoemApp</PageTitle>
+
+@if (category == null)
+{
+    <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+}
+else
+{
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudText Typo="Typo.h4" Class="mb-3" Color="Color.Primary">@category.Name</MudText>
+        @if (!string.IsNullOrEmpty(category.Description))
+        {
+            <MudPaper Class="pa-4 mb-4" Elevation="2">
+                @((MarkupString)category.Description)
+            </MudPaper>
+        }
+
+        @if (category.Poems?.Any() == true)
+        {
+            <MudText Typo="Typo.h6" Class="mb-2">相关文章</MudText>
+            <MudGrid Spacing="3">
+                @foreach (var poem in category.Poems)
+                {
+                    <MudItem xs="12" sm="6" md="4">
+                        <NavLink href="@($"/poem/{poem.Id}")" style="text-decoration:none;color:inherit;display:block;">
+                            <MudCard Elevation="2" Style="cursor: pointer;">
+                                <MudCardHeader>
+                                    <CardHeaderContent>
+                                        <MudText Typo="Typo.subtitle1">@poem.Title</MudText>
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@poem.AuthorName</MudText>
+                                    </CardHeaderContent>
+                                </MudCardHeader>
+                                <MudCardContent>
+                                    @if (!string.IsNullOrEmpty(poem.Content))
+                                    {
+                                        var preview = StripHtml(poem.Content);
+                                        <MudText Typo="Typo.body2">@(preview.Length > 120 ? preview.Substring(0, 120) + "..." : preview)</MudText>
+                                    }
+                                </MudCardContent>
+                            </MudCard>
+                        </NavLink>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+        else
+        {
+            <MudPaper Class="pa-4 text-center" Elevation="1">
+                <MudText Typo="Typo.body1" Color="Color.Secondary">暂无相关诗文</MudText>
+            </MudPaper>
+        }
+    </MudContainer>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CategoryDto? category;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCategoryAsync();
+    }
+
+    private async Task LoadCategoryAsync()
+    {
+        try
+        {
+            category = await CategoriesClient.GetByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading category {Id}: {ex.Message}");
+            Snackbar.Add("加载分类数据失败", Severity.Error);
+        }
+    }
+
+    private void ViewPoem(int poemId)
+    {
+        Navigation.NavigateTo($"/poem/{poemId}");
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = Regex.Replace(html, "<.*?>", string.Empty);
+        return WebUtility.HtmlDecode(text).Trim();
+    }
+}

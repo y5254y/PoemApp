@@ -1,0 +1,118 @@
+@page "/authors/{AuthorId:int}/relationships"
+@attribute [Authorize]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
+    <MudText Typo="Typo.h5">作者关系管理</MudText>
+
+    <MudDivider Class="my-2" />
+
+    <MudGrid>
+        <MudItem xs="12">
+            <MudSelect T="int?" @bind-Value="_selectedToAuthorId" Label="选择目标作者" Clearable="true">
+                @foreach (var a in _allAuthors)
+                {
+                    <MudSelectItem T="int?" Value="@(a.Id)">@a.Name</MudSelectItem>
+                }
+            </MudSelect>
+            <MudSelect T="RelationshipTypeEnum" @bind-Value="_selectedRelationType" Label="关系类型">
+                @foreach (RelationshipTypeEnum r in Enum.GetValues(typeof(RelationshipTypeEnum)))
+                {
+                    <MudSelectItem T="RelationshipTypeEnum" Value="@r">@r.GetDisplayName()</MudSelectItem>
+                }
+            </MudSelect>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRelationship">添加关系</MudButton>
+        </MudItem>
+
+        <MudItem xs="12" Class="mt-4">
+            <MudTable Items="_relationships">
+                <HeaderContent>
+                    <MudTh>目标作者</MudTh>
+                    <MudTh>关系</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
+                <RowTemplate>
+                    <MudTd>@context.ToAuthorName</MudTd>
+                    <MudTd>@context.RelationshipType.GetDisplayName()</MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => RemoveRelationship(context.Id)">删除</MudButton>
+                    </MudTd>
+                </RowTemplate>
+            </MudTable>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    [Parameter] public int AuthorId { get; set; }
+
+    private List<AuthorDto> _allAuthors = new();
+    private List<AuthorRelationshipDto> _relationships = new();
+
+    private int? _selectedToAuthorId;
+    private RelationshipTypeEnum _selectedRelationType = RelationshipTypeEnum.Friends;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInitialData();
+    }
+
+    private async Task LoadInitialData()
+    {
+        var all = await AuthorsClient.GetAllAsync();
+        _allAuthors = all.Items.Where(a => a.Id != AuthorId).ToList();
+
+        var current = await AuthorsClient.GetByIdAsync(AuthorId);
+        _relationships = current?.Relationships ?? new List<AuthorRelationshipDto>();
+    }
+
+    private async Task AddRelationship()
+    {
+        if (_selectedToAuthorId == null)
+        {
+            Snackbar.Add("请选择目标作者", Severity.Warning);
+            return;
+        }
+
+        // Prevent adding duplicate relationships on client before calling API
+        if (_relationships.Any(r => r.ToAuthorId == _selectedToAuthorId.Value && r.RelationshipType == _selectedRelationType))
+        {
+            Snackbar.Add("关系已存在", Severity.Warning);
+            return;
+        }
+
+        var dto = new CreateAuthorRelationshipDto { FromAuthorId = AuthorId, ToAuthorId = _selectedToAuthorId.Value, RelationshipType = _selectedRelationType };
+        var res = await AuthorsClient.AddRelationshipAsync(dto);
+        if (res != null)
+        {
+            Snackbar.Add("添加成功", Severity.Success);
+            await LoadInitialData();
+        }
+        else
+        {
+            Snackbar.Add("添加失败", Severity.Error);
+        }
+    }
+
+    private async Task RemoveRelationship(int id)
+    {
+        var ok = await AuthorsClient.RemoveRelationshipAsync(id);
+        if (ok)
+        {
+            Snackbar.Add("删除成功", Severity.Success);
+            await LoadInitialData();
+        }
+        else
+        {
+            Snackbar.Add("删除失败", Severity.Error);
+        }
+    }
+}

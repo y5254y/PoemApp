@@ -1,0 +1,117 @@
+@using Microsoft.AspNetCore.Authorization
+@inherits LayoutComponentBase
+@using MudBlazor
+@using Microsoft.AspNetCore.Components.Authorization
+@using PoemApp.Admin.Services
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.JSInterop
+@using System.Net.Http.Headers
+@using System.Net.Http.Json
+
+<MudLayout>
+    <!-- Use a primary AppBar so icons/text contrast on mobile -->
+    <MudAppBar Elevation="1" Color="Color.Primary">
+        <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit"  Edge="Edge.Start" OnClick="ToggleDrawer" />
+        <MudSpacer />
+        <MudText Typo="Typo.h6" Color="Color.Inherit">PoemApp ¹ÜÀí¶Ë</MudText>
+        <MudSpacer />
+
+        <AuthorizeView>
+            <Authorized Context="innerState">
+                <MudText Typo="Typo.body2" Color="Color.Inherit" Class="mr-3">@innerState.User.Identity?.Name</MudText>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Logout">×¢Ïú</MudButton>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoginNavigate">µÇÂ¼</MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudAppBar>
+
+    <!-- Responsive drawer -->
+    <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Variant="DrawerVariant.Responsive" Breakpoint="Breakpoint.Md">
+        <NavMenu />
+    </MudDrawer>
+
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.False" Class="pa-4">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private AuthenticationStateProvider AuthStateProvider { get; set; } = null!;
+    [Inject] private IHttpClientFactory HttpClientFactory { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
+    private const string DebugKey = "poemapp_token_debug";
+    private bool _drawerOpen = true;
+
+    private async Task Logout()
+    {
+        if (AuthStateProvider is ApiAuthenticationStateProvider api)
+        {
+            await api.NotifyUserLogoutAsync();
+        }
+
+        Navigation.NavigateTo("/login", forceLoad: true);
+    }
+
+    private void LoginNavigate()
+    {
+        Navigation.NavigateTo("/login");
+    }
+
+    private void ToggleDrawer()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        try
+        {
+            // First try debug localStorage key (written during login for debugging)
+            var debugToken = await JS.InvokeAsync<string>("localStorage.getItem", DebugKey);
+            var token = debugToken;
+
+            // If no debug token, try protected local storage via token service through AuthenticationStateProvider (GetAuthenticationStateAsync will attempt to read it)
+            if (string.IsNullOrEmpty(token))
+            {
+                // Ask the AuthStateProvider to evaluate current state which may read protected storage
+                var state = await AuthStateProvider.GetAuthenticationStateAsync();
+                if (state.User.Identity?.IsAuthenticated ?? false)
+                {
+                    return; // already authenticated
+                }
+
+                // If not authenticated yet, try to read debug token again and validate against API
+                token = await JS.InvokeAsync<string>("localStorage.getItem", DebugKey);
+                if (string.IsNullOrEmpty(token))
+                    return;
+            }
+
+            var client = HttpClientFactory.CreateClient("Api");
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            var resp = await client.GetAsync("api/auth/me");
+            if (!resp.IsSuccessStatusCode)
+                return;
+
+            var user = await resp.Content.ReadFromJsonAsync<PoemApp.Core.DTOs.UserDto>();
+            if (user != null && AuthStateProvider is ApiAuthenticationStateProvider api)
+            {
+                await api.NotifyUserAuthenticationAsync(user, token);
+                StateHasChanged();
+            }
+        }
+        catch
+        {
+            // ignore
+        }
+    }
+}

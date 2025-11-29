@@ -1,0 +1,187 @@
+@page "/categories"
+@using MudBlazor
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@using System.Text.RegularExpressions
+@using System.Net
+@using Microsoft.AspNetCore.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject CategoriesApiClient CategoriesClient
+@inject PoemApiClient PoemClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>分类浏览 - PoemApp</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge">
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">分类浏览</MudText>
+
+    @if (_categories == null)
+    {
+        <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
+    }
+    else if (!_categories.Any())
+    {
+        <MudPaper Class="pa-8 text-center" Elevation="2">
+            <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
+            <MudText Typo="Typo.h6" Color="Color.Secondary">暂无分类数据</MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- 按 Group 分组显示 -->
+        @foreach (var group in Enum.GetValues<CategoryGroup>())
+        {
+            var items = _categories.Where(c => c.Group.HasValue && c.Group.Value == group).ToList();
+            if (!items.Any()) continue;
+
+            <MudText Typo="Typo.h5" Class="mb-3 mt-4">@group.GetDisplayName()</MudText>
+            <MudGrid Spacing="4" Class="mb-6">
+                @foreach (var category in items)
+                {
+                    <MudItem xs="12" sm="6" md="4" lg="3">
+                        <MudCard Class="h-100" Elevation="4">
+                            <MudCardHeader>
+                                <CardHeaderAvatar>
+                                    <MudAvatar Color="Color.Info">
+                                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Medium" />
+                                    </MudAvatar>
+                                </CardHeaderAvatar>
+                                <CardHeaderContent>
+                                    <MudText Typo="Typo.h6">@category.Name</MudText>
+                                    @if (category.Group.HasValue)
+                                    {
+                                        <MudText Typo="Typo.body2" Color="Color.Secondary">@category.Group.Value.GetDisplayName()</MudText>
+                                    }
+                                </CardHeaderContent>
+                            </MudCardHeader>
+                            <MudCardContent Class="flex-grow-1">
+                                @if (!string.IsNullOrEmpty(category.Description))
+                                {
+                                    var descPreview = StripHtml(category.Description);
+                                    <MudText Typo="Typo.body2" Style="line-height: 1.6;">@(descPreview.Length > 100 ? descPreview.Substring(0, 100) + "..." : descPreview)</MudText>
+                                }
+                                <MudText Typo="Typo.caption" Color="Color.Info" Class="mt-2">
+                                    包含 @(GetCategoryPoemCount(category.Id)) 篇作品
+                                </MudText>
+                            </MudCardContent>
+                            <MudCardActions>
+                                <MudButton Variant="Variant.Text" Color="Color.Info" Size="Size.Medium" OnClick="@EventCallback.Factory.Create(this, () => ViewCategory(category.Id))">
+                                    浏览作品
+                                </MudButton>
+                            </MudCardActions>
+                        </MudCard>
+                    </MudItem>
+                }
+            </MudGrid>
+        }
+    }
+</MudContainer>
+
+@code {
+    // capture category query from URL, e.g. /categories?category=唐诗
+    [Parameter]
+    [SupplyParameterFromQuery(Name = "category")]
+    public string? CategoryQuery { get; set; }
+
+    private List<CategoryDto>? _allCategories;
+    private List<CategoryDto>? _categories;
+    private List<PoemDto>? _allPoems;
+    private Dictionary<string, List<PoemDto>>? _featuredPoemsByCategory;
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("Categories page OnInitializedAsync called");
+        await LoadCategoriesAsync();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // apply filter when query parameter changes
+        ApplyCategoryFilter();
+        await Task.CompletedTask;
+    }
+
+    private async Task LoadCategoriesAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            Console.WriteLine("Loading categories...");
+            _allCategories = await CategoriesClient.GetAllAsync();
+            // load poems to calculate counts and featured lists
+            _allPoems = await PoemClient.GetAllAsync();
+
+            // build featured mapping by category name
+            _featuredPoemsByCategory = _allPoems
+                .Where(p => p.Categories != null)
+                .SelectMany(p => p.Categories.Select(c => new { Category = c, Poem = p }))
+                .GroupBy(x => x.Category)
+                .ToDictionary(g => g.Key, g => g.Select(x => x.Poem).ToList());
+
+            Console.WriteLine($"Loaded {_allCategories?.Count ?? 0} categories");
+
+            ApplyCategoryFilter();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error loading categories: {ex.Message}");
+            Snackbar.Add("加载分类数据失败，请稍后重试", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+
+    private void ApplyCategoryFilter()
+    {
+        if (_allCategories == null)
+        {
+            _categories = null;
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(CategoryQuery))
+        {
+            _categories = _allCategories;
+            return;
+        }
+
+        var q = CategoryQuery.Trim();
+        // filter categories by name contains query (case-insensitive)
+        _categories = _allCategories
+            .Where(c => !string.IsNullOrEmpty(c.Name) && c.Name.Contains(q, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+    }
+
+    private int GetCategoryPoemCount(int categoryId)
+    {
+        if (_allPoems == null) return 0;
+
+        var category = _allCategories?.FirstOrDefault(c => c.Id == categoryId);
+        if (category == null) return 0;
+
+        return _allPoems.Count(p => p.Categories?.Contains(category.Name) == true);
+    }
+
+    private void ViewCategory(int categoryId)
+    {
+        Navigation.NavigateTo($"/category/{categoryId}");
+    }
+
+    private void ViewPoem(int poemId)
+    {
+        Navigation.NavigateTo($"/poem/{poemId}");
+    }
+
+    private static string StripHtml(string html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        var text = Regex.Replace(html, "<.*?>", string.Empty);
+        return WebUtility.HtmlDecode(text).Trim();
+    }
+}

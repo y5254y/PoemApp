@@ -1,0 +1,45 @@
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.AspNetCore.Components.Authorization
+@using PoemApp.Admin.Pages
+@using MudBlazor
+
+<CascadingAuthenticationState>
+    <MudThemeProvider />
+    <MudPopoverProvider />
+    <MudDialogProvider />
+    <MudSnackbarProvider />
+
+    <Router AppAssembly="typeof(Program).Assembly">
+        <Found Context="routeData">
+            <AuthorizeRouteView RouteData="@routeData" DefaultLayout="@typeof(Shared.MainLayout)">
+                <Authorizing>
+                    <LayoutView Layout="@typeof(Shared.PublicLayout)">
+                        <Login />
+                    </LayoutView>
+                </Authorizing>
+                <NotAuthorized>
+                    <!-- If user is authenticated but not in role, show a friendly message instead of redirecting to login -->
+                    <AuthorizeView>
+                        <Authorized Context="authState">
+                            <LayoutView Layout="@typeof(Shared.MainLayout)">
+                                <MudText Class="pa-4">您没有权限访问此页面</MudText>
+                            </LayoutView>
+                        </Authorized>
+                        <NotAuthorized Context="anonState">
+                            <LayoutView Layout="@typeof(Shared.PublicLayout)">
+                                <Login />
+                            </LayoutView>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </NotAuthorized>
+            </AuthorizeRouteView>
+            <FocusOnNavigate RouteData="@routeData" Selector="h1" />
+        </Found>
+        <NotFound>
+            <LayoutView Layout="@typeof(Shared.MainLayout)">
+                <p>这里还没有找到页面</p>
+            </LayoutView>
+        </NotFound>
+    </Router>
+</CascadingAuthenticationState>

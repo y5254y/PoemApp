@@ -1,0 +1,12 @@
+@page "/"
+@namespace PoemApp.Web.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+</head>
+<body>
+    <app></app>
+</body>
+</html>

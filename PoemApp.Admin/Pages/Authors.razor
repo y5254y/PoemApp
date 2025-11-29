@@ -1,0 +1,179 @@
+@page "/authors"
+@attribute [Authorize]
+@using PoemApp.Admin.Services
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Core.Extensions
+@using PoemApp.Client.ApiClients
+@using Microsoft.AspNetCore.Components.Web
+@inject AuthorsApiClient AuthorsClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">作者管理</MudText>
+    <MudDivider Class="my-2" />
+
+    <MudTable @ref="_table" Striped="true" Hover="true" ServerData="LoadServerData">
+        <ToolBarContent>
+            <MudTextField @bind-Value="_search" Immediate="true" Placeholder="搜索作者/朝代" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">新增作者</MudButton>
+        </ToolBarContent>
+
+        <HeaderContent>
+            <MudTh>姓名</MudTh>
+            <MudTh>朝代</MudTh>
+            <MudTh>简介</MudTh>
+            <MudTh></MudTh>
+        </HeaderContent>
+
+        <RowTemplate>
+            <MudTd>@context.Name</MudTd>
+            <MudTd>@context.Dynasty.GetDisplayName()</MudTd>
+            <MudTd>
+                @if (!string.IsNullOrEmpty(context.Biography))
+                {
+                    var bioPreview = StripHtml(context.Biography);
+                    @((bioPreview.Length > 100) ? bioPreview.Substring(0, 100) + "..." : bioPreview)
+                }
+            </MudTd>
+            <MudTd>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">编辑</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => ManageRelationships(context.Id)">关系</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
+            </MudTd>
+        </RowTemplate>
+
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
+    </MudTable>
+</MudPaper>
+
+@code {
+    private MudTable<AuthorDto>? _table;
+    private List<AuthorDto> _authors = new();
+    private PagedResult<AuthorDto>? _paged;
+    private string _search = string.Empty;
+    private bool _usedServerSearch = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync(string? search = null)
+    {
+        try
+        {
+            var result = await AuthorsClient.GetAllAsync();
+            _authors = result.Items;
+            _paged = result;
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载作者失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private IEnumerable<AuthorDto> FilteredAuthors =>
+        string.IsNullOrWhiteSpace(_search)
+            ? _authors
+            : _authors.Where(a => (a.Name ?? string.Empty).Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || (a.Biography ?? string.Empty).Contains(_search, StringComparison.OrdinalIgnoreCase)
+                                 || a.Dynasty.GetDisplayName().Contains(_search, StringComparison.OrdinalIgnoreCase));
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter")
+        {
+            // trigger server-side search using current _search
+            _usedServerSearch = true;
+            if (_table != null)
+            {
+                await _table.ReloadServerData();
+            }
+        }
+        else
+        {
+            // use client-side filtering while typing
+            _usedServerSearch = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task<MudBlazor.TableData<AuthorDto>> LoadServerData(MudBlazor.TableState state, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var page = state.Page + 1;
+            var pageSize = state.PageSize;
+            var result = await AuthorsClient.GetAllAsync(page, pageSize, _search);
+            _paged = result;
+            // populate local cache for client-side default
+            _authors = result.Items;
+            return new MudBlazor.TableData<AuthorDto>() { TotalItems = result.TotalCount, Items = result.Items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载作者列表失败: " + ex.Message, Severity.Error);
+            return new MudBlazor.TableData<AuthorDto>() { TotalItems = 0, Items = new List<AuthorDto>() };
+        }
+    }
+
+    private void OpenCreate()
+    {
+        Navigation.NavigateTo("/authors/edit/0");
+    }
+
+    private void Edit(int id)
+    {
+        Navigation.NavigateTo($"/authors/edit/{id}");
+    }
+
+    private void ManageRelationships(int id)
+    {
+        Navigation.NavigateTo($"/authors/{id}/relationships");
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        var confirmed = await DialogService.ShowMessageBox("删除确认", $"确认删除作者 {id} 吗？", yesText: "确认", noText: "取消", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
+        if (confirmed == true)
+        {
+            await DoDelete(id);
+        }
+    }
+
+    private async Task DoDelete(int id)
+    {
+        try
+        {
+            var ok = await AuthorsClient.DeleteAsync(id);
+            if (ok)
+            {
+                Snackbar.Add("删除成功", Severity.Success);
+                if (_table != null)
+                {
+                    await _table.ReloadServerData();
+                }
+            }
+            else
+            {
+                Snackbar.Add("删除失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("删除失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private static string StripHtml(string? html)
+    {
+        if (string.IsNullOrEmpty(html)) return string.Empty;
+        return System.Net.WebUtility.HtmlDecode(System.Text.RegularExpressions.Regex.Replace(html, "<.*?>", string.Empty)).Trim();
+    }
+}

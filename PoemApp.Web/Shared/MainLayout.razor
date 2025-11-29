@@ -1,0 +1,187 @@
+@using MudBlazor
+@using Microsoft.JSInterop
+@inherits LayoutComponentBase
+@implements IDisposable
+
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+<MudPopoverProvider />
+
+@* updated styles to keep nav labels on single line and improve spacing *@
+<style>
+/* Navigation link base */
+.app-navlink {
+    color: rgba(255,255,255,0.92);
+    padding: 6px 10px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 160ms ease, transform 120ms ease, box-shadow 160ms ease;
+    white-space: nowrap; /* prevent wrapping */
+    font-size: 0.95rem;
+}
+.app-navlink:hover {
+    background: rgba(255,255,255,0.06);
+}
+/* Active state: subtle pill with slight elevation */
+.app-navlink-active {
+    background: linear-gradient(90deg, rgba(255,255,255,0.12), rgba(255,255,255,0.08));
+    box-shadow: 0 6px 18px rgba(0,0,0,0.12);
+    transform: translateY(-1px);
+}
+/* Tweak icon spacing when using MudNavLink */
+.app-navlink .mud-icon-root {
+    opacity: 0.95;
+}
+/* Ensure the inner text does not wrap either */
+.app-navlink .ml-1 {
+    white-space: nowrap;
+}
+</style>
+
+<MudAppBar Color="Color.Info" Elevation="4" Dense="true" Style="position:relative;">
+    <!-- Left: menu + title (absolute) -->
+    <div style="position:absolute; left:12px; top:0; bottom:0; display:flex; align-items:center; gap:8px;">
+        <MudHidden Breakpoint="Breakpoint.MdAndUp">
+            <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Surface" Edge="Edge.Start" OnClick="@(() => _drawerOpen = !_drawerOpen)" />
+        </MudHidden>
+        <MudText Typo="Typo.h6" Color="Color.Surface">古诗文欣赏</MudText>
+    </div>
+
+    <!-- Center: nav links (horizontally centered) -->
+    <div style="margin:0 auto; display:flex; align-items:center; gap:12px;">
+        <MudHidden Breakpoint="Breakpoint.SmAndDown">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" Class="app-navlink" ActiveClass="app-navlink-active">
+                    <MudText Class="ml-1">首页</MudText>
+                </MudNavLink>
+                <MudNavLink Href="/poems" Icon="@Icons.Material.Filled.LibraryBooks" Class="app-navlink" ActiveClass="app-navlink-active">
+                    <MudText Class="ml-1">诗文赏析</MudText>
+                </MudNavLink>
+                <MudNavLink Href="/authors" Icon="@Icons.Material.Filled.Person" Class="app-navlink" ActiveClass="app-navlink-active">
+                    <MudText Class="ml-1">诗人介绍</MudText>
+                </MudNavLink>
+                <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category" Class="app-navlink" ActiveClass="app-navlink-active">
+                    <MudText Class="ml-1">分类浏览</MudText>
+                </MudNavLink>
+                <MudNavLink Href="/search" Icon="@Icons.Material.Filled.Search" Class="app-navlink" ActiveClass="app-navlink-active">
+                    <MudText Class="ml-1">智能搜索</MudText>
+                </MudNavLink>
+            </div>
+        </MudHidden>
+    </div>
+
+</MudAppBar>
+
+<MudHidden Breakpoint="Breakpoint.MdAndUp">
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4">
+        <MudDrawerHeader>
+            <MudText Typo="Typo.h5">导航菜单</MudText>
+        </MudDrawerHeader>
+        <MudNavMenu>
+            <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">
+                <MudText>首页</MudText>
+            </MudNavLink>
+            <MudNavLink Href="/poems" Icon="@Icons.Material.Filled.LibraryBooks" IconColor="Color.Secondary">
+                <MudText>诗文赏析</MudText>
+            </MudNavLink>
+            <MudNavLink Href="/authors" Icon="@Icons.Material.Filled.Person" IconColor="Color.Tertiary">
+                <MudText>诗人介绍</MudText>
+            </MudNavLink>
+            <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category" IconColor="Color.Info">
+                <MudText>分类浏览</MudText>
+            </MudNavLink>
+            <MudNavLink Href="/search" Icon="@Icons.Material.Filled.Search" IconColor="Color.Warning">
+                <MudText>智能搜索</MudText>
+            </MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+</MudHidden>
+
+<MudMainContent Class="pt-16">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="px-4">
+        @Body
+    </MudContainer>
+</MudMainContent>
+
+<footer class="mud-footer mt-8 py-4" style="background-color: #f5f5f5;">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        <MudGrid>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.h6" Class="mb-2">古诗文欣赏</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    传承经典，品味诗韵
+                </MudText>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">快速链接</MudText>
+                <MudNavMenu Class="pa-0">
+                    <MudNavLink Href="/poems" Class="pa-0">诗文赏析</MudNavLink>
+                    <MudNavLink Href="/authors" Class="pa-0">诗人介绍</MudNavLink>
+                    <MudNavLink Href="/categories" Class="pa-0">分类浏览</MudNavLink>
+                </MudNavMenu>
+            </MudItem>
+            <MudItem xs="12" md="4">
+                <MudText Typo="Typo.subtitle1" Class="mb-2">关于我们</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">
+                    致力于传承中华优秀传统文化，让更多人感受诗词之美。
+                </MudText>
+            </MudItem>
+        </MudGrid>
+        <MudDivider Class="my-3" />
+        <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">
+            ? 2024 PoemApp. All rights reserved.
+        </MudText>
+    </MudContainer>
+</footer>
+
+@code {
+    private bool _drawerOpen = false;
+    private string _searchText = string.Empty;
+    private DotNetObjectReference<MainLayout>? _dotNetRef;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            // register resize handler to ensure drawer state syncs when viewport changes
+            _ = JSRuntime.InvokeVoidAsync("layoutInterop.registerResizeHandler", _dotNetRef, "MainLayoutResize");
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_dotNetRef != null)
+        {
+            _ = JSRuntime.InvokeVoidAsync("layoutInterop.unregisterResizeHandler", "MainLayoutResize");
+            _dotNetRef.Dispose();
+        }
+    }
+
+    [JSInvokable]
+    public Task OnBrowserResize(int width)
+    {
+        // If width is large enough, ensure drawer is closed by default
+        if (width >= 960) // md breakpoint ~960px
+        {
+            _drawerOpen = false;
+            StateHasChanged();
+        }
+        return Task.CompletedTask;
+    }
+
+    private async Task OnSearchKeyUp(KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !string.IsNullOrWhiteSpace(_searchText))
+        {
+            Navigation.NavigateTo($"/search?q={Uri.EscapeDataString(_searchText)}");
+            _searchText = string.Empty;
+        }
+    }
+}

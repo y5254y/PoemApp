@@ -1,0 +1,270 @@
+﻿// UsersController.cs
+using Microsoft.AspNetCore.Mvc;
+using PoemApp.Core.DTOs;
+using PoemApp.Core.Interfaces;
+using PoemApp.Core.Enums;
+using Microsoft.AspNetCore.Authorization;
+
+namespace PoemApp.API.Controllers;
+
+[ApiController]
+[Route("api/[controller]")]
+[Authorize]
+public class UsersController : ControllerBase
+{
+    private readonly IUserService _userService;
+
+    public UsersController(IUserService userService)
+    {
+        _userService = userService;
+    }
+
+    [HttpGet]
+    [Authorize(Roles ="Admin")]
+    public async Task<ActionResult<PagedResult<UserDto>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] UserRole? role = null, [FromQuery] bool? isVip = null)
+    {
+        var result = await _userService.GetUsersAsync(page, pageSize, search, role, isVip);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserDetailDto>> GetUser(int id)
+    {
+        var user = await _userService.GetUserByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+        return Ok(user);
+    }
+
+    [HttpPost]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserDto>> PostUser(CreateUserDto userDto)
+    {
+        try
+        {
+            var createdUser = await _userService.CreateUserAsync(userDto);
+            return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<ActionResult<UserDto>> PutUser(int id, UpdateUserDto userDto)
+    {
+        try
+        {
+            var updatedUser = await _userService.UpdateUserAsync(id, userDto);
+            return Ok(updatedUser);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        try
+        {
+            await _userService.DeleteUserAsync(id);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // 用户收藏管理
+    [HttpGet("{userId}/favorites")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<UserFavoriteDto>>> GetUserFavorites(int userId)
+    {
+        try
+        {
+            var favorites = await _userService.GetUserFavoritesAsync(userId);
+            return Ok(favorites);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{userId}/favorites")]
+    [Authorize]
+    public async Task<ActionResult<UserFavoriteDto>> PostUserFavorite(int userId, CreateUserFavoriteDto favoriteDto)
+    {
+        try
+        {
+            var createdFavorite = await _userService.AddUserFavoriteAsync(userId, favoriteDto);
+            return CreatedAtAction(nameof(GetUserFavorites), new { userId = userId }, createdFavorite);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{userId}/favorites/{poemId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteUserFavorite(int userId, int poemId)
+    {
+        try
+        {
+            await _userService.RemoveUserFavoriteAsync(userId, poemId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("{userId}/favorites/{poemId}")]
+    [Authorize]
+    public async Task<ActionResult<bool>> IsPoemInFavorites(int userId, int poemId)
+    {
+        try
+        {
+            var isFavorite = await _userService.IsPoemInFavoritesAsync(userId, poemId);
+            return Ok(isFavorite);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // 积分管理
+    [HttpGet("{userId}/points")]
+    [Authorize]
+    public async Task<ActionResult<int>> GetUserPoints(int userId)
+    {
+        try
+        {
+            var points = await _userService.GetUserPointsAsync(userId);
+            return Ok(points);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("{userId}/points/records")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<PointsRecordDto>>> GetUserPointsRecords(int userId)
+    {
+        try
+        {
+            var records = await _userService.GetUserPointsRecordsAsync(userId);
+            return Ok(records);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{userId}/points")]
+    [Authorize]
+    public async Task<ActionResult<PointsRecordDto>> PostUserPoints(int userId, AddPointsDto pointsDto)
+    {
+        try
+        {
+            var record = await _userService.AddPointsAsync(userId, pointsDto);
+            return CreatedAtAction(nameof(GetUserPointsRecords), new { userId = userId }, record);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // VIP管理
+    [HttpPut("{userId}/vip")]
+    [Authorize]
+    public async Task<IActionResult> PutUserVip(int userId, UpdateVipStatusDto vipDto)
+    {
+        try
+        {
+            await _userService.UpdateVipStatusAsync(userId, vipDto);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{userId}/vip")]
+    [Authorize]
+    public async Task<IActionResult> DeleteUserVip(int userId)
+    {
+        try
+        {
+            await _userService.RemoveVipStatusAsync(userId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    // 用户内容管理
+    [HttpGet("{userId}/annotations")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<AnnotationDto>>> GetUserAnnotations(int userId)
+    {
+        try
+        {
+            var annotations = await _userService.GetUserAnnotationsAsync(userId);
+            return Ok(annotations);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("{userId}/audios")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<AudioDto>>> GetUserAudios(int userId)
+    {
+        try
+        {
+            var audios = await _userService.GetUserUploadedAudiosAsync(userId);
+            return Ok(audios);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{userId}/change-password")]
+    [Authorize]
+    public async Task<IActionResult> ChangeUserPassword(int userId, ChangePasswordDto dto)
+    {
+        try
+        {
+            await _userService.UpdateUserPasswordAsync(userId, dto.NewPassword);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+}

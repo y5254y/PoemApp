@@ -1,0 +1,37 @@
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Extensions
+
+<details style="margin-bottom:8px;">
+    <summary style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <span>@Category.Name</span>
+        </div>
+        <div>
+            <button class="mud-button-root mud-button-text mud-button" @onclick="@(async () => await OnEdit.InvokeAsync(Category.Id))">±à¼­</button>
+            <button class="mud-button-root mud-button-text mud-button mud-button-danger" @onclick="@(async () => await OnDelete.InvokeAsync(Category.Id))">É¾³ý</button>
+        </div>
+    </summary>
+    <div style="margin:8px 0 12px 8px; color:rgba(0,0,0,0.7);">
+        ·Ö×é: @(Category.Group.HasValue ? Category.Group.Value.GetDisplayName() : "-") | ¸¸: @(@Category.ParentName ?? "-")
+    </div>
+
+    @if (Children != null && Children.Any())
+    {
+        <div style="margin-left:12px;">
+            @foreach (var child in Children.OrderBy(c => c.Name))
+            {
+                <CategoryPanel Category="child" Children="GetChildren(child.Id)" OnEdit="OnEdit" OnDelete="OnDelete" GetChildren="GetChildren" />
+            }
+        </div>
+    }
+</details>
+
+@code {
+    [Parameter] public CategoryDto Category { get; set; } = null!;
+    [Parameter] public List<CategoryDto>? Children { get; set; }
+    [Parameter] public EventCallback<int> OnEdit { get; set; }
+    [Parameter] public EventCallback<int> OnDelete { get; set; }
+
+    // accept delegate from parent to fetch children
+    [Parameter] public Func<int, List<CategoryDto>>? GetChildren { get; set; }
+}
