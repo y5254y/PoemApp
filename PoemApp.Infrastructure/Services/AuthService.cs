@@ -11,6 +11,7 @@ using PoemApp.Core.Interfaces;
 using Microsoft.Extensions.Configuration;
 using PoemApp.Core.Extensions;
 using System.ComponentModel.DataAnnotations;
+using System.Net.Http.Json;
 
 namespace PoemApp.Infrastructure.Services;
 
@@ -20,12 +21,15 @@ public class AuthService : IAuthService
     private readonly IConfiguration _configuration;
     private readonly IUserService _userService;
     private readonly IAppLogger _logger;
-    public AuthService(AppDbContext context, IConfiguration configuration, IUserService userService, IAppLogger logger)
+    private readonly System.Net.Http.HttpClient _httpClient;
+
+    public AuthService(AppDbContext context, IConfiguration configuration, IUserService userService, IAppLogger logger, System.Net.Http.HttpClient httpClient)
     {
         _context = context;
         _configuration = configuration;
         _userService = userService;
         _logger = logger;
+        _httpClient = httpClient;
         _logger.LogInformation("AuthService 实例化完成");
     }
 
@@ -371,30 +375,84 @@ public class AuthService : IAuthService
         return computedHash.SequenceEqual(storedHash);
     }
 
-    // 微信API调用（简化实现，实际需要调用微信API）
+    // 微信API调用（改为真实实现：调用微信接口获取 openid）
     private async Task<WeChatUserInfo> GetWeChatOpenIdAsync(string code)
     {
-        // 这里应该是调用微信API的代码
-        // 简化实现，返回模拟数据
-        return await Task.FromResult(new WeChatUserInfo
+        var appId = _configuration["WeChat:AppId"];
+        var appSecret = _configuration["WeChat:AppSecret"];
+
+        // 如果未配置，则返回模拟数据以便开发环境继续工作
+        if (string.IsNullOrWhiteSpace(appId) || string.IsNullOrWhiteSpace(appSecret))
         {
-            OpenId = $"wx_openid_{code}",
-            Nickname = "微信用户",
-            HeadImgUrl = "https://example.com/avatar.jpg"
-        });
+            _logger.LogWarning("WeChat AppId/AppSecret 未配置，使用 mock OpenId（仅用于开发环境）");
+            return await Task.FromResult(new WeChatUserInfo
+            {
+                OpenId = $"wx_openid_{code}",
+                Nickname = "微信用户",
+                HeadImgUrl = "https://example.com/avatar.jpg"
+            });
+        }
+
+        try
+        {
+            // 微信登录凭证校验接口（服务端用 code 换取 session_key 和 openid）
+            // 文档: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
+            var url = $"https://api.weixin.qq.com/sns/jscode2session?appid={appId}&secret={appSecret}&js_code={code}&grant_type=authorization_code";
+
+            var response = await _httpClient.GetAsync(url);
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning($"调用微信 code2session 接口失败，状态码: {response.StatusCode}");
+                return null!;
+            }
+
+            var payload = await response.Content.ReadFromJsonAsync<WeChatCode2SessionResponse>();
+            if (payload == null)
+            {
+                _logger.LogWarning("微信返回空响应");
+                return null!;
+            }
+
+            if (!string.IsNullOrEmpty(payload.errcode) && payload.errcode != "0")
+            {
+                _logger.LogWarning($"微信返回错误: {payload.errmsg} ({payload.errcode})");
+                return null!;
+            }
+
+            return new WeChatUserInfo
+            {
+                OpenId = payload.openid ?? string.Empty,
+                Nickname = string.Empty, // 需要后续请求获取用户信息（可选）
+                HeadImgUrl = string.Empty
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"GetWeChatOpenIdAsync 异常: {ex.Message}", ex);
+            return null!;
+        }
     }
 
     // QQAPI调用（简化实现）
     private async Task<QQUserInfo> GetQQOpenIdAsync(string code)
     {
-        // 这里应该是调用QQAPI的代码
-        // 简化实现，返回模拟数据
+        // 简化实现，返回模拟数据，实际应调用 QQ 的授权/接口
         return await Task.FromResult(new QQUserInfo
         {
             OpenId = $"qq_openid_{code}",
             Nickname = "QQ用户",
             HeadImgUrl = "https://example.com/avatar.jpg"
         });
+    }
+
+    // 微信 code2session 响应 DTO
+    private class WeChatCode2SessionResponse
+    {
+        public string? openid { get; set; }
+        public string? session_key { get; set; }
+        public string? unionid { get; set; }
+        public string? errcode { get; set; }
+        public string? errmsg { get; set; }
     }
 
     public async Task<bool> ChangePasswordAsync(int userId, string currentPassword, string newPassword)

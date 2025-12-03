@@ -71,46 +71,6 @@ public class Program
         }
 
 
-        // === 应用名（必须符合腾讯规范）===
-        const string serviceName = "poemapp-api"; // 小写，可含 -，≤63字符
-
-        // === 腾讯云 APM 配置 ===
-        const string token = "kWFYHaWKfOzEGoNBsnJq";
-        const string endpoint = "http://ap-guangzhou.apm.tencentcs.com:4319";
-
-
-
-        //builder.Services.AddOpenTelemetry()
-        //    .ConfigureResource(resource => resource
-        //        .AddService(serviceName: builder.Environment.ApplicationName)
-        //        .AddAttributes(new Dictionary<string, object>
-        //        {
-        //            ["token"] = token, // <token>替换成前置步骤中获得的 Token
-        //            ["host.name"] = Environment.MachineName// <host>替换成自定义主机名
-        //        }))
-        //    .WithTracing(tracing => tracing
-        //        .AddAspNetCoreInstrumentation()
-
-        //        .AddConsoleExporter()
-        //        .AddOtlpExporter()
-
-        //        .AddOtlpExporter(otlpOptions =>
-        //        {
-        //            otlpOptions.Endpoint = new Uri(endpoint); // <endpoint>替换成前置步骤中获得的接入点信息
-        //            otlpOptions.Protocol = OtlpExportProtocol.Grpc;
-
-        //        }))
-        //    .WithMetrics(metrics => metrics
-        //        .AddAspNetCoreInstrumentation()
-        //        .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-        //            {
-        //                metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
-        //            })
-        //        .AddOtlpExporter(otlpOptions =>
-        //        {
-        //            otlpOptions.Endpoint = new Uri(endpoint); // <endpoint>替换成前置步骤中获得的接入点信息
-        //            otlpOptions.Protocol = OtlpExportProtocol.Grpc;
-        //        }));
 
         builder.Services.AddOpenTelemetry()
     .ConfigureResource(resource => resource
@@ -118,26 +78,26 @@ public class Program
         .WithTracing(tracing => tracing
         .AddAspNetCoreInstrumentation()
 
-        .AddConsoleExporter()
-        .AddOtlpExporter()
+        //.AddConsoleExporter()
+        //.AddOtlpExporter()
 
         .AddOtlpExporter(otlpOptions =>
         {
-            otlpOptions.Endpoint = new Uri("http://tracing-analysis-dc-hz-internal.aliyuncs.com/adapt_f1pfgeadvy@a75a87db5bc9eb3_f1pfgeadvy@53df7ad2afe8301/api/otlp/traces");
+            otlpOptions.Endpoint = new Uri("http://tracing-analysis-dc-hz.aliyuncs.com/adapt_f1pfgeadvy@a75a87db5bc9eb3_f1pfgeadvy@53df7ad2afe8301/api/otlp/traces");
             otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
 
         }))
     .WithMetrics(metrics => metrics
         .AddAspNetCoreInstrumentation()
-        .AddConsoleExporter((exporterOptions, metricReaderOptions) =>
-        {
-            metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
-        })
+        //.AddConsoleExporter((exporterOptions, metricReaderOptions) =>
+        //{
+        //    metricReaderOptions.PeriodicExportingMetricReaderOptions.ExportIntervalMilliseconds = 1000;
+        //})
         .AddOtlpExporter(otlpOptions =>
         {
-            otlpOptions.Endpoint = new Uri("http://tracing-analysis-dc-hz-internal.aliyuncs.com/adapt_f1pfgeadvy@a75a87db5bc9eb3_f1pfgeadvy@53df7ad2afe8301/api/otlp/traces");
+            otlpOptions.Endpoint = new Uri("http://tracing-analysis-dc-hz.aliyuncs.com/adapt_f1pfgeadvy@a75a87db5bc9eb3_f1pfgeadvy@53df7ad2afe8301/api/otlp/traces");
             otlpOptions.Protocol = OtlpExportProtocol.HttpProtobuf;
-            
+
         }));
 
 

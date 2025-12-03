@@ -33,6 +33,9 @@ namespace PoemApp.Infrastructure.Extensions
                 options.UseSqlite(connectionString);
             });
 
+            // 注册 HttpClient 实例，供服务调用第三方 API（如微信）
+            services.AddSingleton<System.Net.Http.HttpClient>();
+
             // 2. 注册所有服务（按照依赖顺序）
             // 注册自定义日志服务
             services.AddSingleton<IAppLogger, AppLogger>();
