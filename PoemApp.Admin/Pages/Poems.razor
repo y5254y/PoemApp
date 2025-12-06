@@ -5,59 +5,120 @@
 @using PoemApp.Client.ApiClients
 @using Microsoft.AspNetCore.Components.Web
 @inject PoemApiClient PoemClient
+@inject CategoriesApiClient CategoriesClient
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 @inject IDialogService DialogService
 
-<MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5">诗文管理</MudText>
-    <MudDivider Class="my-2" />
+<MudGrid>
+    <MudItem xs="12" md="3">
+        <MudPaper Class="pa-4 mb-4">
+            <MudText Typo="Typo.h6">教学阶段</MudText>
+            <MudDivider Class="my-2" />
+            <div class="d-flex flex-column" style="gap:8px;">
+                <MudChip T="string" Clickable="true" OnClick="@( () => SelectEducationCategory(null) )" Variant="Variant.Filled" Color="@( _selectedEducationCategoryId == null ? Color.Primary : Color.Default)">全部</MudChip>
+                @foreach (var c in _educationCategories)
+                {
+                    <MudChip T="string" Clickable="true" OnClick="@( () => SelectEducationCategory(c.Id) )" Variant="Variant.Filled" Color="@( _selectedEducationCategoryId == c.Id ? Color.Primary : Color.Default)">@c.Name</MudChip>
+                }
+            </div>
+        </MudPaper>
+    </MudItem>
 
-    <MudTable T="PoemDto" @ref="_table" ServerData="@(async (TableState s, CancellationToken ct) => await LoadServerData(s, ct))" Striped="true" Hover="true" Bordered="true">
-        <ToolBarContent>
-            <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="搜索标题/作者" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" @onkeyup="OnSearchKeyUp" />
-            <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@( () => Navigation.NavigateTo("/poems/edit/0") )">新建诗文</MudButton>
-        </ToolBarContent>
+    <MudItem xs="12" md="9">
+        <MudPaper Class="pa-4">
+            <MudText Typo="Typo.h5">诗文管理</MudText>
+            <MudDivider Class="my-2" />
 
-        <HeaderContent>
-            <MudTh>标题</MudTh>
-            <MudTh>作者</MudTh>
-            <MudTh>朝代</MudTh>
-            <MudTh></MudTh>
-        </HeaderContent>
+            <MudTable T="PoemDto" @ref="_table" ServerData="@(async (TableState s, CancellationToken ct) => await LoadServerData(s, ct))" Striped="true" Hover="true" Bordered="true">
+                <ToolBarContent>
+                    <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="搜索标题/作者" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" @onkeyup="OnSearchKeyUp" />
+                    <MudSpacer />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@( () => Navigation.NavigateTo("/poems/edit/0") )">新建诗文</MudButton>
+                </ToolBarContent>
 
-        <RowTemplate>
-            <MudTd>@context.Title</MudTd>
-            <MudTd>@context.AuthorName</MudTd>
-            <MudTd>@context.DynastyDisplayName</MudTd>
-            <MudTd>
-                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">编辑</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
-            </MudTd>
-        </RowTemplate>
+                <HeaderContent>
+                    <MudTh>标题</MudTh>
+                    <MudTh>作者</MudTh>
+                    <MudTh>朝代</MudTh>
+                    <MudTh>教学阶段</MudTh>
+                    <MudTh></MudTh>
+                </HeaderContent>
 
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
-</MudPaper>
+                <RowTemplate>
+                    <MudTd>@context.Title</MudTd>
+                    <MudTd>@context.AuthorName</MudTd>
+                    <MudTd>@context.DynastyDisplayName</MudTd>
+                    <MudTd>
+                        @if (_educationCategories != null && _educationCategories.Any() && context.CategoryIds != null)
+                        {
+                            var eduNames = _educationCategories.Where(ec => context.CategoryIds.Contains(ec.Id)).Select(ec => ec.Name).ToList();
+                            if (eduNames.Any())
+                            {
+                                foreach (var n in eduNames)
+                                {
+                                    <MudChip T="string" Label="true" Size="Size.Small" Color="Color.Info" Class="mr-1">@n</MudChip>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-muted">—</span>
+                            }
+                        }
+                        else
+                        {
+                            <span class="text-muted">—</span>
+                        }
+                    </MudTd>
+                    <MudTd>
+                        <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">编辑</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">删除</MudButton>
+                    </MudTd>
+                </RowTemplate>
+
+                <PagerContent>
+                    <MudTablePager />
+                </PagerContent>
+            </MudTable>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
 
 @code {
     private MudTable<PoemDto>? _table;
     private string _search = string.Empty;
+    private List<CategoryDto> _educationCategories = new();
+    private int? _selectedEducationCategoryId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            var cats = await CategoriesClient.GetAllAsync();
+            _educationCategories = cats.Where(c => c.Group == PoemApp.Core.Enums.CategoryGroup.EducationLevel).OrderBy(c => c.Name).ToList();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载分类失败: " + ex.Message, Severity.Warning);
+        }
+    }
 
     private async Task<TableData<PoemDto>> LoadServerData(TableState state, CancellationToken ct)
     {
         try
         {
-            // PoemApiClient currently only has GetAllAsync without paging. Use it and filter client-side until server paging added.
             var list = await PoemClient.GetAllAsync();
             var q = list.AsQueryable();
             if (!string.IsNullOrWhiteSpace(_search))
             {
                 var s = _search.Trim().ToLowerInvariant();
                 q = q.Where(p => (p.Title ?? string.Empty).ToLower().Contains(s) || (p.AuthorName ?? string.Empty).ToLower().Contains(s));
+            }
+
+            if (_selectedEducationCategoryId.HasValue)
+            {
+                var selId = _selectedEducationCategoryId.Value;
+                q = q.Where(p => p.CategoryIds != null && p.CategoryIds.Contains(selId));
             }
 
             var items = q.Skip(state.Page * state.PageSize).Take(state.PageSize).ToList();
@@ -68,6 +129,12 @@
             Snackbar.Add("加载诗文失败: " + ex.Message, Severity.Error);
             return new TableData<PoemDto> { TotalItems = 0, Items = new List<PoemDto>() };
         }
+    }
+
+    private void SelectEducationCategory(int? id)
+    {
+        _selectedEducationCategoryId = id;
+        _ = InvokeAsync(async () => { if (_table != null) await _table.ReloadServerData(); });
     }
 
     private Task OnSearchChanged(string value)
