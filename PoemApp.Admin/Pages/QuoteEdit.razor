@@ -1,0 +1,122 @@
+@page "/quotes/edit/{Id:int}"
+@attribute [Authorize(Roles = "Admin")]
+@using PoemApp.Core.DTOs
+@using PoemApp.Client.ApiClients
+@using MudBlazor
+@using PoemApp.Client.ApiClients
+@inject QuotesApiClient QuotesClient
+@inject AuthorsApiClient AuthorsClient
+@inject PoemApiClient PoemClient
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
+    <MudText Typo="Typo.h5">名句编辑</MudText>
+
+    <EditForm Model="_model" OnValidSubmit="HandleValid">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <MudTextField @bind-Value="_model.Content" Label="内容" Required="true" />
+
+        <MudSelect T="int?" Label="作者(可选)" @bind-Value="_model.AuthorId">
+            <MudSelectItem T="int?" Value="null">--无--</MudSelectItem>
+            @foreach (var a in _authors)
+            {
+                <MudSelectItem T="int?" Value="@(a.Id)">@a.Name</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudSelect T="int?" Label="来自诗文(可选)" @bind-Value="_model.PoemId">
+            <MudSelectItem T="int?" Value="null">--无--</MudSelectItem>
+            @foreach (var p in _poems)
+            {
+                <MudSelectItem T="int?" Value="@(p.Id)">@p.Title</MudSelectItem>
+            }
+        </MudSelect>
+
+        <MudTextField @bind-Value="_model.Source" Label="来源/出处" />
+        <MudText Typo="Typo.subtitle2" Class="mt-2">译文</MudText>
+        <QuillEditor @ref="_translationEditor" InitialContent="@(_model.Translation ?? string.Empty)" OnContentChanged="OnTranslationChanged" />
+
+        <MudText Typo="Typo.subtitle2" Class="mt-2">注释/解读</MudText>
+        <QuillEditor @ref="_annotationEditor" InitialContent="@(_model.Annotation ?? string.Empty)" OnContentChanged="OnAnnotationChanged" />
+
+        <div class="mt-3">
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">取消</MudButton>
+        </div>
+    </EditForm>
+</MudPaper>
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private CreateQuoteDto _model = new();
+    private QuillEditor? _translationEditor;
+    private QuillEditor? _annotationEditor;
+
+    private List<AuthorDto> _authors = new();
+    private List<PoemDto> _poems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        _authors = (await AuthorsClient.GetAllAsync()).Items.ToList();
+        _poems = await PoemClient.GetAllAsync();
+
+        if (Id != 0)
+        {
+            var dto = await QuotesClient.GetByIdAsync(Id);
+            if (dto != null)
+            {
+                // populate model for editing
+                _model = new CreateQuoteDto
+                {
+                    Content = dto.Content,
+                    AuthorId = dto.AuthorId,
+                    PoemId = dto.PoemId,
+                    Source = dto.Source,
+                    Translation = dto.Translation,
+                    Annotation = dto.Annotation
+                };
+            }
+        }
+    }
+
+    private Task OnTranslationChanged(string html) { _model.Translation = html; return Task.CompletedTask; }
+    private Task OnAnnotationChanged(string html) { _model.Annotation = html; return Task.CompletedTask; }
+
+    private async Task HandleValid()
+    {
+        try
+        {
+            if (Id == 0)
+            {
+                var created = await QuotesClient.CreateAsync(_model);
+                if (created != null) { Snackbar.Add("创建成功", Severity.Success); Navigation.NavigateTo("/quotes"); }
+                else Snackbar.Add("创建失败", Severity.Error);
+            }
+            else
+            {
+                var ok = await QuotesClient.UpdateAsync(Id, new UpdateQuoteDto
+                {
+                    Content = _model.Content,
+                    AuthorId = _model.AuthorId,
+                    PoemId = _model.PoemId,
+                    Source = _model.Source,
+                    Translation = _model.Translation,
+                    Annotation = _model.Annotation
+                });
+
+                if (ok) { Snackbar.Add("更新成功", Severity.Success); Navigation.NavigateTo("/quotes"); }
+                else Snackbar.Add("更新失败", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("保存失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private void Cancel() => Navigation.NavigateTo("/quotes");
+}

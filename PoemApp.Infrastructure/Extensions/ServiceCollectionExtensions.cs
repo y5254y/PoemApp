@@ -47,6 +47,7 @@ namespace PoemApp.Infrastructure.Extensions
             services.AddTransient<ICategoryService, CategoryService>();
             services.AddTransient<IAnnotationService, AnnotationService>();
             services.AddTransient<IAudioService, AudioService>();
+            services.AddTransient<IQuoteService, QuoteService>();
             services.AddTransient<IDataSeedService, DataSeedService>();
 
             Console.WriteLine("基础设施服务注册完成");

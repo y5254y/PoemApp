@@ -1,0 +1,65 @@
+@page "/quote/{Id:int}"
+@using PoemApp.Client.ApiClients
+@using PoemApp.Core.DTOs
+@using MudBlazor
+@inject QuotesApiClient QuotesClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>名句 - PoemApp</PageTitle>
+
+@if (_quote == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudPaper Class="pa-4">
+        <MudText Typo="Typo.h5">@((MarkupString)_quote.Content)</MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@(_quote.AuthorName ?? _quote.PoemTitle ?? "匿名")</MudText>
+
+        @if (!string.IsNullOrWhiteSpace(_quote.Translation))
+        {
+            <MudPaper Class="pa-3 mt-3">
+                <MudText Typo="Typo.subtitle2">译文</MudText>
+                <MudText>@((MarkupString)_quote.Translation)</MudText>
+            </MudPaper>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(_quote.Annotation))
+        {
+            <MudPaper Class="pa-3 mt-3">
+                <MudText Typo="Typo.subtitle2">注释/解读</MudText>
+                <MudText>@((MarkupString)_quote.Annotation)</MudText>
+            </MudPaper>
+        }
+
+        <div class="mt-3">
+            <MudButton Variant="Variant.Text" OnClick="Back">返回</MudButton>
+        </div>
+    </MudPaper>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+    private QuoteDto? _quote;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            _quote = await QuotesClient.GetByIdAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private void Back() => Navigation.NavigateTo("/quotes");
+}

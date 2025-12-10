@@ -22,6 +22,7 @@ public class AppDbContext : DbContext
     public DbSet<AudioRating> AudioRatings { get; set; }
     public DbSet<AuthorRelationship> AuthorRelationships { get; set; }
     public DbSet<PointsRecord> PointsRecords { get; set; }
+    public DbSet<Quote> Quotes { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -112,5 +113,21 @@ public class AppDbContext : DbContext
             .HasIndex(c => new { c.Group, c.Name })
             .IsUnique()
             .HasDatabaseName("UX_Categories_Group_Name");
+
+        // Quote relationships
+        modelBuilder.Entity<Quote>()
+            .HasKey(q => q.Id);
+
+        modelBuilder.Entity<Quote>()
+            .HasOne(q => q.Author)
+            .WithMany(a => a.Quotes)
+            .HasForeignKey(q => q.AuthorId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<Quote>()
+            .HasOne(q => q.Poem)
+            .WithMany()
+            .HasForeignKey(q => q.PoemId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

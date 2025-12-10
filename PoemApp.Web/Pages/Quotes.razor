@@ -1,0 +1,81 @@
+@page "/quotes"
+@using PoemApp.Client.ApiClients
+@using PoemApp.Core.DTOs
+@using MudBlazor
+@inject QuotesApiClient QuotesClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>名言名句 - PoemApp</PageTitle>
+
+<MudPaper Class="pa-4">
+    <MudText Typo="Typo.h5">名言名句</MudText>
+    <MudDivider Class="my-2" />
+
+    <MudGrid>
+        <MudItem xs="12" md="8">
+            @if (_items == null)
+            {
+                <MudProgressCircular Indeterminate="true" />
+            }
+            else if (!_items.Any())
+            {
+                <MudText>暂无名言</MudText>
+            }
+            else
+            {
+                <MudList T="QuoteDto">
+                    @foreach (var q in _items)
+                    {
+                        <MudListItem T="QuoteDto" Clickable="true" OnClick="() => View(q.Id)">
+                            <div>
+                                <MudText Typo="Typo.body1">@((MarkupString)q.Content)</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@(!string.IsNullOrWhiteSpace(q.AuthorName) ? q.AuthorName : (q.PoemTitle ?? "匿名"))</MudText>
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+            }
+        </MudItem>
+
+        <MudItem xs="12" md="4">
+            <MudPaper Class="pa-3">
+                <MudText Typo="Typo.subtitle2">搜索</MudText>
+                <MudTextField @bind-Value="_search" Placeholder="搜索名句/作者/来源" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+                <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="Search">搜索</MudButton>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudPaper>
+
+@code {
+    private List<QuoteDto>? _items;
+    private string _search = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        try
+        {
+            _items = await QuotesClient.GetAllAsync();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载失败: " + ex.Message, Severity.Error);
+        }
+    }
+
+    private void View(int id) => Navigation.NavigateTo($"/quote/{id}");
+
+    private async Task Search()
+    {
+        if (string.IsNullOrWhiteSpace(_search)) { await Load(); return; }
+        var all = await QuotesClient.GetAllAsync();
+        var s = _search.Trim().ToLowerInvariant();
+        _items = all.Where(q => (q.Content ?? string.Empty).ToLower().Contains(s) || (q.AuthorName ?? string.Empty).ToLower().Contains(s) || (q.PoemTitle ?? string.Empty).ToLower().Contains(s)).ToList();
+    }
+}

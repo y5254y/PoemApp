@@ -23,6 +23,9 @@ public class Author
 
     // 作品集合
     public ICollection<Poem> Poems { get; set; } = [];
+
+    // 名言名句集合
+    public ICollection<Quote> Quotes { get; set; } = [];
 }
 
 
