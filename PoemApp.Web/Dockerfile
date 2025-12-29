@@ -17,7 +17,7 @@ COPY PoemApp.Web/PoemApp.Web.csproj PoemApp.Web/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
 COPY PoemApp.Client.ApiClients/PoemApp.Client.ApiClients.csproj PoemApp.Client.ApiClients/
 
-RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config
+RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
 # copy the rest and publish (use MSBuild props to enforce package folders)
 COPY . ./
@@ -26,7 +26,10 @@ COPY . ./
 RUN find . -type d -name bin -prune -exec rm -rf {} + || true
 RUN find . -type d -name obj -prune -exec rm -rf {} + || true
 
-RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish --no-restore -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
+# restore again after cleaning host obj so assets are generated in container
+RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
+
+RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
