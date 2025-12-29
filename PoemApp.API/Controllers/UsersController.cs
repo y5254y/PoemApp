@@ -267,4 +267,65 @@ public class UsersController : ControllerBase
             return BadRequest(ex.Message);
         }
     }
+
+    // 用户对名句的收藏管理
+    [HttpGet("{userId}/quote-favorites")]
+    [Authorize]
+    public async Task<ActionResult<IEnumerable<UserQuoteFavoriteDto>>> GetUserQuoteFavorites(int userId)
+    {
+        try
+        {
+            var favorites = await _userService.GetUserQuoteFavoritesAsync(userId);
+            return Ok(favorites);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpPost("{userId}/quote-favorites")]
+    [Authorize]
+    public async Task<ActionResult<UserQuoteFavoriteDto>> PostUserQuoteFavorite(int userId, CreateUserQuoteFavoriteDto favoriteDto)
+    {
+        try
+        {
+            var created = await _userService.AddUserQuoteFavoriteAsync(userId, favoriteDto);
+            return CreatedAtAction(nameof(GetUserQuoteFavorites), new { userId = userId }, created);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpDelete("{userId}/quote-favorites/{quoteId}")]
+    [Authorize]
+    public async Task<IActionResult> DeleteUserQuoteFavorite(int userId, int quoteId)
+    {
+        try
+        {
+            await _userService.RemoveUserQuoteFavoriteAsync(userId, quoteId);
+            return NoContent();
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    [HttpGet("{userId}/quote-favorites/{quoteId}")]
+    [Authorize]
+    public async Task<ActionResult<bool>> IsQuoteInFavorites(int userId, int quoteId)
+    {
+        try
+        {
+            var isFav = await _userService.IsQuoteInFavoritesAsync(userId, quoteId);
+            return Ok(isFav);
+        }
+        catch (ArgumentException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
 }

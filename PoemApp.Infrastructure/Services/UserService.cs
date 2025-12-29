@@ -498,6 +498,81 @@ public partial class UserService : IUserService
         await _context.SaveChangesAsync();
     }
 
+    public async Task<IEnumerable<UserQuoteFavoriteDto>> GetUserQuoteFavoritesAsync(int userId)
+    {
+        var user = await _context.Users
+            .Include(u => u.QuoteFavorites)
+                .ThenInclude(qf => qf.Quote)
+                    .ThenInclude(q => q.Author)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
+        if (user == null) throw new ArgumentException("User not found");
+
+        return user.QuoteFavorites.Select(qf => new UserQuoteFavoriteDto
+        {
+            UserId = qf.UserId,
+            QuoteId = qf.QuoteId,
+            QuoteContent = qf.Quote.Content,
+            AuthorName = qf.Quote.Author?.Name,
+            FavoriteTime = qf.FavoriteTime
+        }).ToList();
+    }
+
+    public async Task<UserQuoteFavoriteDto> AddUserQuoteFavoriteAsync(int userId, CreateUserQuoteFavoriteDto favoriteDto)
+    {
+        var user = await _context.Users.FindAsync(userId);
+        if (user == null) throw new ArgumentException("User not found");
+
+        var quote = await _context.Quotes.FindAsync(favoriteDto.QuoteId);
+        if (quote == null) throw new ArgumentException("Quote not found");
+
+        var existing = await _context.UserQuoteFavorites
+            .FirstOrDefaultAsync(qf => qf.UserId == userId && qf.QuoteId == favoriteDto.QuoteId);
+        if (existing != null) throw new ArgumentException("Quote is already in favorites");
+
+        var userQuoteFavorite = new UserQuoteFavorite
+        {
+            UserId = userId,
+            QuoteId = favoriteDto.QuoteId,
+            FavoriteTime = DateTime.UtcNow
+        };
+
+        _context.UserQuoteFavorites.Add(userQuoteFavorite);
+        await _context.SaveChangesAsync();
+
+        var created = await _context.UserQuoteFavorites
+            .Include(qf => qf.Quote)
+                .ThenInclude(q => q.Author)
+            .FirstOrDefaultAsync(qf => qf.UserId == userId && qf.QuoteId == favoriteDto.QuoteId);
+
+        if (created == null || created.Quote == null) throw new InvalidOperationException("Failed to retrieve created quote favorite");
+
+        return new UserQuoteFavoriteDto
+        {
+            UserId = created.UserId,
+            QuoteId = created.QuoteId,
+            QuoteContent = created.Quote.Content,
+            AuthorName = created.Quote.Author?.Name,
+            FavoriteTime = created.FavoriteTime
+        };
+    }
+
+    public async Task RemoveUserQuoteFavoriteAsync(int userId, int quoteId)
+    {
+        var qf = await _context.UserQuoteFavorites
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.QuoteId == quoteId);
+        if (qf == null) throw new ArgumentException("Favorite not found");
+
+        _context.UserQuoteFavorites.Remove(qf);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<bool> IsQuoteInFavoritesAsync(int userId, int quoteId)
+    {
+        return await _context.UserQuoteFavorites
+            .AnyAsync(qf => qf.UserId == userId && qf.QuoteId == quoteId);
+    }
+
     // Helper
     private void CreatePasswordHash(string password, out byte[] passwordHash, out byte[] passwordSalt)
     {

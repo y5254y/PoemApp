@@ -20,6 +20,12 @@ public interface IUserService
     Task RemoveUserFavoriteAsync(int userId, int poemId);
     Task<bool> IsPoemInFavoritesAsync(int userId, int poemId);
 
+    // 用户对名句收藏管理
+    Task<IEnumerable<UserQuoteFavoriteDto>> GetUserQuoteFavoritesAsync(int userId);
+    Task<UserQuoteFavoriteDto> AddUserQuoteFavoriteAsync(int userId, CreateUserQuoteFavoriteDto favoriteDto);
+    Task RemoveUserQuoteFavoriteAsync(int userId, int quoteId);
+    Task<bool> IsQuoteInFavoritesAsync(int userId, int quoteId);
+
     // 积分管理
     Task<IEnumerable<PointsRecordDto>> GetUserPointsRecordsAsync(int userId);
     Task<int> GetUserPointsAsync(int userId);

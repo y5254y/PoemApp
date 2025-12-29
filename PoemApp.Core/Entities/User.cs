@@ -1,5 +1,4 @@
-﻿
-using PoemApp.Core.Enums;
+﻿using PoemApp.Core.Enums;
 using System.ComponentModel.DataAnnotations;
 
 namespace PoemApp.Core.Entities;
@@ -48,6 +47,9 @@ public class User
     // 收藏的诗文
     public ICollection<UserFavorite> Favorites { get; set; } = [];
 
+    // 收藏的名句
+    public ICollection<UserQuoteFavorite> QuoteFavorites { get; set; } = [];
+
     // 上传的音频
     public ICollection<Audio> Audios { get; set; } = [];
 
@@ -90,6 +92,18 @@ public class UserFavorite
 
     public int PoemId { get; set; }
     public Poem Poem { get; set; } = null!;
+
+    public DateTime FavoriteTime { get; set; } = DateTime.UtcNow;
+}
+
+// 新增：用户对名句的收藏实体
+public class UserQuoteFavorite
+{
+    public int UserId { get; set; }
+    public User User { get; set; } = null!;
+
+    public int QuoteId { get; set; }
+    public Quote Quote { get; set; } = null!;
 
     public DateTime FavoriteTime { get; set; } = DateTime.UtcNow;
 }

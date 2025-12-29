@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<PoemCategory> PoemCategories { get; set; }
     public DbSet<User> Users { get; set; }
     public DbSet<UserFavorite> UserFavorites { get; set; }
+    public DbSet<UserQuoteFavorite> UserQuoteFavorites { get; set; }
     public DbSet<Annotation> Annotations { get; set; }
     public DbSet<Audio> Audios { get; set; }
     public DbSet<AudioRating> AudioRatings { get; set; }
@@ -55,6 +56,20 @@ public class AppDbContext : DbContext
             .HasOne(uf => uf.Poem)
             .WithMany(p => p.FavoritedBy)
             .HasForeignKey(uf => uf.PoemId);
+
+        // 配置用户对名句的收藏关系
+        modelBuilder.Entity<UserQuoteFavorite>()
+            .HasKey(uqf => new { uqf.UserId, uqf.QuoteId });
+
+        modelBuilder.Entity<UserQuoteFavorite>()
+            .HasOne(uqf => uqf.User)
+            .WithMany(u => u.QuoteFavorites)
+            .HasForeignKey(uqf => uqf.UserId);
+
+        modelBuilder.Entity<UserQuoteFavorite>()
+            .HasOne(uqf => uqf.Quote)
+            .WithMany()
+            .HasForeignKey(uqf => uqf.QuoteId);
 
         // 配置作者关系（自引用）
         modelBuilder.Entity<AuthorRelationship>()

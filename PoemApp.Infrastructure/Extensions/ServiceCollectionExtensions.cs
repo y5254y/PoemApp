@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using PoemApp.Infrastructure.Data;
 using PoemApp.Infrastructure.Services;
 using PoemApp.Core.Interfaces;
+using MySql.EntityFrameworkCore.Extensions;
 
 
 namespace PoemApp.Infrastructure.Extensions
@@ -30,7 +31,8 @@ namespace PoemApp.Infrastructure.Extensions
             {
                 var connectionString = configuration.GetConnectionString("DefaultConnection");
                 Console.WriteLine($"数据库连接字符串: {connectionString}");
-                options.UseSqlite(connectionString);
+                // Use official MySQL provider extension
+                options.UseMySQL(connectionString);
             });
 
             // 注册 HttpClient 实例，供服务调用第三方 API（如微信）
