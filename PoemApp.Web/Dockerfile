@@ -6,6 +6,9 @@ WORKDIR /src
 ENV NUGET_PACKAGES=/root/.nuget/packages
 ENV NUGET_FALLBACK_PACKAGES=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
+# create fallback folder to avoid NU1301 when SDK expects it
+RUN mkdir -p /usr/share/dotnet/sdk/NuGetFallbackFolder
+
 # copy project files and restore only Web project to avoid MAUI workloads
 COPY PoemApp.Web/PoemApp.Web.csproj PoemApp.Web/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
