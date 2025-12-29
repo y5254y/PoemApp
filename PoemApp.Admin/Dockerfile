@@ -2,6 +2,12 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# ensure nuget folders are Linux-friendly inside container
+ENV NUGET_PACKAGES=/root/.nuget/packages
+ENV NUGET_FALLBACK_PACKAGES=/usr/share/dotnet/sdk/NuGetFallbackFolder
+
+RUN mkdir -p /usr/share/dotnet/sdk/NuGetFallbackFolder
+
 # copy project files and restore only Admin project to avoid MAUI workloads
 COPY PoemApp.Admin/PoemApp.Admin.csproj PoemApp.Admin/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/

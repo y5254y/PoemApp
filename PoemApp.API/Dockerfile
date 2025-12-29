@@ -2,6 +2,13 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
+# ensure nuget folders are Linux-friendly inside container
+ENV NUGET_PACKAGES=/root/.nuget/packages
+ENV NUGET_FALLBACK_PACKAGES=/usr/share/dotnet/sdk/NuGetFallbackFolder
+
+# create fallback folder to avoid NU1301 when SDK expects it
+RUN mkdir -p /usr/share/dotnet/sdk/NuGetFallbackFolder
+
 # copy project files and restore only API project to avoid MAUI workloads
 COPY PoemApp.API/PoemApp.API.csproj PoemApp.API/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
