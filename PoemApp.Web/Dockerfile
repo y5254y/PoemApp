@@ -21,6 +21,11 @@ RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config
 
 # copy the rest and publish (use MSBuild props to enforce package folders)
 COPY . ./
+
+# remove any host bin/obj (they may contain Windows absolute paths in assets) to avoid using host project.assets.json
+RUN find . -type d -name bin -prune -exec rm -rf {} + || true
+RUN find . -type d -name obj -prune -exec rm -rf {} + || true
+
 RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish --no-restore -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
