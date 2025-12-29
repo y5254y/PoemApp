@@ -9,16 +9,19 @@ ENV NUGET_FALLBACK_PACKAGES=/usr/share/dotnet/sdk/NuGetFallbackFolder
 # create fallback folder to avoid NU1301 when SDK expects it
 RUN mkdir -p /usr/share/dotnet/sdk/NuGetFallbackFolder
 
+# copy NuGet.config so restore uses container-friendly config
+COPY NuGet.config ./
+
 # copy project files and restore only Web project to avoid MAUI workloads
 COPY PoemApp.Web/PoemApp.Web.csproj PoemApp.Web/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
 COPY PoemApp.Client.ApiClients/PoemApp.Client.ApiClients.csproj PoemApp.Client.ApiClients/
 
-RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj
+RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config
 
-# copy the rest and publish
+# copy the rest and publish (use MSBuild props to enforce package folders)
 COPY . ./
-RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish --no-restore
+RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish --no-restore -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
