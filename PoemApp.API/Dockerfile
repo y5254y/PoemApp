@@ -9,16 +9,25 @@ ENV NUGET_FALLBACK_PACKAGES=/usr/share/dotnet/sdk/NuGetFallbackFolder
 # create fallback folder to avoid NU1301 when SDK expects it
 RUN mkdir -p /usr/share/dotnet/sdk/NuGetFallbackFolder
 
+# copy NuGet.config to ensure container-friendly config
+COPY NuGet.config ./
+
 # copy project files and restore only API project to avoid MAUI workloads
 COPY PoemApp.API/PoemApp.API.csproj PoemApp.API/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
 COPY PoemApp.Infrastructure/PoemApp.Infrastructure.csproj PoemApp.Infrastructure/
 
-RUN dotnet restore PoemApp.API/PoemApp.API.csproj
+RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
-# copy the rest and publish
+# copy the rest
 COPY . ./
-RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish --no-restore
+# remove host bin/obj to avoid Windows paths in assets
+RUN find . -type d -name bin -prune -exec rm -rf {} + || true
+RUN find . -type d -name obj -prune -exec rm -rf {} + || true
+
+# restore again inside container (safe) and publish
+RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
+RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
