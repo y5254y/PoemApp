@@ -34,6 +34,10 @@ RUN mkdir -p PoemApp.API/wwwroot && mkdir -p PoemApp.API/wwwroot/_framework
 RUN cp -r /tmp/poemapp.web.publish/_framework/* PoemApp.API/wwwroot/_framework/ || true
 RUN cp -r PoemApp.Web/wwwroot/* PoemApp.API/wwwroot/ || true
 
+# Patch API csproj to avoid running PublishClient target with Windows-style paths inside container
+RUN sed -i "s#<Target Name=\"PublishClient\" AfterTargets=\"Publish\">#<Target Name=\"PublishClient\" AfterTargets=\"Publish\" Condition=\"'\$(PublishClient)'!='false'\">#" PoemApp.API/PoemApp.API.csproj || true
+RUN sed -i "s#\\\\#/#g" PoemApp.API/PoemApp.API.csproj || true
+
 # restore again inside container (safe) and publish API without triggering PublishClient target
 RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish -p:PublishClient=false
