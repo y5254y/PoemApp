@@ -16,6 +16,8 @@ COPY NuGet.config ./
 COPY PoemApp.API/PoemApp.API.csproj PoemApp.API/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
 COPY PoemApp.Infrastructure/PoemApp.Infrastructure.csproj PoemApp.Infrastructure/
+COPY PoemApp.Web/PoemApp.Web.csproj PoemApp.Web/
+COPY PoemApp.Client.ApiClients/PoemApp.Client.ApiClients.csproj PoemApp.Client.ApiClients/
 
 RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
@@ -25,9 +27,16 @@ COPY . ./
 RUN find . -type d -name bin -prune -exec rm -rf {} + || true
 RUN find . -type d -name obj -prune -exec rm -rf {} + || true
 
-# restore again inside container (safe) and publish
+# Build/publish the Blazor WebAssembly client inside the same build stage and copy into API wwwroot
+RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
+RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /tmp/poemapp.web.publish
+RUN mkdir -p PoemApp.API/wwwroot && mkdir -p PoemApp.API/wwwroot/_framework
+RUN cp -r /tmp/poemapp.web.publish/_framework/* PoemApp.API/wwwroot/_framework/ || true
+RUN cp -r PoemApp.Web/wwwroot/* PoemApp.API/wwwroot/ || true
+
+# restore again inside container (safe) and publish API without triggering PublishClient target
 RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
-RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish
+RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish -p:PublishClient=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
