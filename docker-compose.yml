@@ -35,6 +35,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Production
+      - Api__BaseUrl=http://api:5000
     depends_on:
       - api
 
