@@ -2,7 +2,8 @@
 # Re-save common text source and static asset files as UTF-8 without BOM
 # Run from repository root in PowerShell (Windows)
 
-$extensions = '\*.razor','\*.cshtml','\*.html','\*.htm','\*.css','\*.js','\*.json','\*.cs','\*.xml','\*.md'
+# Use glob patterns without leading backslash so Get-ChildItem -Include works correctly
+$extensions = '*.razor','*.cshtml','*.html','*.htm','*.css','*.js','*.json','*.cs','*.xml','*.md'
 $excludeDirs = @('.git','.vs','bin','obj','node_modules')
 
 Write-Output "Searching files to re-encode..."
