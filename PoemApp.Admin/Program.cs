@@ -71,6 +71,24 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+// Ensure text/html responses explicitly include utf-8 charset to avoid mojibake when served through Docker
+app.Use(async (context, next) =>
+{
+    context.Response.OnStarting(state =>
+    {
+        var httpContext = (HttpContext)state!;
+        var ct = httpContext.Response.ContentType;
+        if (!string.IsNullOrEmpty(ct) && ct.StartsWith("text/html", StringComparison.OrdinalIgnoreCase) && !ct.Contains("charset", StringComparison.OrdinalIgnoreCase))
+        {
+            httpContext.Response.ContentType = ct + "; charset=utf-8";
+        }
+        return Task.CompletedTask;
+    }, context);
+
+    await next();
+});
+
 app.UseRouting();
 
 // Admin minimal endpoints for logging control and reading logs
