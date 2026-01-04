@@ -48,26 +48,26 @@ public class Program
         builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
         builder.Services.AddSingleton<LoggingLevelSwitch>(levelSwitch);
 
-        // ×¢²á»ù´¡ÉèÊ©·şÎñ
+        // æ³¨å†ŒåŸºç¡€è®¾æ–½æœåŠ¡
         try
         {
             builder.Services.AddInfrastructure(builder.Configuration);
-            Console.WriteLine("»ù´¡ÉèÊ©·şÎñ×¢²á³É¹¦");
+            Console.WriteLine("åŸºç¡€è®¾æ–½æœåŠ¡æ³¨å†ŒæˆåŠŸ");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"»ù´¡ÉèÊ©·şÎñ×¢²áÊ§°Ü: {ex.Message}");
-            Console.WriteLine($"Òì³£ÏêÇé: {ex}");
+            Console.WriteLine($"åŸºç¡€è®¾æ–½æœåŠ¡æ³¨å†Œå¤±è´¥: {ex.Message}");
+            Console.WriteLine($"å¼‚å¸¸è¯¦æƒ…: {ex}");
         }
-        // ¼ì²é IAuthService ÊÇ·ñÒÑ×¢²á
+        // æ£€æŸ¥ IAuthService æ˜¯å¦å·²æ³¨å†Œ
         var serviceCollection = builder.Services;
         var authServiceDescriptor = serviceCollection.FirstOrDefault(d => d.ServiceType == typeof(IAuthService));
-        Console.WriteLine($"IAuthService ×¢²á×´Ì¬: {(authServiceDescriptor != null ? "ÒÑ×¢²á" : "Î´×¢²á")}");
+        Console.WriteLine($"IAuthService æ³¨å†ŒçŠ¶æ€: {(authServiceDescriptor != null ? "å·²æ³¨å†Œ" : "æœªæ³¨å†Œ")}");
 
-        // Èç¹ûÊÇÒÑ×¢²á£¬ÏÔÊ¾ÊµÏÖÀàĞÍ
+        // å¦‚æœæ˜¯å·²æ³¨å†Œï¼Œæ˜¾ç¤ºå®ç°ç±»å‹
         if (authServiceDescriptor != null)
         {
-            Console.WriteLine($"IAuthService ÊµÏÖÀàĞÍ: {authServiceDescriptor.ImplementationType?.Name}");
+            Console.WriteLine($"IAuthService å®ç°ç±»å‹: {authServiceDescriptor.ImplementationType?.Name}");
         }
 
 
@@ -101,11 +101,11 @@ public class Program
         }));
 
 
-        // Ìí¼Ó·şÎñµ½ÈİÆ÷
+        // æ·»åŠ æœåŠ¡åˆ°å®¹å™¨
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
 
-        // Ìí¼Ó JWT ÈÏÖ¤
+        // æ·»åŠ  JWT è®¤è¯
         var jwtKey = builder.Configuration["Jwt:Key"];
         if (string.IsNullOrEmpty(jwtKey) || Encoding.UTF8.GetByteCount(jwtKey) < 64)
         {
@@ -127,7 +127,7 @@ public class Program
                     // Ensure role/name claim mapping matches tokens created in AuthService
                     RoleClaimType = ClaimTypes.Role,
                     NameClaimType = ClaimTypes.Name,
-                    // ·Å¿íÊ±ÖÓÆ«²î£¬±ÜÃâÊ±¼äÍ¬²½ÎÊÌâ
+                    // æ”¾å®½æ—¶é’Ÿåå·®ï¼Œé¿å…æ—¶é—´åŒæ­¥é—®é¢˜
                     ClockSkew = TimeSpan.FromMinutes(5)
                 };
 
@@ -135,12 +135,12 @@ public class Program
                 {
                     OnAuthenticationFailed = context =>
                     {
-                        Console.WriteLine($"ÈÏÖ¤Ê§°Ü: {context.Exception.Message}");
+                        Console.WriteLine($"è®¤è¯å¤±è´¥: {context.Exception.Message}");
                         return Task.CompletedTask;
                     },
                     OnTokenValidated = context =>
                     {
-                        Console.WriteLine("Token ÑéÖ¤³É¹¦");
+                        Console.WriteLine("Token éªŒè¯æˆåŠŸ");
                         return Task.CompletedTask;
                     }
                 };
@@ -152,7 +152,7 @@ public class Program
             config.Version = "v1";
         });
 
-        // ÅäÖÃCORS
+        // é…ç½®CORS
         builder.Services.AddCors(options =>
         {
             options.AddPolicy("AllowAll", policy =>
@@ -166,7 +166,7 @@ public class Program
         var app = builder.Build();
 
 
-        // ÖÖ×ÓÊı¾İ£¨½öÔÚ¿ª·¢»·¾³£©
+        // ç§å­æ•°æ®ï¼ˆä»…åœ¨å¼€å‘ç¯å¢ƒï¼‰
         if (app.Environment.IsDevelopment())
         {
             app.UseOpenApi();
@@ -180,15 +180,24 @@ public class Program
             catch (Exception ex)
             {
                 var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-                logger.LogError(ex, "ÖÖ×ÓÊı¾İÖ´ĞĞÊ§°Ü");
+                logger.LogError(ex, "ç§å­æ•°æ®æ‰§è¡Œå¤±è´¥");
             }
         }
 
         //app.UseHttpsRedirection();
-        app.UseAuthentication();    // ÖØÒª£ºÌí¼ÓÈÏÖ¤ÖĞ¼ä¼ş
+        app.UseAuthentication();    // é‡è¦ï¼šæ·»åŠ è®¤è¯ä¸­é—´ä»¶
         app.UseCors("AllowAll");
         app.UseAuthorization();
+
+        // Serve static files (web client) from wwwroot when API hosts the Blazor WebAssembly client
+        app.UseDefaultFiles();
+        app.UseStaticFiles();
+
         app.MapControllers();
+
+        // Fallback to index.html for SPA routes
+        app.MapFallbackToFile("/index.html");
+
         //app.MapHealthChecks("/health"); // Map health check endpoint
 
         app.Run();
