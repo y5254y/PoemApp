@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using PoemApp.Core.Entities;
 
 
@@ -28,6 +28,17 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+
+        // Ensure EF maps table names to lower-case to match MySQL container naming (Linux MySQL is case-sensitive)
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            // set table name to lower-case
+            var currentName = entityType.GetTableName();
+            if (!string.IsNullOrEmpty(currentName))
+            {
+                entityType.SetTableName(currentName.ToLowerInvariant());
+            }
+        }
 
         // 配置多对多关系
         modelBuilder.Entity<PoemCategory>()
