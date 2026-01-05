@@ -21,8 +21,9 @@ services:
       context: .
       dockerfile: PoemApp.API/Dockerfile
     environment:
-      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};
+      - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=root;Password=${MYSQL_ROOT_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Production
+      - Cors__AllowedOrigins=http://localhost:6000
     depends_on:
       - db
     ports:
@@ -47,9 +48,11 @@ services:
       dockerfile: PoemApp.Web/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApiBaseUrl=http://localhost:80/api
+      - ApiBaseUrl=http://localhost:5000/
     depends_on:
       - api
+    ports:
+      - "6000:80"
 
   nginx:
     build:

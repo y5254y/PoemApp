@@ -155,11 +155,13 @@ public class Program
         // 配置CORS
         builder.Services.AddCors(options =>
         {
+            var allowedOrigins = builder.Configuration.GetValue<string>("Cors:AllowedOrigins")?.Split(';', StringSplitOptions.RemoveEmptyEntries) ?? new[] { "http://localhost:6000" };
             options.AddPolicy("AllowAll", policy =>
             {
-                policy.AllowAnyOrigin()
+                policy.WithOrigins(allowedOrigins)
                       .AllowAnyMethod()
-                      .AllowAnyHeader();
+                      .AllowAnyHeader()
+                      .AllowCredentials();
             });
         });
 
