@@ -11,8 +11,12 @@ var builder = WebAssemblyHostBuilder.CreateDefault(args);
 builder.RootComponents.Add<App>("#app");
 builder.RootComponents.Add<HeadOutlet>("head::after");
 
-// Determine API base: prefer explicit configuration
+// Determine API base: prefer explicit configuration keys (support both ApiBaseUrl and Api:BaseUrl)
 var configuredApiBase = builder.Configuration["ApiBaseUrl"];
+if (string.IsNullOrWhiteSpace(configuredApiBase))
+{
+    configuredApiBase = builder.Configuration["Api:BaseUrl"];
+}
 var apiBase = !string.IsNullOrWhiteSpace(configuredApiBase) ? configuredApiBase : builder.HostEnvironment.BaseAddress;
 
 // Register shared API clients
