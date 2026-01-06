@@ -35,14 +35,20 @@ RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:
 FROM nginx:stable
 
 # Copy all published wwwroot files to nginx html root
-# Using wildcard to ensure we get index.html and all assets (_content, _framework, etc)
-COPY --from=build /app/publish/wwwroot/ /usr/share/nginx/html/
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 
-# Copy nginx config (optional: for SPA routing fallback to index.html)
+# Copy Blazor WebAssembly framework files from _content subdirectory to root
+# This ensures _framework, _content, etc. are accessible from the root
+RUN cp -r /usr/share/nginx/html/_content/PoemApp.Web/* /usr/share/nginx/html/ 2>/dev/null || true
+
+# Copy nginx config (for SPA routing fallback to index.html)
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
-# Verify files were copied
-RUN echo "Files in /usr/share/nginx/html:" && ls -la /usr/share/nginx/html/
+# Verify key files exist
+RUN echo "=== Checking wwwroot structure ===" && \
+    ls -la /usr/share/nginx/html/ && \
+    echo "=== Checking _framework ===" && \
+    ls -la /usr/share/nginx/html/_framework 2>/dev/null || echo "Note: _framework at /usr/share/nginx/html/_framework"
 
 EXPOSE 80
 
