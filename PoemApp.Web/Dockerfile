@@ -29,16 +29,20 @@ RUN find . -type d -name obj -prune -exec rm -rf {} + || true
 # restore again after cleaning host obj so assets are generated in container
 RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
-RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
+RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder -p:PublishTrimmed=false
 
 # Runtime: use nginx to serve static files (Blazor WASM is client-side, not a server app)
 FROM nginx:stable
 
-# Copy published static files to nginx www root
-COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+# Copy all published wwwroot files to nginx html root
+# Using wildcard to ensure we get index.html and all assets (_content, _framework, etc)
+COPY --from=build /app/publish/wwwroot/ /usr/share/nginx/html/
 
 # Copy nginx config (optional: for SPA routing fallback to index.html)
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
+
+# Verify files were copied
+RUN echo "Files in /usr/share/nginx/html:" && ls -la /usr/share/nginx/html/
 
 EXPOSE 80
 
