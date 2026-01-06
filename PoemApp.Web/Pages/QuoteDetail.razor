@@ -6,7 +6,7 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<PageTitle>Ãû¾ä - PoemApp</PageTitle>
+<PageTitle>åå¥ - PoemApp</PageTitle>
 
 @if (_quote == null)
 {
@@ -16,12 +16,12 @@ else
 {
     <MudPaper Class="pa-4">
         <MudText Typo="Typo.h5">@((MarkupString)_quote.Content)</MudText>
-        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@(_quote.AuthorName ?? _quote.PoemTitle ?? "ÄäÃû")</MudText>
+        <MudText Typo="Typo.subtitle1" Color="Color.Secondary">@(_quote.AuthorName ?? _quote.PoemTitle ?? "åŒ¿å")</MudText>
 
         @if (!string.IsNullOrWhiteSpace(_quote.Translation))
         {
             <MudPaper Class="pa-3 mt-3">
-                <MudText Typo="Typo.subtitle2">ÒëÎÄ</MudText>
+                <MudText Typo="Typo.subtitle2">è¯‘æ–‡</MudText>
                 <MudText>@((MarkupString)_quote.Translation)</MudText>
             </MudPaper>
         }
@@ -29,13 +29,13 @@ else
         @if (!string.IsNullOrWhiteSpace(_quote.Annotation))
         {
             <MudPaper Class="pa-3 mt-3">
-                <MudText Typo="Typo.subtitle2">×¢ÊÍ/½â¶Á</MudText>
+                <MudText Typo="Typo.subtitle2">æ³¨é‡Š/è§£è¯»</MudText>
                 <MudText>@((MarkupString)_quote.Annotation)</MudText>
             </MudPaper>
         }
 
         <div class="mt-3">
-            <MudButton Variant="Variant.Text" OnClick="Back">·µ»Ø</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Back">è¿”å›</MudButton>
         </div>
     </MudPaper>
 }
@@ -57,7 +57,7 @@ else
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 

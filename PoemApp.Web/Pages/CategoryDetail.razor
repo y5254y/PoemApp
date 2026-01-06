@@ -28,7 +28,7 @@ else
 
         @if (category.Poems?.Any() == true)
         {
-            <MudText Typo="Typo.h6" Class="mb-2">相关文章</MudText>
+            <MudText Typo="Typo.h6" Class="mb-2">鐩稿叧鏂囩珷</MudText>
             <MudGrid Spacing="3">
                 @foreach (var poem in category.Poems)
                 {
@@ -57,7 +57,7 @@ else
         else
         {
             <MudPaper Class="pa-4 text-center" Elevation="1">
-                <MudText Typo="Typo.body1" Color="Color.Secondary">暂无相关诗文</MudText>
+                <MudText Typo="Typo.body1" Color="Color.Secondary">鏆傛棤鐩稿叧璇楁枃</MudText>
             </MudPaper>
         }
     </MudContainer>
@@ -82,7 +82,7 @@ else
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading category {Id}: {ex.Message}");
-            Snackbar.Add("加载分类数据失败", Severity.Error);
+            Snackbar.Add("鍔犺浇鍒嗙被鏁版嵁澶辫触", Severity.Error);
         }
     }
 

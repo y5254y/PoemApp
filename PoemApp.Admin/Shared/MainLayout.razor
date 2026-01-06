@@ -13,16 +13,16 @@
     <MudAppBar Elevation="1" Color="Color.Primary">
         <MudIconButton Icon="Icons.Material.Filled.Menu" Color="Color.Inherit"  Edge="Edge.Start" OnClick="ToggleDrawer" />
         <MudSpacer />
-        <MudText Typo="Typo.h6" Color="Color.Inherit">PoemApp ¹ÜÀí¶Ë</MudText>
+        <MudText Typo="Typo.h6" Color="Color.Inherit">PoemApp ç®¡ç†ç«¯</MudText>
         <MudSpacer />
 
         <AuthorizeView>
             <Authorized Context="innerState">
                 <MudText Typo="Typo.body2" Color="Color.Inherit" Class="mr-3">@innerState.User.Identity?.Name</MudText>
-                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Logout">×¢Ïú</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="Logout">æ³¨é”€</MudButton>
             </Authorized>
             <NotAuthorized>
-                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoginNavigate">µÇÂ¼</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Inherit" OnClick="LoginNavigate">ç™»å½•</MudButton>
             </NotAuthorized>
         </AuthorizeView>
     </MudAppBar>

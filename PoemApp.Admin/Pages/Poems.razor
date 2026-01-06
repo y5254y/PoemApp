@@ -13,10 +13,10 @@
 <MudGrid>
     <MudItem xs="12" md="3">
         <MudPaper Class="pa-4 mb-4">
-            <MudText Typo="Typo.h6">½ÌÑ§½×¶Î</MudText>
+            <MudText Typo="Typo.h6">æ•™å­¦é˜¶æ®µ</MudText>
             <MudDivider Class="my-2" />
             <div class="d-flex flex-column" style="gap:8px;">
-                <MudChip T="string" Clickable="true" OnClick="@( () => SelectEducationCategory(null) )" Variant="Variant.Filled" Color="@( _selectedEducationCategoryId == null ? Color.Primary : Color.Default)">È«²¿</MudChip>
+                <MudChip T="string" Clickable="true" OnClick="@( () => SelectEducationCategory(null) )" Variant="Variant.Filled" Color="@( _selectedEducationCategoryId == null ? Color.Primary : Color.Default)">å…¨éƒ¨</MudChip>
                 @foreach (var c in _educationCategories)
                 {
                     <MudChip T="string" Clickable="true" OnClick="@( () => SelectEducationCategory(c.Id) )" Variant="Variant.Filled" Color="@( _selectedEducationCategoryId == c.Id ? Color.Primary : Color.Default)">@c.Name</MudChip>
@@ -27,21 +27,21 @@
 
     <MudItem xs="12" md="9">
         <MudPaper Class="pa-4">
-            <MudText Typo="Typo.h5">Ê«ÎÄ¹ÜÀí</MudText>
+            <MudText Typo="Typo.h5">è¯—æ–‡ç®¡ç†</MudText>
             <MudDivider Class="my-2" />
 
             <MudTable T="PoemDto" @ref="_table" ServerData="@(async (TableState s, CancellationToken ct) => await LoadServerData(s, ct))" Striped="true" Hover="true" Bordered="true">
                 <ToolBarContent>
-                    <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="ËÑË÷±êÌâ/×÷Õß" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" @onkeyup="OnSearchKeyUp" />
+                    <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="æœç´¢æ ‡é¢˜/ä½œè€…" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" @onkeyup="OnSearchKeyUp" />
                     <MudSpacer />
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@( () => Navigation.NavigateTo("/poems/edit/0") )">ĞÂ½¨Ê«ÎÄ</MudButton>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="@( () => Navigation.NavigateTo("/poems/edit/0") )">æ–°å»ºè¯—æ–‡</MudButton>
                 </ToolBarContent>
 
                 <HeaderContent>
-                    <MudTh>±êÌâ</MudTh>
-                    <MudTh>×÷Õß</MudTh>
-                    <MudTh>³¯´ú</MudTh>
-                    <MudTh>½ÌÑ§½×¶Î</MudTh>
+                    <MudTh>æ ‡é¢˜</MudTh>
+                    <MudTh>ä½œè€…</MudTh>
+                    <MudTh>æœä»£</MudTh>
+                    <MudTh>æ•™å­¦é˜¶æ®µ</MudTh>
                     <MudTh></MudTh>
                 </HeaderContent>
 
@@ -62,17 +62,17 @@
                             }
                             else
                             {
-                                <span class="text-muted">¡ª</span>
+                                <span class="text-muted">â€”</span>
                             }
                         }
                         else
                         {
-                            <span class="text-muted">¡ª</span>
+                            <span class="text-muted">â€”</span>
                         }
                     </MudTd>
                     <MudTd>
-                        <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">±à¼­</MudButton>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">É¾³ı</MudButton>
+                        <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">ç¼–è¾‘</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">åˆ é™¤</MudButton>
                     </MudTd>
                 </RowTemplate>
 
@@ -99,7 +99,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØ·ÖÀàÊ§°Ü: " + ex.Message, Severity.Warning);
+            Snackbar.Add("åŠ è½½åˆ†ç±»å¤±è´¥: " + ex.Message, Severity.Warning);
         }
     }
 
@@ -126,7 +126,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØÊ«ÎÄÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½è¯—æ–‡å¤±è´¥: " + ex.Message, Severity.Error);
             return new TableData<PoemDto> { TotalItems = 0, Items = new List<PoemDto>() };
         }
     }
@@ -158,7 +158,7 @@
 
     private async Task ConfirmDelete(int id)
     {
-        var confirmed = await DialogService.ShowMessageBox("É¾³ıÈ·ÈÏ", $"È·ÈÏÉ¾³ıÕâÆªÊ«ÎÄÂğ£¿", yesText: "È·ÈÏ", noText: "È¡Ïû", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
+        var confirmed = await DialogService.ShowMessageBox("åˆ é™¤ç¡®è®¤", $"ç¡®è®¤åˆ é™¤è¿™ç¯‡è¯—æ–‡å—ï¼Ÿ", yesText: "ç¡®è®¤", noText: "å–æ¶ˆ", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
         if (confirmed == true)
         {
             await DoDelete(id);
@@ -172,7 +172,7 @@
             var ok = await PoemClient.DeleteAsync(id);
             if (ok)
             {
-                Snackbar.Add("É¾³ı³É¹¦", Severity.Success);
+                Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success);
                 if (_table != null)
                 {
                     await _table.ReloadServerData();
@@ -180,12 +180,12 @@
             }
             else
             {
-                Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+                Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("É¾³ıÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åˆ é™¤å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 }

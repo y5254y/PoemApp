@@ -11,39 +11,39 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
-    <MudText Typo="Typo.h5">×÷Õß¹ØÏµ¹ÜÀí</MudText>
+    <MudText Typo="Typo.h5">ä½œè€…å…³ç³»ç®¡ç†</MudText>
 
     <MudDivider Class="my-2" />
 
     <MudGrid>
         <MudItem xs="12">
-            <MudSelect T="int?" @bind-Value="_selectedToAuthorId" Label="Ñ¡ÔñÄ¿±ê×÷Õß" Clearable="true">
+            <MudSelect T="int?" @bind-Value="_selectedToAuthorId" Label="é€‰æ‹©ç›®æ ‡ä½œè€…" Clearable="true">
                 @foreach (var a in _allAuthors)
                 {
                     <MudSelectItem T="int?" Value="@(a.Id)">@a.Name</MudSelectItem>
                 }
             </MudSelect>
-            <MudSelect T="RelationshipTypeEnum" @bind-Value="_selectedRelationType" Label="¹ØÏµÀàĞÍ">
+            <MudSelect T="RelationshipTypeEnum" @bind-Value="_selectedRelationType" Label="å…³ç³»ç±»å‹">
                 @foreach (RelationshipTypeEnum r in Enum.GetValues(typeof(RelationshipTypeEnum)))
                 {
                     <MudSelectItem T="RelationshipTypeEnum" Value="@r">@r.GetDisplayName()</MudSelectItem>
                 }
             </MudSelect>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRelationship">Ìí¼Ó¹ØÏµ</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="AddRelationship">æ·»åŠ å…³ç³»</MudButton>
         </MudItem>
 
         <MudItem xs="12" Class="mt-4">
             <MudTable Items="_relationships">
                 <HeaderContent>
-                    <MudTh>Ä¿±ê×÷Õß</MudTh>
-                    <MudTh>¹ØÏµ</MudTh>
+                    <MudTh>ç›®æ ‡ä½œè€…</MudTh>
+                    <MudTh>å…³ç³»</MudTh>
                     <MudTh></MudTh>
                 </HeaderContent>
                 <RowTemplate>
                     <MudTd>@context.ToAuthorName</MudTd>
                     <MudTd>@context.RelationshipType.GetDisplayName()</MudTd>
                     <MudTd>
-                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => RemoveRelationship(context.Id)">É¾³ı</MudButton>
+                        <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => RemoveRelationship(context.Id)">åˆ é™¤</MudButton>
                     </MudTd>
                 </RowTemplate>
             </MudTable>
@@ -78,14 +78,14 @@
     {
         if (_selectedToAuthorId == null)
         {
-            Snackbar.Add("ÇëÑ¡ÔñÄ¿±ê×÷Õß", Severity.Warning);
+            Snackbar.Add("è¯·é€‰æ‹©ç›®æ ‡ä½œè€…", Severity.Warning);
             return;
         }
 
         // Prevent adding duplicate relationships on client before calling API
         if (_relationships.Any(r => r.ToAuthorId == _selectedToAuthorId.Value && r.RelationshipType == _selectedRelationType))
         {
-            Snackbar.Add("¹ØÏµÒÑ´æÔÚ", Severity.Warning);
+            Snackbar.Add("å…³ç³»å·²å­˜åœ¨", Severity.Warning);
             return;
         }
 
@@ -93,12 +93,12 @@
         var res = await AuthorsClient.AddRelationshipAsync(dto);
         if (res != null)
         {
-            Snackbar.Add("Ìí¼Ó³É¹¦", Severity.Success);
+            Snackbar.Add("æ·»åŠ æˆåŠŸ", Severity.Success);
             await LoadInitialData();
         }
         else
         {
-            Snackbar.Add("Ìí¼ÓÊ§°Ü", Severity.Error);
+            Snackbar.Add("æ·»åŠ å¤±è´¥", Severity.Error);
         }
     }
 
@@ -107,12 +107,12 @@
         var ok = await AuthorsClient.RemoveRelationshipAsync(id);
         if (ok)
         {
-            Snackbar.Add("É¾³ı³É¹¦", Severity.Success);
+            Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success);
             await LoadInitialData();
         }
         else
         {
-            Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+            Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
         }
     }
 }

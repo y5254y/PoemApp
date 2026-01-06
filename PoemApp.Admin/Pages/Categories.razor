@@ -13,16 +13,16 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5">·ÖÀà¹ÜÀí</MudText>
+    <MudText Typo="Typo.h5">åˆ†ç±»ç®¡ç†</MudText>
     <MudDivider Class="my-2" />
 
     <div class="d-flex mb-2">
-        <MudTextField @bind-Value="_search" Immediate="true" OnImmediateValueChanged="OnSearchChanged" Placeholder="ËÑË÷·ÖÀà" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" @onkeydown="OnSearchKeyDown" />
+        <MudTextField @bind-Value="_search" Immediate="true" OnImmediateValueChanged="OnSearchChanged" Placeholder="æœç´¢åˆ†ç±»" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" @onkeydown="OnSearchKeyDown" />
         <MudSpacer />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">ĞÂ½¨·ÖÀà</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">æ–°å»ºåˆ†ç±»</MudButton>
     </div>
 
-    @* °´ Group ·Ö×éÏÔÊ¾£¬Ë³Ğò¹Ì¶¨Îª£º½ÌÑ§½×¶Î¡¢ÎÄÌå¡¢³¯´ú¡¢Ìâ²Ä¡¢·ç¸ñ *@
+    @* æŒ‰ Group åˆ†ç»„æ˜¾ç¤ºï¼Œé¡ºåºå›ºå®šä¸ºï¼šæ•™å­¦é˜¶æ®µã€æ–‡ä½“ã€æœä»£ã€é¢˜æã€é£æ ¼ *@
     @foreach (var group in _displayOrder)
     {
         var groupCats = _categories.Where(c => c.Group == group).ToList();
@@ -32,7 +32,7 @@
             <div class="d-flex" style="align-items:center;justify-content:space-between;">
                 <MudText Typo="Typo.h6">@group.GetDisplayName() (@groupCats.Count())</MudText>
                 <div>
-                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => OpenCreateGroup(group)">ĞÂ½¨¸Ã×é·ÖÀà</MudButton>
+                    <MudButton Variant="Variant.Text" Size="Size.Small" OnClick="() => OpenCreateGroup(group)">æ–°å»ºè¯¥ç»„åˆ†ç±»</MudButton>
                 </div>
             </div>
 
@@ -56,7 +56,7 @@
     private List<CategoryDto> _categories = new();
     private string _search = string.Empty;
 
-    // ·Ö×éÏÔÊ¾Ë³Ğò
+    // åˆ†ç»„æ˜¾ç¤ºé¡ºåº
     private readonly CategoryGroup[] _displayOrder = new[]
     {
         CategoryGroup.EducationLevel,
@@ -80,7 +80,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØ·ÖÀàÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½åˆ†ç±»å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 
@@ -117,7 +117,7 @@
         }
     }
 
-    // ·µ»ØÖ¸¶¨ group ÏÂµÄ×ÓÏî£¨¹© CategoryPanelMud Ê¹ÓÃ£©
+    // è¿”å›æŒ‡å®š group ä¸‹çš„å­é¡¹ï¼ˆä¾› CategoryPanelMud ä½¿ç”¨ï¼‰
     private List<CategoryDto> GetChildrenForGroup(int parentId, CategoryGroup group)
     {
         return _categories
@@ -126,7 +126,7 @@
             .ToList();
     }
 
-    // Îª×é¼şÌá¹©±Õ°üÎ¯ÍĞ£¬°ó¶¨µ±Ç° group
+    // ä¸ºç»„ä»¶æä¾›é—­åŒ…å§”æ‰˜ï¼Œç»‘å®šå½“å‰ group
     private Func<int, List<CategoryDto>> GetChildrenDelegateForGroup(CategoryGroup group) => id => GetChildrenForGroup(id, group);
 
     private void OpenCreate() => Navigation.NavigateTo("/categories/edit/0");
@@ -135,7 +135,7 @@
 
     private async Task ConfirmDelete(int id)
     {
-        var confirmed = await DialogService.ShowMessageBox("É¾³ıÈ·ÈÏ", $"È·ÈÏÉ¾³ı·ÖÀà {id} Âğ£¿", yesText: "È·ÈÏ", noText: "È¡Ïû");
+        var confirmed = await DialogService.ShowMessageBox("åˆ é™¤ç¡®è®¤", $"ç¡®è®¤åˆ é™¤åˆ†ç±» {id} å—ï¼Ÿ", yesText: "ç¡®è®¤", noText: "å–æ¶ˆ");
         if (confirmed == true) await DoDelete(id);
     }
 
@@ -144,9 +144,9 @@
         var ok = await CategoriesClient.DeleteAsync(id);
         if (ok)
         {
-            Snackbar.Add("É¾³ı³É¹¦", Severity.Success);
+            Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success);
             await LoadAllAsync();
         }
-        else Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+        else Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
     }
 }

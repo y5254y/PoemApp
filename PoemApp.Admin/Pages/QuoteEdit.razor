@@ -11,40 +11,40 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
-    <MudText Typo="Typo.h5">Ãû¾ä±à¼­</MudText>
+    <MudText Typo="Typo.h5">åå¥ç¼–è¾‘</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <MudTextField @bind-Value="_model.Content" Label="ÄÚÈİ" Required="true" />
+        <MudTextField @bind-Value="_model.Content" Label="å†…å®¹" Required="true" />
 
-        <MudSelect T="int?" Label="×÷Õß(¿ÉÑ¡)" @bind-Value="_model.AuthorId">
-            <MudSelectItem T="int?" Value="null">--ÎŞ--</MudSelectItem>
+        <MudSelect T="int?" Label="ä½œè€…(å¯é€‰)" @bind-Value="_model.AuthorId">
+            <MudSelectItem T="int?" Value="null">--æ— --</MudSelectItem>
             @foreach (var a in _authors)
             {
                 <MudSelectItem T="int?" Value="@(a.Id)">@a.Name</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="int?" Label="À´×ÔÊ«ÎÄ(¿ÉÑ¡)" @bind-Value="_model.PoemId">
-            <MudSelectItem T="int?" Value="null">--ÎŞ--</MudSelectItem>
+        <MudSelect T="int?" Label="æ¥è‡ªè¯—æ–‡(å¯é€‰)" @bind-Value="_model.PoemId">
+            <MudSelectItem T="int?" Value="null">--æ— --</MudSelectItem>
             @foreach (var p in _poems)
             {
                 <MudSelectItem T="int?" Value="@(p.Id)">@p.Title</MudSelectItem>
             }
         </MudSelect>
 
-        <MudTextField @bind-Value="_model.Source" Label="À´Ô´/³ö´¦" />
-        <MudText Typo="Typo.subtitle2" Class="mt-2">ÒëÎÄ</MudText>
+        <MudTextField @bind-Value="_model.Source" Label="æ¥æº/å‡ºå¤„" />
+        <MudText Typo="Typo.subtitle2" Class="mt-2">è¯‘æ–‡</MudText>
         <QuillEditor @ref="_translationEditor" InitialContent="@(_model.Translation ?? string.Empty)" OnContentChanged="OnTranslationChanged" />
 
-        <MudText Typo="Typo.subtitle2" Class="mt-2">×¢ÊÍ/½â¶Á</MudText>
+        <MudText Typo="Typo.subtitle2" Class="mt-2">æ³¨é‡Š/è§£è¯»</MudText>
         <QuillEditor @ref="_annotationEditor" InitialContent="@(_model.Annotation ?? string.Empty)" OnContentChanged="OnAnnotationChanged" />
 
         <div class="mt-3">
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">±£´æ</MudButton>
-            <MudButton Variant="Variant.Text" OnClick="Cancel">È¡Ïû</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">ä¿å­˜</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">å–æ¶ˆ</MudButton>
         </div>
     </EditForm>
 </MudPaper>
@@ -93,8 +93,8 @@
             if (Id == 0)
             {
                 var created = await QuotesClient.CreateAsync(_model);
-                if (created != null) { Snackbar.Add("´´½¨³É¹¦", Severity.Success); Navigation.NavigateTo("/quotes"); }
-                else Snackbar.Add("´´½¨Ê§°Ü", Severity.Error);
+                if (created != null) { Snackbar.Add("åˆ›å»ºæˆåŠŸ", Severity.Success); Navigation.NavigateTo("/quotes"); }
+                else Snackbar.Add("åˆ›å»ºå¤±è´¥", Severity.Error);
             }
             else
             {
@@ -108,13 +108,13 @@
                     Annotation = _model.Annotation
                 });
 
-                if (ok) { Snackbar.Add("¸üĞÂ³É¹¦", Severity.Success); Navigation.NavigateTo("/quotes"); }
-                else Snackbar.Add("¸üĞÂÊ§°Ü", Severity.Error);
+                if (ok) { Snackbar.Add("æ›´æ–°æˆåŠŸ", Severity.Success); Navigation.NavigateTo("/quotes"); }
+                else Snackbar.Add("æ›´æ–°å¤±è´¥", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("±£´æÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("ä¿å­˜å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 

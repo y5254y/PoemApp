@@ -6,10 +6,10 @@
 @inject ISnackbar Snackbar
 @inject NavigationManager Navigation
 
-<PageTitle>ÃûÑÔÃû¾ä - PoemApp</PageTitle>
+<PageTitle>åè¨€åå¥ - PoemApp</PageTitle>
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5">ÃûÑÔÃû¾ä</MudText>
+    <MudText Typo="Typo.h5">åè¨€åå¥</MudText>
     <MudDivider Class="my-2" />
 
     <MudGrid>
@@ -20,7 +20,7 @@
             }
             else if (!_items.Any())
             {
-                <MudText>ÔİÎŞÃûÑÔ</MudText>
+                <MudText>æš‚æ— åè¨€</MudText>
             }
             else
             {
@@ -30,7 +30,7 @@
                         <MudListItem T="QuoteDto" Clickable="true" OnClick="() => View(q.Id)">
                             <div>
                                 <MudText Typo="Typo.body1">@((MarkupString)q.Content)</MudText>
-                                <MudText Typo="Typo.caption" Color="Color.Secondary">@(!string.IsNullOrWhiteSpace(q.AuthorName) ? q.AuthorName : (q.PoemTitle ?? "ÄäÃû"))</MudText>
+                                <MudText Typo="Typo.caption" Color="Color.Secondary">@(!string.IsNullOrWhiteSpace(q.AuthorName) ? q.AuthorName : (q.PoemTitle ?? "åŒ¿å"))</MudText>
                             </div>
                         </MudListItem>
                     }
@@ -40,9 +40,9 @@
 
         <MudItem xs="12" md="4">
             <MudPaper Class="pa-3">
-                <MudText Typo="Typo.subtitle2">ËÑË÷</MudText>
-                <MudTextField @bind-Value="_search" Placeholder="ËÑË÷Ãû¾ä/×÷Õß/À´Ô´" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
-                <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="Search">ËÑË÷</MudButton>
+                <MudText Typo="Typo.subtitle2">æœç´¢</MudText>
+                <MudTextField @bind-Value="_search" Placeholder="æœç´¢åå¥/ä½œè€…/æ¥æº" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+                <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="Search">æœç´¢</MudButton>
             </MudPaper>
         </MudItem>
     </MudGrid>
@@ -65,7 +65,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 

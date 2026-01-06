@@ -9,14 +9,14 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageTitle>¹ÅÊ«ÎÄĞÀÉÍ - PoemApp</PageTitle>
+<PageTitle>å¤è¯—æ–‡æ¬£èµ - PoemApp</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4">
  
 
-    <!-- ×îĞÂÊ«ÎÄ -->
+    <!-- æœ€æ–°è¯—æ–‡ -->
     <MudPaper Class="pa-4 mb-6" Elevation="4">
-        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">×îĞÂÊ«ÎÄ</MudText>
+        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">æœ€æ–°è¯—æ–‡</MudText>
         <MudGrid>
             @if (latestPoems != null)
             {
@@ -37,7 +37,7 @@
                             </MudCardContent>
                             <MudCardActions>
                                 <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => ViewPoem(poem.Id)">
-                                    ÔÄ¶ÁÈ«ÎÄ
+                                    é˜…è¯»å…¨æ–‡
                                 </MudButton>
                             </MudCardActions>
                         </MudCard>
@@ -47,9 +47,9 @@
         </MudGrid>
     </MudPaper>
 
-    <!-- ÈÈÃÅÊ«ÈË -->
+    <!-- çƒ­é—¨è¯—äºº -->
     <MudPaper Class="pa-4" Elevation="4">
-        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">ÖøÃûÊ«ÈË</MudText>
+        <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">è‘—åè¯—äºº</MudText>
         <MudGrid>
             @if (featuredAuthors != null)
             {
@@ -86,14 +86,14 @@
         try
         {
             Console.WriteLine("Loading index data...");
-            // ¼ÓÔØ¾«Ñ¡Ê«ÎÄ£¨ÕâÀï¿ÉÒÔ¸ù¾İÄ³ÖÖËã·¨Ñ¡Ôñ£©
+            // åŠ è½½ç²¾é€‰è¯—æ–‡ï¼ˆè¿™é‡Œå¯ä»¥æ ¹æ®æŸç§ç®—æ³•é€‰æ‹©ï¼‰
             var allPoems = await PoemClient.GetAllAsync();
             featuredPoems = allPoems.Take(5).ToList();
 
-            // ×îĞÂÊ«ÎÄ£¨Ä£Äâ£¬ÕâÀï¿ÉÒÔ°´´´½¨Ê±¼äÅÅĞò£©
+            // æœ€æ–°è¯—æ–‡ï¼ˆæ¨¡æ‹Ÿï¼Œè¿™é‡Œå¯ä»¥æŒ‰åˆ›å»ºæ—¶é—´æ’åºï¼‰
             latestPoems = allPoems.Take(6).ToList();
 
-            // ÖøÃûÊ«ÈË
+            // è‘—åè¯—äºº
             var authorsResult = await AuthorsClient.GetAllAsync(1, 12);
             featuredAuthors = authorsResult.Items;
 
@@ -102,7 +102,7 @@
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading index data: {ex.Message}");
-            Snackbar.Add("¼ÓÔØÊı¾İÊ§°Ü£¬Çë¼ì²éÍøÂçÁ¬½Ó", Severity.Error);
+            Snackbar.Add("åŠ è½½æ•°æ®å¤±è´¥ï¼Œè¯·æ£€æŸ¥ç½‘ç»œè¿æ¥", Severity.Error);
         }
     }
 
@@ -141,9 +141,9 @@
         if (string.IsNullOrEmpty(htmlContent))
             return string.Empty;
 
-        // ¼òµ¥µÄ HTML ±êÇ©ÒÆ³ı£¬×ª»»Îª´¿ÎÄ±¾
+        // ç®€å•çš„ HTML æ ‡ç­¾ç§»é™¤ï¼Œè½¬æ¢ä¸ºçº¯æ–‡æœ¬
         var plainText = System.Text.RegularExpressions.Regex.Replace(htmlContent, "<[^>]*>", string.Empty);
-        // ½âÂë HTML ÊµÌå
+        // è§£ç  HTML å®ä½“
         plainText = System.Net.WebUtility.HtmlDecode(plainText);
         return plainText.Trim();
     }

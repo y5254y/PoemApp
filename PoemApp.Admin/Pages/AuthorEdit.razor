@@ -10,24 +10,24 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
-    <MudText Typo="Typo.h5">×÷Õß±à¼­</MudText>
+    <MudText Typo="Typo.h5">ä½œè€…ç¼–è¾‘</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid">
-        <MudTextField @bind-Value="_model.Name" Label="ĞÕÃû" Required="true" />
-        <MudSelect T="DynastyEnum" Label="³¯´ú" @bind-Value="_model.Dynasty" Required="true">
+        <MudTextField @bind-Value="_model.Name" Label="å§“å" Required="true" />
+        <MudSelect T="DynastyEnum" Label="æœä»£" @bind-Value="_model.Dynasty" Required="true">
             @foreach (DynastyEnum d in Enum.GetValues(typeof(DynastyEnum)))
             {
                 <MudSelectItem T="DynastyEnum" Value="@d">@d.GetDisplayName()</MudSelectItem>
             }
         </MudSelect>
 
-        <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">´«¼Ç£¨¸»ÎÄ±¾£©</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-4 mb-2">ä¼ è®°ï¼ˆå¯Œæ–‡æœ¬ï¼‰</MudText>
         <div style="min-height:300px; border:1px solid var(--mud-palette-divider);">
-            <QuillEditor @ref="_quill" InitialContent="@_model.Biography" Placeholder="ÇëÊäÈë×÷Õß´«¼Ç..." />
+            <QuillEditor @ref="_quill" InitialContent="@_model.Biography" Placeholder="è¯·è¾“å…¥ä½œè€…ä¼ è®°..." />
         </div>
 
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Class="mt-3">±£´æ</MudButton>
-        <MudButton Variant="Variant.Text" OnClick="Cancel" Class="mt-3">È¡Ïû</MudButton>
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Class="mt-3">ä¿å­˜</MudButton>
+        <MudButton Variant="Variant.Text" OnClick="Cancel" Class="mt-3">å–æ¶ˆ</MudButton>
     </EditForm>
 </MudPaper>
 
@@ -86,12 +86,12 @@
                 });
             }
 
-            Snackbar.Add(success ? "±£´æ³É¹¦" : "±£´æÊ§°Ü", success ? Severity.Success : Severity.Error);
+            Snackbar.Add(success ? "ä¿å­˜æˆåŠŸ" : "ä¿å­˜å¤±è´¥", success ? Severity.Success : Severity.Error);
             if (success) Navigation.NavigateTo("/authors");
         }
         catch (Exception ex)
         {
-            Snackbar.Add("±£´æÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("ä¿å­˜å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 

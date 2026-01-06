@@ -10,16 +10,16 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageTitle>Ê«ÈË½éÉÜ - PoemApp</PageTitle>
+<PageTitle>è¯—äººä»‹ç» - PoemApp</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">Ê«ÈË½éÉÜ</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">è¯—äººä»‹ç»</MudText>
 
-    <!-- ËÑË÷ -->
+    <!-- æœç´¢ -->
     <MudPaper Class="pa-4 mb-6" Elevation="2">
         <MudTextField @bind-Value="_searchText"
-                      Label="ËÑË÷Ê«ÈË"
-                      Placeholder="ÊäÈëÊ«ÈËĞÕÃû»ò¼ò½é"
+                      Label="æœç´¢è¯—äºº"
+                      Placeholder="è¾“å…¥è¯—äººå§“åæˆ–ç®€ä»‹"
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Variant="Variant.Outlined"
@@ -27,7 +27,7 @@
                       OnKeyDown="OnSearchKeyDown" />
     </MudPaper>
 
-    <!-- Ê«ÈËÁĞ±í -->
+    <!-- è¯—äººåˆ—è¡¨ -->
     @if (_filteredAuthors == null)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
@@ -36,7 +36,7 @@
     {
         <MudPaper Class="pa-8 text-center" Elevation="2">
             <MudIcon Icon="@Icons.Material.Filled.Person" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
-            <MudText Typo="Typo.h6" Color="Color.Secondary">ÔİÎŞÊ«ÈËÊı¾İ</MudText>
+            <MudText Typo="Typo.h6" Color="Color.Secondary">æš‚æ— è¯—äººæ•°æ®</MudText>
         </MudPaper>
     }
     else
@@ -70,13 +70,13 @@
                             else
                             {
                                 <MudText Typo="Typo.body2" Color="Color.Secondary" Style="font-style: italic;">
-                                    ¸ÃÊ«ÈËÔİÎŞÏêÏ¸½éÉÜ
+                                    è¯¥è¯—äººæš‚æ— è¯¦ç»†ä»‹ç»
                                 </MudText>
                             }
                         </MudCardContent>
                         <MudCardActions>
                             <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small" OnClick="() => ViewAuthor(author.Id)">
-                                ²é¿´ÏêÇé
+                                æŸ¥çœ‹è¯¦æƒ…
                             </MudButton>
                         </MudCardActions>
                     </MudCard>
@@ -110,7 +110,7 @@
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading authors: {ex.Message}");
-            Snackbar.Add("¼ÓÔØÊ«ÈËÊı¾İÊ§°Ü£¬ÇëÉÔºóÖØÊÔ", Severity.Error);
+            Snackbar.Add("åŠ è½½è¯—äººæ•°æ®å¤±è´¥ï¼Œè¯·ç¨åé‡è¯•", Severity.Error);
         }
     }
 

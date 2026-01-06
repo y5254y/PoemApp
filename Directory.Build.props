@@ -1,8 +1,0 @@
-<Project>
-  <PropertyGroup>
-    <!-- When building inside Docker we want to skip the PublishClient target that publishes the Web client into API/wwwroot.
-         Setting PublishClient to false here prevents the PublishClient Target from executing during DOTNET publish in container builds.
-         This file can be removed or overridden for local development if you prefer the API to host the client. -->
-    <PublishClient>false</PublishClient>
-  </PropertyGroup>
-</Project>

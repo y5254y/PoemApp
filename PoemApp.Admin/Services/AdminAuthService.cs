@@ -32,7 +32,7 @@ public class AdminAuthService
             {
                 var err = await resp.Content.ReadFromJsonAsync<LoginResultDto>();
                 _logger.LogWarning("LoginAsync: login failed, status {Status}", resp.StatusCode);
-                return err ?? new LoginResultDto { Success = false, Message = "µÇÂ¼Ê§°Ü" };
+                return err ?? new LoginResultDto { Success = false, Message = "ç™»å½•å¤±è´¥" };
             }
 
             var result = await resp.Content.ReadFromJsonAsync<LoginResultDto>();
@@ -54,18 +54,18 @@ public class AdminAuthService
                 }
             }
 
-            return result ?? new LoginResultDto { Success = false, Message = "µÇÂ¼Ê§°Ü" };
+            return result ?? new LoginResultDto { Success = false, Message = "ç™»å½•å¤±è´¥" };
         }
         catch (HttpRequestException ex)
         {
-            // ÎŞ·¨Á¬½Óµ½ API£¨ÀıÈç API Î´ÔËĞĞ»ò¶Ë¿Ú²»¶Ô£©
+            // æ— æ³•è¿æ¥åˆ° APIï¼ˆä¾‹å¦‚ API æœªè¿è¡Œæˆ–ç«¯å£ä¸å¯¹ï¼‰
             _logger.LogError(ex, "LoginAsync: HttpRequestException when calling API");
-            return new LoginResultDto { Success = false, Message = $"ÎŞ·¨Á¬½Óµ½ºó¶Ë API£º{ex.Message}. ÇëÈ·±£ PoemApp.API ÒÑÆô¶¯²¢ÇÒ Api:BaseUrl ÅäÖÃÕıÈ·¡£" };
+            return new LoginResultDto { Success = false, Message = $"æ— æ³•è¿æ¥åˆ°åç«¯ APIï¼š{ex.Message}. è¯·ç¡®ä¿ PoemApp.API å·²å¯åŠ¨å¹¶ä¸” Api:BaseUrl é…ç½®æ­£ç¡®ã€‚" };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "LoginAsync: unexpected exception");
-            return new LoginResultDto { Success = false, Message = $"µÇÂ¼Ê±·¢Éú´íÎó£º{ex.Message}" };
+            return new LoginResultDto { Success = false, Message = $"ç™»å½•æ—¶å‘ç”Ÿé”™è¯¯ï¼š{ex.Message}" };
         }
     }
 

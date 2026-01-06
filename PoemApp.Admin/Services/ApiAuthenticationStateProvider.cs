@@ -54,7 +54,7 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
 
             _logger.LogInformation("GetAuthenticationStateAsync: authenticated as {Username}", user.Username);
 
-            // ÔÚËùÓĞ user.Username ·ÃÎÊÇ°Ìí¼Ó null ¼ì²é£¬±ÜÃâ¿ÕÒıÓÃÒì³£
+            // åœ¨æ‰€æœ‰ user.Username è®¿é—®å‰æ·»åŠ  null æ£€æŸ¥ï¼Œé¿å…ç©ºå¼•ç”¨å¼‚å¸¸
             var identity = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
                 new Claim("id", user.Id.ToString()),
@@ -82,7 +82,7 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
                 _logger.LogDebug("NotifyUserAuthenticationAsync: token stored");
             }
 
-            // ÔÚËùÓĞ user.Username ·ÃÎÊÇ°Ìí¼Ó null ¼ì²é£¬±ÜÃâ¿ÕÒıÓÃÒì³£
+            // åœ¨æ‰€æœ‰ user.Username è®¿é—®å‰æ·»åŠ  null æ£€æŸ¥ï¼Œé¿å…ç©ºå¼•ç”¨å¼‚å¸¸
             var identity = new ClaimsIdentity(new[] {
                     new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
                     new Claim("id", user.Id.ToString()),

@@ -13,10 +13,10 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageTitle>·ÖÀàä¯ÀÀ - PoemApp</PageTitle>
+<PageTitle>åˆ†ç±»æµè§ˆ - PoemApp</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">·ÖÀàä¯ÀÀ</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">åˆ†ç±»æµè§ˆ</MudText>
 
     @if (_categories == null)
     {
@@ -26,12 +26,12 @@
     {
         <MudPaper Class="pa-8 text-center" Elevation="2">
             <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
-            <MudText Typo="Typo.h6" Color="Color.Secondary">ÔİÎŞ·ÖÀàÊı¾İ</MudText>
+            <MudText Typo="Typo.h6" Color="Color.Secondary">æš‚æ— åˆ†ç±»æ•°æ®</MudText>
         </MudPaper>
     }
     else
     {
-        <!-- °´ Group ·Ö×éÏÔÊ¾ -->
+        <!-- æŒ‰ Group åˆ†ç»„æ˜¾ç¤º -->
         @foreach (var group in Enum.GetValues<CategoryGroup>())
         {
             var items = _categories.Where(c => c.Group.HasValue && c.Group.Value == group).ToList();
@@ -64,12 +64,12 @@
                                     <MudText Typo="Typo.body2" Style="line-height: 1.6;">@(descPreview.Length > 100 ? descPreview.Substring(0, 100) + "..." : descPreview)</MudText>
                                 }
                                 <MudText Typo="Typo.caption" Color="Color.Info" Class="mt-2">
-                                    °üº¬ @(GetCategoryPoemCount(category.Id)) Æª×÷Æ·
+                                    åŒ…å« @(GetCategoryPoemCount(category.Id)) ç¯‡ä½œå“
                                 </MudText>
                             </MudCardContent>
                             <MudCardActions>
                                 <MudButton Variant="Variant.Text" Color="Color.Info" Size="Size.Medium" OnClick="@EventCallback.Factory.Create(this, () => ViewCategory(category.Id))">
-                                    ä¯ÀÀ×÷Æ·
+                                    æµè§ˆä½œå“
                                 </MudButton>
                             </MudCardActions>
                         </MudCard>
@@ -81,7 +81,7 @@
 </MudContainer>
 
 @code {
-    // capture category query from URL, e.g. /categories?category=ÌÆÊ«
+    // capture category query from URL, e.g. /categories?category=å”è¯—
     [Parameter]
     [SupplyParameterFromQuery(Name = "category")]
     public string? CategoryQuery { get; set; }
@@ -129,7 +129,7 @@
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading categories: {ex.Message}");
-            Snackbar.Add("¼ÓÔØ·ÖÀàÊı¾İÊ§°Ü£¬ÇëÉÔºóÖØÊÔ", Severity.Error);
+            Snackbar.Add("åŠ è½½åˆ†ç±»æ•°æ®å¤±è´¥ï¼Œè¯·ç¨åé‡è¯•", Severity.Error);
         }
         finally
         {

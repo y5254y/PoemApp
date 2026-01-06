@@ -12,20 +12,20 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5">×÷Õß¹ÜÀí</MudText>
+    <MudText Typo="Typo.h5">ä½œè€…ç®¡ç†</MudText>
     <MudDivider Class="my-2" />
 
     <MudTable @ref="_table" Striped="true" Hover="true" ServerData="LoadServerData">
         <ToolBarContent>
-            <MudTextField @bind-Value="_search" Immediate="true" Placeholder="ËÑË÷×÷Õß/³¯´ú" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
+            <MudTextField @bind-Value="_search" Immediate="true" Placeholder="æœç´¢ä½œè€…/æœä»£" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" OnKeyUp="OnSearchKeyUp" />
             <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">ĞÂÔö×÷Õß</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">æ–°å¢ä½œè€…</MudButton>
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh>ĞÕÃû</MudTh>
-            <MudTh>³¯´ú</MudTh>
-            <MudTh>¼ò½é</MudTh>
+            <MudTh>å§“å</MudTh>
+            <MudTh>æœä»£</MudTh>
+            <MudTh>ç®€ä»‹</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
 
@@ -40,9 +40,9 @@
                 }
             </MudTd>
             <MudTd>
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">±à¼­</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => ManageRelationships(context.Id)">¹ØÏµ</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">É¾³ı</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="() => Edit(context.Id)">ç¼–è¾‘</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Secondary" OnClick="() => ManageRelationships(context.Id)">å…³ç³»</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">åˆ é™¤</MudButton>
             </MudTd>
         </RowTemplate>
 
@@ -74,7 +74,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØ×÷ÕßÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½ä½œè€…å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 
@@ -118,7 +118,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØ×÷ÕßÁĞ±íÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½ä½œè€…åˆ—è¡¨å¤±è´¥: " + ex.Message, Severity.Error);
             return new MudBlazor.TableData<AuthorDto>() { TotalItems = 0, Items = new List<AuthorDto>() };
         }
     }
@@ -140,7 +140,7 @@
 
     private async Task ConfirmDelete(int id)
     {
-        var confirmed = await DialogService.ShowMessageBox("É¾³ıÈ·ÈÏ", $"È·ÈÏÉ¾³ı×÷Õß {id} Âğ£¿", yesText: "È·ÈÏ", noText: "È¡Ïû", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
+        var confirmed = await DialogService.ShowMessageBox("åˆ é™¤ç¡®è®¤", $"ç¡®è®¤åˆ é™¤ä½œè€… {id} å—ï¼Ÿ", yesText: "ç¡®è®¤", noText: "å–æ¶ˆ", options: new DialogOptions { CloseButton = true, MaxWidth = MaxWidth.Small });
         if (confirmed == true)
         {
             await DoDelete(id);
@@ -154,7 +154,7 @@
             var ok = await AuthorsClient.DeleteAsync(id);
             if (ok)
             {
-                Snackbar.Add("É¾³ı³É¹¦", Severity.Success);
+                Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success);
                 if (_table != null)
                 {
                     await _table.ReloadServerData();
@@ -162,12 +162,12 @@
             }
             else
             {
-                Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+                Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("É¾³ıÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åˆ é™¤å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 

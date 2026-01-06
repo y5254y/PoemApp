@@ -1,10 +1,10 @@
-PoemApp.Admin - Blazor Server ¹ÜÀíºóÌ¨ (minimal scaffold)
+PoemApp.Admin - Blazor Server ç®¡ç†åå° (minimal scaffold)
 
-°üº¬£º
+åŒ…å«ï¼š
 - MudBlazor UI
-- `Poems` ¹ÜÀíÒ³ÃæÊ¾Àı (µ÷ÓÃ `PoemApp.API` µÄ `api/poems`)
-- `PoemApiClient` ¼òµ¥·â×° HttpClient
+- `Poems` ç®¡ç†é¡µé¢ç¤ºä¾‹ (è°ƒç”¨ `PoemApp.API` çš„ `api/poems`)
+- `PoemApiClient` ç®€å•å°è£… HttpClient
 
-ÒªÔËĞĞ£º
-1. ÔÚ `PoemApp.Admin` ÏîÄ¿ÖĞÉèÖÃÆô¶¯ÅäÖÃ£¬È·±£ `Api:BaseUrl` Ö¸ÏòÄãµÄ API¡£
-2. ²Î¿¼ Program.cs Æô¶¯¡£
+è¦è¿è¡Œï¼š
+1. åœ¨ `PoemApp.Admin` é¡¹ç›®ä¸­è®¾ç½®å¯åŠ¨é…ç½®ï¼Œç¡®ä¿ `Api:BaseUrl` æŒ‡å‘ä½ çš„ APIã€‚
+2. å‚è€ƒ Program.cs å¯åŠ¨ã€‚

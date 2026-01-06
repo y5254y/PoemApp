@@ -7,12 +7,12 @@
             <span>@Category.Name</span>
         </div>
         <div>
-            <button class="mud-button-root mud-button-text mud-button" @onclick="@(async () => await OnEdit.InvokeAsync(Category.Id))">±à¼­</button>
-            <button class="mud-button-root mud-button-text mud-button mud-button-danger" @onclick="@(async () => await OnDelete.InvokeAsync(Category.Id))">É¾³ý</button>
+            <button class="mud-button-root mud-button-text mud-button" @onclick="@(async () => await OnEdit.InvokeAsync(Category.Id))">ç¼–è¾‘</button>
+            <button class="mud-button-root mud-button-text mud-button mud-button-danger" @onclick="@(async () => await OnDelete.InvokeAsync(Category.Id))">åˆ é™¤</button>
         </div>
     </summary>
     <div style="margin:8px 0 12px 8px; color:rgba(0,0,0,0.7);">
-        ·Ö×é: @(Category.Group.HasValue ? Category.Group.Value.GetDisplayName() : "-") | ¸¸: @(@Category.ParentName ?? "-")
+        åˆ†ç»„: @(Category.Group.HasValue ? Category.Group.Value.GetDisplayName() : "-") | çˆ¶: @(@Category.ParentName ?? "-")
     </div>
 
     @if (Children != null && Children.Any())

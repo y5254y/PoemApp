@@ -11,15 +11,15 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5">ÓÃ»§¹ÜÀí</MudText>
+    <MudText Typo="Typo.h5">ç”¨æˆ·ç®¡ç†</MudText>
     <MudDivider Class="my-2" />
 
     <MudTable T="UserDto" ServerData="@((TableState s, CancellationToken ct) => ServerReload(s, ct))" @ref="_table" Striped="true" Hover="true" RowsPerPageOptions="new int[]{5,10,20}" Bordered="true">
         <ToolBarContent>
-            <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="ËÑË÷ÓÃ»§" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+            <MudTextField Value="@_search" ValueChanged="@(EventCallback.Factory.Create<string>(this, OnSearchChanged))" Placeholder="æœç´¢ç”¨æˆ·" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
 
-            <MudSelect T="UserRole?" Label="½ÇÉ«" Value="@_filterRole" ValueChanged="@(EventCallback.Factory.Create<UserRole?>(this, OnFilterRoleChanged))" Dense="true" Class="mx-2">
-                <MudSelectItem T="UserRole?" Value="@((UserRole?)null)">È«²¿</MudSelectItem>
+            <MudSelect T="UserRole?" Label="è§’è‰²" Value="@_filterRole" ValueChanged="@(EventCallback.Factory.Create<UserRole?>(this, OnFilterRoleChanged))" Dense="true" Class="mx-2">
+                <MudSelectItem T="UserRole?" Value="@((UserRole?)null)">å…¨éƒ¨</MudSelectItem>
                 @foreach (UserRole r in Enum.GetValues(typeof(UserRole)))
                 {
                     <MudSelectItem T="UserRole?" Value="@(r)">@r.GetDisplayName()</MudSelectItem>
@@ -27,50 +27,50 @@
             </MudSelect>
 
             <MudSelect T="bool?" Label="VIP" Value="@_filterVipBool" ValueChanged="@(EventCallback.Factory.Create<bool?>(this, OnFilterVipChanged))" Dense="true" Class="mx-2">
-                <MudSelectItem T="bool?" Value="@((bool?)null)">È«²¿</MudSelectItem>
-                <MudSelectItem T="bool?" Value="@(true)">ÊÇ</MudSelectItem>
-                <MudSelectItem T="bool?" Value="@(false)">·ñ</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@((bool?)null)">å…¨éƒ¨</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@(true)">æ˜¯</MudSelectItem>
+                <MudSelectItem T="bool?" Value="@(false)">å¦</MudSelectItem>
             </MudSelect>
 
             <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">ĞÂÔöÓÃ»§</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="OpenCreate">æ–°å¢ç”¨æˆ·</MudButton>
         </ToolBarContent>
 
         <HeaderContent>
-            <MudTh>ÓÃ»§Ãû</MudTh>
-            <MudTh>Î¢ĞÅ</MudTh>
+            <MudTh>ç”¨æˆ·å</MudTh>
+            <MudTh>å¾®ä¿¡</MudTh>
             <MudTh>QQ</MudTh>
-            <MudTh>ÊÖ»úºÅ</MudTh>
-            <MudTh>½ÇÉ«</MudTh>
-            <MudTh>VIPÆÚ¼ä</MudTh>
-            <MudTh>ÊÇ·ñVIP</MudTh>
-            <MudTh>»ı·Ö</MudTh>
-            <MudTh>×¢²áÊ±¼ä</MudTh>
+            <MudTh>æ‰‹æœºå·</MudTh>
+            <MudTh>è§’è‰²</MudTh>
+            <MudTh>VIPæœŸé—´</MudTh>
+            <MudTh>æ˜¯å¦VIP</MudTh>
+            <MudTh>ç§¯åˆ†</MudTh>
+            <MudTh>æ³¨å†Œæ—¶é—´</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
 
         <RowTemplate>
-            <MudTd DataLabel="ÓÃ»§Ãû">@context.Username</MudTd>
-            <MudTd DataLabel="Î¢ĞÅ">@context.WeChatId</MudTd>
+            <MudTd DataLabel="ç”¨æˆ·å">@context.Username</MudTd>
+            <MudTd DataLabel="å¾®ä¿¡">@context.WeChatId</MudTd>
             <MudTd DataLabel="QQ">@context.QQId</MudTd>
-            <MudTd DataLabel="ÊÖ»úºÅ">@context.Phone</MudTd>
-            <MudTd DataLabel="½ÇÉ«">@context.RoleDisplayName</MudTd>
-            <MudTd DataLabel="VIPÆÚ¼ä">
+            <MudTd DataLabel="æ‰‹æœºå·">@context.Phone</MudTd>
+            <MudTd DataLabel="è§’è‰²">@context.RoleDisplayName</MudTd>
+            <MudTd DataLabel="VIPæœŸé—´">
                 @if (context.VipStartDate.HasValue || context.VipEndDate.HasValue)
                 {
-                    @((context.VipStartDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-") + " ¡ú " + (context.VipEndDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-"))
+                    @((context.VipStartDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-") + " â†’ " + (context.VipEndDate?.ToLocalTime().ToString("yyyy-MM-dd") ?? "-"))
                 }
                 else
                 {
                     <span>-</span>
                 }
             </MudTd>
-            <MudTd DataLabel="ÊÇ·ñVIP">@((context.IsVip) ? "ÊÇ" : "·ñ")</MudTd>
-            <MudTd DataLabel="»ı·Ö">@context.Points</MudTd>
-            <MudTd DataLabel="×¢²áÊ±¼ä">@context.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
+            <MudTd DataLabel="æ˜¯å¦VIP">@((context.IsVip) ? "æ˜¯" : "å¦")</MudTd>
+            <MudTd DataLabel="ç§¯åˆ†">@context.Points</MudTd>
+            <MudTd DataLabel="æ³¨å†Œæ—¶é—´">@context.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd HH:mm")</MudTd>
             <MudTd>
-                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">±à¼­</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">É¾³ı</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">ç¼–è¾‘</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">åˆ é™¤</MudButton>
             </MudTd>
         </RowTemplate>
 
@@ -116,7 +116,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØÓÃ»§Ê§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½ç”¨æˆ·å¤±è´¥: " + ex.Message, Severity.Error);
             return new TableData<UserDto>() { TotalItems = 0, Items = new List<UserDto>() };
         }
     }
@@ -138,7 +138,7 @@
 
     private async Task ConfirmDelete(int id)
     {
-        var confirmed = await DialogService.ShowMessageBox("É¾³ıÈ·ÈÏ", $"È·ÈÏÉ¾³ıÓÃ»§ {id} Âğ", yesText: "È·ÈÏ", noText: "È¡Ïû");
+        var confirmed = await DialogService.ShowMessageBox("åˆ é™¤ç¡®è®¤", $"ç¡®è®¤åˆ é™¤ç”¨æˆ· {id} å—", yesText: "ç¡®è®¤", noText: "å–æ¶ˆ");
         if (confirmed == true)
         {
             await DoDelete(id);
@@ -153,16 +153,16 @@
             var ok = await UsersClient.DeleteAsync(id);
             if (ok)
             {
-                Snackbar.Add("É¾³ı³É¹¦", Severity.Success);
+                Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success);
             }
             else
             {
-                Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+                Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("É¾³ıÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åˆ é™¤å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 }

@@ -4,19 +4,19 @@ namespace PoemApp.Core.Enums;
 
 public enum CategoryGroup
 {
-    [Display(Name = "文体")]
+    [Display(Name = "鏂囦綋")]
     LiteraryForm,
 
-    [Display(Name = "朝代")]
+    [Display(Name = "鏈濅唬")]
     Dynasty,
 
-    [Display(Name = "题材")]
+    [Display(Name = "棰樻潗")]
     Theme,
 
-    [Display(Name = "教学阶段")]
+    [Display(Name = "鏁欏闃舵")]
     EducationLevel,
 
-    [Display(Name = "风格")]
+    [Display(Name = "椋庢牸")]
     Style
 
 

@@ -14,15 +14,15 @@
     </DialogContent>
     <DialogActions>
         <div class="d-flex justify-end" style="width:100%;">
-            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel" StartIcon="Icons.Material.Filled.Close" Class="me-2">È¡Ïû</MudButton>
-            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Ok" StartIcon="Icons.Material.Filled.Delete">É¾³ı</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Cancel" StartIcon="Icons.Material.Filled.Close" Class="me-2">å–æ¶ˆ</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Error" OnClick="Ok" StartIcon="Icons.Material.Filled.Delete">åˆ é™¤</MudButton>
         </div>
     </DialogActions>
 </MudDialog>
 
 @code {
-    [Parameter] public string Title { get; set; } = "È·ÈÏ";
-    [Parameter] public string ContentText { get; set; } = "È·¶¨Òª¼ÌĞøÂğ£¿";
+    [Parameter] public string Title { get; set; } = "ç¡®è®¤";
+    [Parameter] public string ContentText { get; set; } = "ç¡®å®šè¦ç»§ç»­å—ï¼Ÿ";
 
     // Use object to avoid compile-time dependency on MudBlazor internal types across versions
     [CascadingParameter] public object? MudDialog { get; set; }

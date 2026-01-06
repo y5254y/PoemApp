@@ -14,30 +14,30 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:900px">
-    <MudText Typo="Typo.h5">Ê«ÎÄ±à¼­</MudText>
+    <MudText Typo="Typo.h5">è¯—æ–‡ç¼–è¾‘</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid" OnInvalidSubmit="HandleInvalid">
         <DataAnnotationsValidator />
         <ValidationSummary />
 
-        <MudTextField @bind-Value="_model.Title" Label="±êÌâ" Required="true" />
-        <MudSelect T="int" Label="×÷Õß" @bind-Value="_model.AuthorId" Required="true">
+        <MudTextField @bind-Value="_model.Title" Label="æ ‡é¢˜" Required="true" />
+        <MudSelect T="int" Label="ä½œè€…" @bind-Value="_model.AuthorId" Required="true">
             @foreach (var a in _authors)
             {
                 <MudSelectItem T="int" Value="@a.Id">@a.Name</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="DynastyEnum" Label="³¯´ú" @bind-Value="_model.Dynasty" Required="true">
+        <MudSelect T="DynastyEnum" Label="æœä»£" @bind-Value="_model.Dynasty" Required="true">
             @foreach (DynastyEnum d in Enum.GetValues(typeof(DynastyEnum)))
             {
                 <MudSelectItem T="DynastyEnum" Value="@(d)">@PoemApp.Core.Extensions.EnumExtensions.GetDisplayName(d)</MudSelectItem>
             }
         </MudSelect>
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">·ÖÀà</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">åˆ†ç±»</MudText>
 
-        @* °´ Group ·Ö×éÏÔÊ¾·ÖÀà£¬±£Áô¸¸×Ó²ã¼¶²¢ÏÔÊ¾¸´Ñ¡¿ò *@
+        @* æŒ‰ Group åˆ†ç»„æ˜¾ç¤ºåˆ†ç±»ï¼Œä¿ç•™çˆ¶å­å±‚çº§å¹¶æ˜¾ç¤ºå¤é€‰æ¡† *@
         @foreach (var group in _displayOrder)
         {
             var groupNodes = BuildTreeListForGroup(group);
@@ -59,25 +59,25 @@
             </MudPaper>
         }
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">ÄÚÈİ</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">å†…å®¹</MudText>
         <QuillEditor @ref="_editor" InitialContent="@(_model.Content ?? string.Empty)" OnContentChanged="OnEditorContentChanged" />
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">ÒëÎÄ</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">è¯‘æ–‡</MudText>
         <QuillEditor @ref="_translationEditor" InitialContent="@(_model.Translation ?? string.Empty)" OnContentChanged="OnTranslationChanged" />
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">×¢ÊÍ</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">æ³¨é‡Š</MudText>
         <QuillEditor @ref="_annotationEditor" InitialContent="@(_model.Annotation ?? string.Empty)" OnContentChanged="OnAnnotationChanged" />
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">×÷Æ·¼øÉÍ</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">ä½œå“é‰´èµ</MudText>
         <QuillEditor @ref="_appreciationEditor" InitialContent="@(_model.Appreciation ?? string.Empty)" OnContentChanged="OnAppreciationChanged" />
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">±³¾°</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">èƒŒæ™¯</MudText>
         <QuillEditor @ref="_backgroundEditor" InitialContent="@(_model.Background ?? string.Empty)" OnContentChanged="OnBackgroundChanged" />
 
         <div class="mt-3">
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">±£´æ</MudButton>
-            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Delete">É¾³ı</MudButton>
-            <MudButton Variant="Variant.Text" OnClick="Cancel">È¡Ïû</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">ä¿å­˜</MudButton>
+            <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="Delete">åˆ é™¤</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">å–æ¶ˆ</MudButton>
         </div>
     </EditForm>
 </MudPaper>
@@ -102,7 +102,7 @@
 
     private List<CategorySelection> _categorySelections = new();
 
-    // ·Ö×éÏÔÊ¾Ë³Ğò
+    // åˆ†ç»„æ˜¾ç¤ºé¡ºåº
     private readonly CategoryGroup[] _displayOrder = new[]
     {
         CategoryGroup.EducationLevel,
@@ -169,11 +169,11 @@
         if (errors.Any())
         {
             var msg = string.Join(';', errors.Take(5));
-            Snackbar.Add("±íµ¥ÑéÖ¤Ê§°Ü: " + msg, Severity.Warning);
+            Snackbar.Add("è¡¨å•éªŒè¯å¤±è´¥: " + msg, Severity.Warning);
         }
         else
         {
-            Snackbar.Add("±íµ¥ÑéÖ¤Ê§°Ü£¬Çë¼ì²éÊäÈë", Severity.Warning);
+            Snackbar.Add("è¡¨å•éªŒè¯å¤±è´¥ï¼Œè¯·æ£€æŸ¥è¾“å…¥", Severity.Warning);
         }
     }
 
@@ -245,10 +245,10 @@
                 var created = await PoemClient.CreateAsync(_model);
                 if (created != null)
                 {
-                    Snackbar.Add("´´½¨³É¹¦", Severity.Success);
+                    Snackbar.Add("åˆ›å»ºæˆåŠŸ", Severity.Success);
                     Navigation.NavigateTo("/poems");
                 }
-                else Snackbar.Add("´´½¨Ê§°Ü", Severity.Error);
+                else Snackbar.Add("åˆ›å»ºå¤±è´¥", Severity.Error);
             }
             else
             {
@@ -263,13 +263,13 @@
                     Appreciation = _model.Appreciation,
                     CategoryIds = _model.CategoryIds
                 });
-                if (ok) { Snackbar.Add("¸üĞÂ³É¹¦", Severity.Success); Navigation.NavigateTo("/poems"); }
-                else Snackbar.Add("¸üĞÂÊ§°Ü", Severity.Error);
+                if (ok) { Snackbar.Add("æ›´æ–°æˆåŠŸ", Severity.Success); Navigation.NavigateTo("/poems"); }
+                else Snackbar.Add("æ›´æ–°å¤±è´¥", Severity.Error);
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("±£´æÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("ä¿å­˜å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 
@@ -277,8 +277,8 @@
     {
         if (Id == 0) return;
         var ok = await PoemClient.DeleteAsync(Id);
-        if (ok) { Snackbar.Add("É¾³ı³É¹¦", Severity.Success); Navigation.NavigateTo("/poems"); }
-        else Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+        if (ok) { Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success); Navigation.NavigateTo("/poems"); }
+        else Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
     }
 
     private void Cancel() => Navigation.NavigateTo("/poems");
@@ -309,7 +309,7 @@
         await InvokeAsync(StateHasChanged);
     }
 
-    // ¹¹½¨Ö¸¶¨ group µÄÊ÷ĞÎÁĞ±í£¬·µ»Ø(ID, Name, Level)
+    // æ„å»ºæŒ‡å®š group çš„æ ‘å½¢åˆ—è¡¨ï¼Œè¿”å›(ID, Name, Level)
     private List<(int Id, string Name, int Level)> BuildTreeListForGroup(CategoryGroup group)
     {
         var list = new List<(int, string, int)>();

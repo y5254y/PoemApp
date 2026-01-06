@@ -9,20 +9,20 @@
 @inject IDialogService DialogService
 
 <MudPaper Class="pa-4">
-    <MudText Typo="Typo.h5">ÃûÑÔÃû¾ä¹ÜÀí</MudText>
+    <MudText Typo="Typo.h5">åè¨€åå¥ç®¡ç†</MudText>
     <MudDivider Class="my-2" />
 
     <MudTable T="QuoteDto" Items="_items" Striped="true" Hover="true" Bordered="true">
         <ToolBarContent>
-            <MudTextField @bind-Value="_search" Placeholder="ËÑË÷ÄÚÈİ/×÷Õß/Ê«ÎÄ" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
+            <MudTextField @bind-Value="_search" Placeholder="æœç´¢å†…å®¹/ä½œè€…/è¯—æ–‡" Adornment="Adornment.Start" AdornmentIcon="Icons.Material.Filled.Search" Immediate="true" />
             <MudSpacer />
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">ĞÂ½¨Ãû¾ä</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Create">æ–°å»ºåå¥</MudButton>
         </ToolBarContent>
         <HeaderContent>
-            <MudTh>ÄÚÈİ</MudTh>
-            <MudTh>×÷Õß</MudTh>
-            <MudTh>À´Ô´/Ê«ÎÄ</MudTh>
-            <MudTh>´´½¨Ê±¼ä</MudTh>
+            <MudTh>å†…å®¹</MudTh>
+            <MudTh>ä½œè€…</MudTh>
+            <MudTh>æ¥æº/è¯—æ–‡</MudTh>
+            <MudTh>åˆ›å»ºæ—¶é—´</MudTh>
             <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
@@ -31,8 +31,8 @@
             <MudTd>@(string.IsNullOrWhiteSpace(context.Source) ? context.PoemTitle : context.Source)</MudTd>
             <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd")</MudTd>
             <MudTd>
-                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">±à¼­</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">É¾³ı</MudButton>
+                <MudButton Variant="Variant.Text" OnClick="() => Edit(context.Id)">ç¼–è¾‘</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="() => ConfirmDelete(context.Id)">åˆ é™¤</MudButton>
             </MudTd>
         </RowTemplate>
         <PagerContent>
@@ -58,7 +58,7 @@
         }
         catch (Exception ex)
         {
-            Snackbar.Add("¼ÓÔØÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("åŠ è½½å¤±è´¥: " + ex.Message, Severity.Error);
         }
     }
 
@@ -67,12 +67,12 @@
 
     private async Task ConfirmDelete(int id)
     {
-        var ok = await DialogService.ShowMessageBox("É¾³ıÈ·ÈÏ", "È·ÈÏÉ¾³ı¸ÃÃû¾ä£¿", yesText: "É¾³ı", noText: "È¡Ïû");
+        var ok = await DialogService.ShowMessageBox("åˆ é™¤ç¡®è®¤", "ç¡®è®¤åˆ é™¤è¯¥åå¥ï¼Ÿ", yesText: "åˆ é™¤", noText: "å–æ¶ˆ");
         if (ok == true)
         {
             var success = await QuotesClient.DeleteAsync(id);
-            if (success) { Snackbar.Add("É¾³ı³É¹¦", Severity.Success); await Load(); }
-            else Snackbar.Add("É¾³ıÊ§°Ü", Severity.Error);
+            if (success) { Snackbar.Add("åˆ é™¤æˆåŠŸ", Severity.Success); await Load(); }
+            else Snackbar.Add("åˆ é™¤å¤±è´¥", Severity.Error);
         }
     }
 }

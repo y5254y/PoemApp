@@ -6,29 +6,29 @@ public class Quote
 {
     public int Id { get; set; }
 
-    // ÃûÑÔ/Ãû¾äÄÚÈİ
+    // åè¨€/åå¥å†…å®¹
     [Required]
     [StringLength(500)]
     public string Content { get; set; } = null!;
 
-    // ¿ÉÑ¡µÄ×÷ÕßÒıÓÃ£¨ÓĞĞ©Ãû¾äÓĞÃ÷È·×÷Õß£©
+    // å¯é€‰çš„ä½œè€…å¼•ç”¨ï¼ˆæœ‰äº›åå¥æœ‰æ˜ç¡®ä½œè€…ï¼‰
     public int? AuthorId { get; set; }
     public Author? Author { get; set; }
 
-    // ¿ÉÑ¡µÄÊ«ÎÄÒıÓÃ£¨Ãû¾ä¿ÉÄÜÀ´×ÔÄ³Ê×¹ÅÊ«ÎÄ£©
+    // å¯é€‰çš„è¯—æ–‡å¼•ç”¨ï¼ˆåå¥å¯èƒ½æ¥è‡ªæŸé¦–å¤è¯—æ–‡ï¼‰
     public int? PoemId { get; set; }
     public Poem? Poem { get; set; }
 
-    // À´Ô´ËµÃ÷£¨ÀıÈçÊ«Ãû¡¢Êé¼®»ò³ö´¦£©
+    // æ¥æºè¯´æ˜ï¼ˆä¾‹å¦‚è¯—åã€ä¹¦ç±æˆ–å‡ºå¤„ï¼‰
     [StringLength(200)]
     public string? Source { get; set; }
 
-    // ÒëÎÄ»òÏÖ´ú°×»°
+    // è¯‘æ–‡æˆ–ç°ä»£ç™½è¯
     public string? Translation { get; set; }
 
-    // ×¢ÊÍ/½â¶Á
+    // æ³¨é‡Š/è§£è¯»
     public string? Annotation { get; set; }
 
-    // ´´½¨Ê±¼ä
+    // åˆ›å»ºæ—¶é—´
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

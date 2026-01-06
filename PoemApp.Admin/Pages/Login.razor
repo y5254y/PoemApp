@@ -7,12 +7,12 @@
 @inject AuthenticationStateProvider AuthStateProvider
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:400px">
-    <MudText Typo="Typo.h6">¹ÜÀíÔ±µÇÂ¼</MudText>
+    <MudText Typo="Typo.h6">ç®¡ç†å‘˜ç™»å½•</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleLogin">
-        <MudTextField @bind-Value="_model.Username" Label="ÓÃ»§Ãû" Required="true" />
-        <MudTextField @bind-Value="_model.Password" Label="ÃÜÂë" InputType="InputType.Password" Required="true" />
-        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">µÇÂ¼</MudButton>
+        <MudTextField @bind-Value="_model.Username" Label="ç”¨æˆ·å" Required="true" />
+        <MudTextField @bind-Value="_model.Password" Label="å¯†ç " InputType="InputType.Password" Required="true" />
+        <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled" Color="Color.Primary">ç™»å½•</MudButton>
     </EditForm>
 
     @if (!string.IsNullOrEmpty(_error))
@@ -50,7 +50,7 @@
         }
         else
         {
-            _error = result.Message ?? "µÇÂ¼Ê§°Ü";
+            _error = result.Message ?? "ç™»å½•å¤±è´¥";
         }
     }
 }

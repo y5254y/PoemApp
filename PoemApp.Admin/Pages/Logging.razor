@@ -3,19 +3,19 @@
 @inject PoemApp.Core.Interfaces.IAppLogger AppLogger
 
 <h3>Runtime Logging Level</h3>
-<p>µ±Ç°¼¶±ğ: @currentLevel</p>
+<p>å½“å‰çº§åˆ«: @currentLevel</p>
 <select @bind="selectedLevel">
     @foreach (var lvl in levels)
     {
         <option value="@lvl">@lvl</option>
     }
 </select>
-<button @onclick="SetLevel">ÉèÖÃ¼¶±ğ</button>
+<button @onclick="SetLevel">è®¾ç½®çº§åˆ«</button>
 
-<h3>²é¿´ÈÕÖ¾</h3>
-<label>×î½üĞĞÊı: <input type="number" min="1" @bind="lines" style="width:80px" /></label>
-<button @onclick="LoadLogs">Ë¢ĞÂÈÕÖ¾</button>
-<button @onclick="OpenLogsFolder">´ò¿ªÈÕÖ¾Ä¿Â¼</button>
+<h3>æŸ¥çœ‹æ—¥å¿—</h3>
+<label>æœ€è¿‘è¡Œæ•°: <input type="number" min="1" @bind="lines" style="width:80px" /></label>
+<button @onclick="LoadLogs">åˆ·æ–°æ—¥å¿—</button>
+<button @onclick="OpenLogsFolder">æ‰“å¼€æ—¥å¿—ç›®å½•</button>
 <pre style="max-height:400px;overflow:auto;background:#f8f8f8;padding:10px">@logContent</pre>
 
 @code {
@@ -42,7 +42,7 @@
         }
         catch (Exception ex)
         {
-            AppLogger.LogError("»ñÈ¡ÈÕÖ¾¼¶±ğÊ§°Ü", ex);
+            AppLogger.LogError("è·å–æ—¥å¿—çº§åˆ«å¤±è´¥", ex);
         }
     }
 
@@ -58,12 +58,12 @@
             }
             else
             {
-                AppLogger.LogWarning($"ÉèÖÃÈÕÖ¾¼¶±ğÊ§°Ü: {resp.StatusCode}");
+                AppLogger.LogWarning($"è®¾ç½®æ—¥å¿—çº§åˆ«å¤±è´¥: {resp.StatusCode}");
             }
         }
         catch (Exception ex)
         {
-            AppLogger.LogError("ÉèÖÃÈÕÖ¾¼¶±ğÊ§°Ü", ex);
+            AppLogger.LogError("è®¾ç½®æ—¥å¿—çº§åˆ«å¤±è´¥", ex);
         }
     }
 
@@ -75,15 +75,15 @@
         }
         catch (Exception ex)
         {
-            AppLogger.LogError("¼ÓÔØÈÕÖ¾Ê§°Ü", ex);
-            logContent = $"¼ÓÔØÈÕÖ¾Ê§°Ü: {ex.Message}";
+            AppLogger.LogError("åŠ è½½æ—¥å¿—å¤±è´¥", ex);
+            logContent = $"åŠ è½½æ—¥å¿—å¤±è´¥: {ex.Message}";
         }
     }
 
     private void OpenLogsFolder()
     {
-        // ÔÚ Blazor Server ÖĞÎŞ·¨Ö±½ÓÔÚ¿Í»§¶Ë´ò¿ª·şÎñÆ÷Ä¿Â¼£»¸øÓÃ»§Ò»¸öÌáÊ¾»òÔÚÎ´À´ÊµÏÖÏÂÔØ/µ¼º½¹¦ÄÜ¡£
-        AppLogger.LogInformation("ÇëÇó´ò¿ªÈÕÖ¾Ä¿Â¼£¨·şÎñÆ÷¶Ë²Ù×÷£©£¬ÇëÔÚ·şÎñÆ÷ÉÏ²é¿´ logs Ä¿Â¼¡£");
+        // åœ¨ Blazor Server ä¸­æ— æ³•ç›´æ¥åœ¨å®¢æˆ·ç«¯æ‰“å¼€æœåŠ¡å™¨ç›®å½•ï¼›ç»™ç”¨æˆ·ä¸€ä¸ªæç¤ºæˆ–åœ¨æœªæ¥å®ç°ä¸‹è½½/å¯¼èˆªåŠŸèƒ½ã€‚
+        AppLogger.LogInformation("è¯·æ±‚æ‰“å¼€æ—¥å¿—ç›®å½•ï¼ˆæœåŠ¡å™¨ç«¯æ“ä½œï¼‰ï¼Œè¯·åœ¨æœåŠ¡å™¨ä¸ŠæŸ¥çœ‹ logs ç›®å½•ã€‚");
     }
 
     private class LevelDto { public string Level { get; set; } = string.Empty; }

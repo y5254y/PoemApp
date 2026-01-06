@@ -7,14 +7,14 @@
         <div class="d-flex align-center" style="gap:8px; width:100%; justify-content:space-between;">
             <div>@Category.Name</div>
             <div>
-                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(async () => await OnEdit.InvokeAsync(Category.Id))">±à¼­</MudButton>
-                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@(async () => await OnDelete.InvokeAsync(Category.Id))">É¾³ý</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="@(async () => await OnEdit.InvokeAsync(Category.Id))">ç¼–è¾‘</MudButton>
+                <MudButton Variant="Variant.Text" Color="Color.Error" OnClick="@(async () => await OnDelete.InvokeAsync(Category.Id))">åˆ é™¤</MudButton>
             </div>
         </div>
     </TitleContent>
 
     <ChildContent>
-        <div style="margin-bottom:8px; color:rgba(0,0,0,0.6);">·Ö×é: @(Category.Group.HasValue ? Category.Group.Value.GetDisplayName() : "-") | ¸¸: @(@Category.ParentName ?? "-")</div>
+        <div style="margin-bottom:8px; color:rgba(0,0,0,0.6);">åˆ†ç»„: @(Category.Group.HasValue ? Category.Group.Value.GetDisplayName() : "-") | çˆ¶: @(@Category.ParentName ?? "-")</div>
 
         @if (Children != null && Children.Any())
         {

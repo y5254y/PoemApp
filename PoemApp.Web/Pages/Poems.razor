@@ -9,18 +9,18 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageTitle>Ê«ÎÄÉÍÎö - PoemApp</PageTitle>
+<PageTitle>è¯—æ–‡èµæ - PoemApp</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
-    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">Ê«ÎÄÉÍÎö</MudText>
+    <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">è¯—æ–‡èµæ</MudText>
 
-    <!-- ËÑË÷ºÍÉ¸Ñ¡ -->
+    <!-- æœç´¢å’Œç­›é€‰ -->
     <MudPaper Class="pa-4 mb-6" Elevation="2">
         <MudGrid>
             <MudItem xs="12" md="6">
                 <MudTextField @bind-Value="_searchText"
-                              Label="ËÑË÷Ê«ÎÄ"
-                              Placeholder="ÊäÈëÊ«ÎÄ±êÌâ¡¢ÄÚÈİ»ò×÷ÕßÃû"
+                              Label="æœç´¢è¯—æ–‡"
+                              Placeholder="è¾“å…¥è¯—æ–‡æ ‡é¢˜ã€å†…å®¹æˆ–ä½œè€…å"
                               Adornment="Adornment.Start"
                               AdornmentIcon="@Icons.Material.Filled.Search"
                               Variant="Variant.Outlined"
@@ -29,7 +29,7 @@
             </MudItem>
             <MudItem xs="12" md="3">
                 <MudSelect T="string" @bind-Value="_selectedDynasty"
-                           Label="³¯´úÉ¸Ñ¡"
+                           Label="æœä»£ç­›é€‰"
                            Variant="Variant.Outlined"
                            Clearable="true">
                     @foreach (var d in DynastyItems)
@@ -44,13 +44,13 @@
                            FullWidth="true"
                            StartIcon="@Icons.Material.Filled.Search"
                            OnClick="ApplyFilters">
-                    ËÑË÷
+                    æœç´¢
                 </MudButton>
             </MudItem>
         </MudGrid>
     </MudPaper>
 
-    <!-- Ê«ÎÄÁĞ±í -->
+    <!-- è¯—æ–‡åˆ—è¡¨ -->
     @if (_isLoading)
     {
         <MudProgressCircular Indeterminate="true" Size="Size.Large" Class="d-flex justify-center mt-8" />
@@ -59,7 +59,7 @@
     {
         <MudPaper Class="pa-8 text-center" Elevation="2">
             <MudIcon Icon="@Icons.Material.Filled.LibraryBooks" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
-            <MudText Typo="Typo.h6" Color="Color.Secondary">ÔİÎŞÊ«ÎÄÊı¾İ</MudText>
+            <MudText Typo="Typo.h6" Color="Color.Secondary">æš‚æ— è¯—æ–‡æ•°æ®</MudText>
         </MudPaper>
     }
     else
@@ -115,7 +115,7 @@
                                     else if (IsExpanded(poem.Id) && poem.Categories.Count > 6)
                                     {
                                         <MudChip Label="true" Size="Size.Small" Variant="Variant.Outlined" Class="mr-1 mb-1" T="string" OnClick="() => ToggleExpandCategories(poem.Id)">
-                                            ÊÕÆğ
+                                            æ”¶èµ·
                                         </MudChip>
                                     }
                                 </div>
@@ -124,7 +124,7 @@
                         <MudCardActions>
                             <!-- Read full links to poem detail -->
                             <NavLink href="@($"/poem/{poem.Id}")" style="text-decoration:none;color:inherit;">
-                                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">ÔÄ¶ÁÈ«ÎÄ</MudButton>
+                                <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">é˜…è¯»å…¨æ–‡</MudButton>
                             </NavLink>
                         </MudCardActions>
                     </MudCard>
@@ -132,7 +132,7 @@
             }
         </MudGrid>
 
-        <!-- ·ÖÒ³ -->
+        <!-- åˆ†é¡µ -->
         @if (_totalPages > 1)
         {
             <div class="d-flex justify-center mt-6">
@@ -180,7 +180,7 @@
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error loading poems: {ex.Message}");
-            Snackbar.Add("¼ÓÔØÊ«ÎÄÊı¾İÊ§°Ü£¬ÇëÉÔºóÖØÊÔ", Severity.Error);
+            Snackbar.Add("åŠ è½½è¯—æ–‡æ•°æ®å¤±è´¥ï¼Œè¯·ç¨åé‡è¯•", Severity.Error);
         }
         finally
         {
@@ -194,7 +194,7 @@
 
         var query = _allPoems.AsQueryable();
 
-        // ËÑË÷¹ıÂË
+        // æœç´¢è¿‡æ»¤
         if (!string.IsNullOrWhiteSpace(_searchText))
         {
             var search = _searchText.Trim().ToLowerInvariant();
@@ -204,7 +204,7 @@
                 (StripHtml(p.Content ?? string.Empty) ?? string.Empty).ToLower().Contains(search));
         }
 
-        // ³¯´ú¹ıÂË
+        // æœä»£è¿‡æ»¤
         if (!string.IsNullOrWhiteSpace(_selectedDynasty))
         {
             var dynasty = PoemApp.Core.Extensions.EnumExtensions.GetEnumFromDisplayName<DynastyEnum>(_selectedDynasty);
@@ -214,7 +214,7 @@
         var filtered = query.ToList();
         _totalPages = (int)Math.Ceiling((double)filtered.Count / _pageSize);
 
-        // ·ÖÒ³
+        // åˆ†é¡µ
         _filteredPoems = filtered
             .Skip((_currentPage - 1) * _pageSize)
             .Take(_pageSize)
@@ -231,7 +231,7 @@
 
     private async Task ApplyFilters()
     {
-        _currentPage = 1; // ÖØÖÃµ½µÚÒ»Ò³
+        _currentPage = 1; // é‡ç½®åˆ°ç¬¬ä¸€é¡µ
         ApplyFiltersInternal();
     }
 

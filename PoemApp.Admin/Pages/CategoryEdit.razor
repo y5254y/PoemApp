@@ -13,33 +13,33 @@
 @inject ISnackbar Snackbar
 
 <MudPaper Class="pa-4 mx-auto" Style="max-width:800px">
-    <MudText Typo="Typo.h5">·ÖÀà±à¼­</MudText>
+    <MudText Typo="Typo.h5">åˆ†ç±»ç¼–è¾‘</MudText>
 
     <EditForm Model="_model" OnValidSubmit="HandleValid">
-        <MudTextField @bind-Value="_model.Name" Label="Ãû³Æ" Required="true" />
+        <MudTextField @bind-Value="_model.Name" Label="åç§°" Required="true" />
 
-        <MudSelect T="CategoryGroup?" Label="·Ö×é" @bind-Value="_model.Group">
-            <MudSelectItem T="CategoryGroup?" Value="@(null)">Î´Ö¸¶¨</MudSelectItem>
+        <MudSelect T="CategoryGroup?" Label="åˆ†ç»„" @bind-Value="_model.Group">
+            <MudSelectItem T="CategoryGroup?" Value="@(null)">æœªæŒ‡å®š</MudSelectItem>
             @foreach (var val in Enum.GetValues(typeof(CategoryGroup)).Cast<CategoryGroup>())
             {
                 <MudSelectItem T="CategoryGroup?" Value="@(val)">@val.GetDisplayName()</MudSelectItem>
             }
         </MudSelect>
 
-        <MudSelect T="int?" Label="¸¸·ÖÀà" @bind-Value="_model.ParentId">
-            <MudSelectItem T="int?" Value="@(null)">ÎŞ¸¸¼¶</MudSelectItem>
+        <MudSelect T="int?" Label="çˆ¶åˆ†ç±»" @bind-Value="_model.ParentId">
+            <MudSelectItem T="int?" Value="@(null)">æ— çˆ¶çº§</MudSelectItem>
             @foreach (var opt in _parentOptions)
             {
                 <MudSelectItem T="int?" Value="@opt.Id">@opt.Name</MudSelectItem>
             }
         </MudSelect>
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">ÃèÊö</MudText>
+        <MudText Typo="Typo.subtitle1" Class="mt-2">æè¿°</MudText>
         <QuillEditor @ref="_descriptionEditor" InitialContent="@(_model.Description ?? string.Empty)" />
 
         <div class="mt-3">
-            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">±£´æ</MudButton>
-            <MudButton Variant="Variant.Text" OnClick="Cancel">È¡Ïû</MudButton>
+            <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">ä¿å­˜</MudButton>
+            <MudButton Variant="Variant.Text" OnClick="Cancel">å–æ¶ˆ</MudButton>
         </div>
     </EditForm>
 </MudPaper>
@@ -118,7 +118,7 @@
         }
 
         await JS.InvokeVoidAsync("console.log", $"HandleValid called. Id={Id}, Name={_model.Name}, DescLength={(_model.Description?.Length ?? 0)}");
-        Snackbar.Add($"×¼±¸±£´æ·ÖÀà(Id={Id})...", Severity.Info);
+        Snackbar.Add($"å‡†å¤‡ä¿å­˜åˆ†ç±»(Id={Id})...", Severity.Info);
 
         try
         {
@@ -127,12 +127,12 @@
                 var res = await CategoriesClient.CreateAsync(_model);
                 if (res != null)
                 {
-                    Snackbar.Add("´´½¨³É¹¦", Severity.Success);
+                    Snackbar.Add("åˆ›å»ºæˆåŠŸ", Severity.Success);
                     Navigation.NavigateTo("/categories");
                 }
                 else
                 {
-                    Snackbar.Add("´´½¨Ê§°Ü", Severity.Error);
+                    Snackbar.Add("åˆ›å»ºå¤±è´¥", Severity.Error);
                 }
             }
             else
@@ -140,18 +140,18 @@
                 var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Name = _model.Name, Description = _model.Description, Group = _model.Group, ParentId = _model.ParentId });
                 if (ok)
                 {
-                    Snackbar.Add("¸üĞÂ³É¹¦", Severity.Success);
+                    Snackbar.Add("æ›´æ–°æˆåŠŸ", Severity.Success);
                     Navigation.NavigateTo("/categories");
                 }
                 else
                 {
-                    Snackbar.Add("¸üĞÂÊ§°Ü", Severity.Error);
+                    Snackbar.Add("æ›´æ–°å¤±è´¥", Severity.Error);
                 }
             }
         }
         catch (Exception ex)
         {
-            Snackbar.Add("±£´æÊ§°Ü: " + ex.Message, Severity.Error);
+            Snackbar.Add("ä¿å­˜å¤±è´¥: " + ex.Message, Severity.Error);
             await JS.InvokeVoidAsync("console.error", ex.Message);
         }
     }

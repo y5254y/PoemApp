@@ -31,7 +31,7 @@ builder.Host.UseSerilog();
 builder.Services.AddSingleton<Serilog.ILogger>(Log.Logger);
 builder.Services.AddSingleton<LoggingLevelSwitch>(levelSwitch);
 
-// ×¢²á×Ô¶¨ÒåÈÕÖ¾·şÎñ
+// æ³¨å†Œè‡ªå®šä¹‰æ—¥å¿—æœåŠ¡
 builder.Services.AddSingleton<IAppLogger, AppLogger>();
 
 builder.Services.AddRazorPages();

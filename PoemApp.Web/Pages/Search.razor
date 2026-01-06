@@ -10,18 +10,18 @@
 @inject NavigationManager Navigation
 @inject ISnackbar Snackbar
 
-<PageTitle>ËÑË÷Ò³ - PoemApp</PageTitle>
+<PageTitle>æœç´¢é¡µ - PoemApp</PageTitle>
 
 <MudContainer MaxWidth="MaxWidth.ExtraLarge">
     <MudText Typo="Typo.h4" Class="mb-4" Color="Color.Primary">
-        ËÑË÷½á¹û @(string.IsNullOrWhiteSpace(_query) ? "" : $"- \"{_query}\"")
+        æœç´¢ç»“æœ @(string.IsNullOrWhiteSpace(_query) ? "" : $"- \"{_query}\"")
     </MudText>
 
-    <!-- ËÑË÷¿ò -->
+    <!-- æœç´¢æ¡† -->
     <MudPaper Class="pa-4 mb-6" Elevation="2">
         <MudTextField @bind-Value="_searchText"
-                      Label="ËÑË÷Ê«ÎÄ¡¢×÷Õß»ò·ÖÀà"
-                      Placeholder="ÊäÈë¹Ø¼ü´ÊËÑË÷..."
+                      Label="æœç´¢è¯—æ–‡ã€ä½œè€…æˆ–åˆ†ç±»"
+                      Placeholder="è¾“å…¥å…³é”®è¯æœç´¢..."
                       Adornment="Adornment.Start"
                       AdornmentIcon="@Icons.Material.Filled.Search"
                       Variant="Variant.Outlined"
@@ -31,7 +31,7 @@
                    StartIcon="@Icons.Material.Filled.Search"
                    OnClick="PerformSearch"
                    Class="mt-3">
-            ËÑË÷
+            æœç´¢
         </MudButton>
     </MudPaper>
 
@@ -41,36 +41,36 @@
     }
     else if (string.IsNullOrWhiteSpace(_query))
     {
-        <!-- ÌáÊ¾ÏÔÊ¾ -->
+        <!-- æç¤ºæ˜¾ç¤º -->
         <MudPaper Class="pa-8 text-center" Elevation="2">
             <MudIcon Icon="@Icons.Material.Filled.Search" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
-            <MudText Typo="Typo.h6" Class="mb-2">¿ªÊ¼ËÑË÷Äã¸ĞĞËÈ¤µÄÄÚÈİ</MudText>
+            <MudText Typo="Typo.h6" Class="mb-2">å¼€å§‹æœç´¢ä½ æ„Ÿå…´è¶£çš„å†…å®¹</MudText>
             <MudText Typo="Typo.body1" Color="Color.Secondary" Class="mb-4">
-                ÔÚËÑË÷¿òÖĞÊäÈë¹Ø¼ü´Ê£¬°´»Ø³µ»òµã»÷¡°ËÑË÷¡±°´Å¥²é¿´½á¹û¡£
+                åœ¨æœç´¢æ¡†ä¸­è¾“å…¥å…³é”®è¯ï¼ŒæŒ‰å›è½¦æˆ–ç‚¹å‡»â€œæœç´¢â€æŒ‰é’®æŸ¥çœ‹ç»“æœã€‚
             </MudText>
         </MudPaper>
     }
     else
     {
-        <!-- ËÑË÷½á¹û -->
+        <!-- æœç´¢ç»“æœ -->
         @if ((_poemResults?.Any() != true) && (_authorResults?.Any() != true))
         {
             <MudPaper Class="pa-8 text-center" Elevation="2">
                 <MudIcon Icon="@Icons.Material.Filled.SearchOff" Size="Size.Large" Color="Color.Secondary" Class="mb-4" />
-                <MudText Typo="Typo.h6" Class="mb-2">Î´ÕÒµ½Æ¥Åä½á¹û</MudText>
+                <MudText Typo="Typo.h6" Class="mb-2">æœªæ‰¾åˆ°åŒ¹é…ç»“æœ</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    Çë³¢ÊÔÊ¹ÓÃ²»Í¬µÄ¹Ø¼ü´Ê»ò¼ì²éÆ´Ğ´¡£
+                    è¯·å°è¯•ä½¿ç”¨ä¸åŒçš„å…³é”®è¯æˆ–æ£€æŸ¥æ‹¼å†™ã€‚
                 </MudText>
             </MudPaper>
         }
         else
         {
-            <!-- Ê«ÎÄ½á¹û -->
+            <!-- è¯—æ–‡ç»“æœ -->
             @if (_poemResults?.Any() == true)
             {
                 <MudPaper Class="pa-4 mb-6" Elevation="4">
                     <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Primary">
-                        Ê«ÎÄ½á¹û (@_poemResults.Count)
+                        è¯—æ–‡ç»“æœ (@_poemResults.Count)
                     </MudText>
                     <MudGrid Spacing="3">
                         @foreach (var poem in _poemResults)
@@ -95,7 +95,7 @@
                                         </MudCardContent>
                                         <MudCardActions>
                                             <MudButton Variant="Variant.Text" Color="Color.Primary" Size="Size.Small">
-                                                ²é¿´È«ÎÄ
+                                                æŸ¥çœ‹å…¨æ–‡
                                             </MudButton>
                                         </MudCardActions>
                                     </MudCard>
@@ -106,12 +106,12 @@
                 </MudPaper>
             }
 
-            <!-- ×÷Õß½á¹û -->
+            <!-- ä½œè€…ç»“æœ -->
             @if (_authorResults?.Any() == true)
             {
                 <MudPaper Class="pa-4" Elevation="4">
                     <MudText Typo="Typo.h5" Class="mb-4" Color="Color.Secondary">
-                        ×÷Õß½á¹û (@_authorResults.Count)
+                        ä½œè€…ç»“æœ (@_authorResults.Count)
                     </MudText>
                     <MudGrid Spacing="3">
                         @foreach (var author in _authorResults)
@@ -143,7 +143,7 @@
                                         </MudCardContent>
                                         <MudCardActions>
                                             <MudButton Variant="Variant.Text" Color="Color.Secondary" Size="Size.Small">
-                                                ²é¿´ÏêÇé
+                                                æŸ¥çœ‹è¯¦æƒ…
                                             </MudButton>
                                         </MudCardActions>
                                     </MudCard>
@@ -228,7 +228,7 @@
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error performing search: {ex.Message}");
-            Snackbar.Add("ËÑË÷Ê§°Ü£¬ÇëÉÔºóÖØÊÔ", Severity.Error);
+            Snackbar.Add("æœç´¢å¤±è´¥ï¼Œè¯·ç¨åé‡è¯•", Severity.Error);
             _poemResults = new List<PoemDto>();
             _authorResults = new List<AuthorDto>();
         }
