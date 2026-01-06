@@ -45,6 +45,6 @@ RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish -p:
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish ./
-ENV ASPNETCORE_URLS=http://+:5000
-EXPOSE 5000
+ENV ASPNETCORE_URLS=http://+:7000
+EXPOSE 7000
 ENTRYPOINT ["dotnet", "PoemApp.API.dll"]

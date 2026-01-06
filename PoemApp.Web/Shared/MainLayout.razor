@@ -1,4 +1,4 @@
-@using MudBlazor
+ï»¿@using MudBlazor
 @using Microsoft.JSInterop
 @inherits LayoutComponentBase
 @implements IDisposable
@@ -50,7 +50,7 @@
         <MudHidden Breakpoint="Breakpoint.MdAndUp">
             <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Surface" Edge="Edge.Start" OnClick="@(() => _drawerOpen = !_drawerOpen)" />
         </MudHidden>
-        <MudText Typo="Typo.h6" Color="Color.Surface">¹ÅÊ«ÎÄÐÀÉÍ</MudText>
+        <MudText Typo="Typo.h6" Color="Color.Surface">å¤è¯—æ–‡æ¬£èµ</MudText>
     </div>
 
     <!-- Center: nav links (horizontally centered) -->
@@ -58,22 +58,22 @@
         <MudHidden Breakpoint="Breakpoint.SmAndDown">
             <div style="display:flex; align-items:center; gap:12px;">
                 <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Home" Class="app-navlink" ActiveClass="app-navlink-active">
-                    <MudText Class="ml-1">Ê×Ò³</MudText>
+                    <MudText Class="ml-1">é¦–é¡µ</MudText>
                 </MudNavLink>
                 <MudNavLink Href="/poems" Icon="@Icons.Material.Filled.LibraryBooks" Class="app-navlink" ActiveClass="app-navlink-active">
-                    <MudText Class="ml-1">Ê«ÎÄÉÍÎö</MudText>
+                    <MudText Class="ml-1">è¯—æ–‡èµæž</MudText>
                 </MudNavLink>
                 <MudNavLink Href="/authors" Icon="@Icons.Material.Filled.Person" Class="app-navlink" ActiveClass="app-navlink-active">
-                    <MudText Class="ml-1">Ê«ÈË½éÉÜ</MudText>
+                    <MudText Class="ml-1">è¯—äººä»‹ç»</MudText>
                 </MudNavLink>
                 <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category" Class="app-navlink" ActiveClass="app-navlink-active">
-                    <MudText Class="ml-1">·ÖÀàä¯ÀÀ</MudText>
+                    <MudText Class="ml-1">åˆ†ç±»æµè§ˆ</MudText>
                 </MudNavLink>
                 <MudNavLink Href="/search" Icon="@Icons.Material.Filled.Search" Class="app-navlink" ActiveClass="app-navlink-active">
-                    <MudText Class="ml-1">ÖÇÄÜËÑË÷</MudText>
+                    <MudText Class="ml-1">æ™ºèƒ½æœç´¢</MudText>
                 </MudNavLink>
                 <MudNavLink Href="/quotes" Icon="@Icons.Material.Filled.FormatQuote" Class="app-navlink" ActiveClass="app-navlink-active">
-                    <MudText Class="ml-1">ÃûÑÔÃû¾ä</MudText>
+                    <MudText Class="ml-1">åè¨€åå¥</MudText>
                 </MudNavLink>
             </div>
         </MudHidden>
@@ -84,26 +84,26 @@
 <MudHidden Breakpoint="Breakpoint.MdAndUp">
     <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="4">
         <MudDrawerHeader>
-            <MudText Typo="Typo.h5">µ¼º½²Ëµ¥</MudText>
+            <MudText Typo="Typo.h5">å¯¼èˆªèœå•</MudText>
         </MudDrawerHeader>
         <MudNavMenu>
             <MudNavLink Href="/" Icon="@Icons.Material.Filled.Home" IconColor="Color.Primary">
-                <MudText>Ê×Ò³</MudText>
+                <MudText>é¦–é¡µ</MudText>
             </MudNavLink>
             <MudNavLink Href="/poems" Icon="@Icons.Material.Filled.LibraryBooks" IconColor="Color.Secondary">
-                <MudText>Ê«ÎÄÉÍÎö</MudText>
+                <MudText>è¯—æ–‡èµæž</MudText>
             </MudNavLink>
             <MudNavLink Href="/authors" Icon="@Icons.Material.Filled.Person" IconColor="Color.Tertiary">
-                <MudText>Ê«ÈË½éÉÜ</MudText>
+                <MudText>è¯—äººä»‹ç»</MudText>
             </MudNavLink>
             <MudNavLink Href="/categories" Icon="@Icons.Material.Filled.Category" IconColor="Color.Info">
-                <MudText>·ÖÀàä¯ÀÀ</MudText>
+                <MudText>åˆ†ç±»æµè§ˆ</MudText>
             </MudNavLink>
             <MudNavLink Href="/search" Icon="@Icons.Material.Filled.Search" IconColor="Color.Warning">
-                <MudText>ÖÇÄÜËÑË÷</MudText>
+                <MudText>æ™ºèƒ½æœç´¢</MudText>
             </MudNavLink>
             <MudNavLink Href="/quotes" Icon="@Icons.Material.Filled.FormatQuote" IconColor="Color.Success">
-                <MudText>ÃûÑÔÃû¾ä</MudText>
+                <MudText>åè¨€åå¥</MudText>
             </MudNavLink>
         </MudNavMenu>
     </MudDrawer>
@@ -119,32 +119,32 @@
     <MudContainer MaxWidth="MaxWidth.Large">
         <MudGrid>
             <MudItem xs="12" md="4">
-                <MudText Typo="Typo.h6" Class="mb-2">¹ÅÊ«ÎÄÐÀÉÍ</MudText>
+                <MudText Typo="Typo.h6" Class="mb-2">å¤è¯—æ–‡æ¬£èµ</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    ´«³Ð¾­µä£¬Æ·Î¶Ê«ÔÏ
+                    ä¼ æ‰¿ç»å…¸ï¼Œå“å‘³è¯—éŸµ
                 </MudText>
             </MudItem>
             <MudItem xs="12" md="4">
-                <MudText Typo="Typo.subtitle1" Class="mb-2">¿ìËÙÁ´½Ó</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-2">å¿«é€Ÿé“¾æŽ¥</MudText>
                 <MudNavMenu Class="pa-0">
-                    <MudNavLink Href="/poems" Class="pa-0">Ê«ÎÄÉÍÎö</MudNavLink>
-                    <MudNavLink Href="/authors" Class="pa-0">Ê«ÈË½éÉÜ</MudNavLink>
-                    <MudNavLink Href="/categories" Class="pa-0">·ÖÀàä¯ÀÀ</MudNavLink>
+                    <MudNavLink Href="/poems" Class="pa-0">è¯—æ–‡èµæž</MudNavLink>
+                    <MudNavLink Href="/authors" Class="pa-0">è¯—äººä»‹ç»</MudNavLink>
+                    <MudNavLink Href="/categories" Class="pa-0">åˆ†ç±»æµè§ˆ</MudNavLink>
                 </MudNavMenu>
             </MudItem>
             <MudItem xs="12" md="4">
-                <MudText Typo="Typo.subtitle1" Class="mb-2">¹ØÓÚÎÒÃÇ</MudText>
+                <MudText Typo="Typo.subtitle1" Class="mb-2">å…³äºŽæˆ‘ä»¬</MudText>
                 <MudText Typo="Typo.body2" Color="Color.Secondary">
-                    ÖÂÁ¦ÓÚ´«³ÐÖÐ»ªÓÅÐã´«Í³ÎÄ»¯£¬ÈÃ¸ü¶àÈË¸ÐÊÜÊ«´ÊÖ®ÃÀ¡£
+                    è‡´åŠ›äºŽä¼ æ‰¿ä¸­åŽä¼˜ç§€ä¼ ç»Ÿæ–‡åŒ–ï¼Œè®©æ›´å¤šäººæ„Ÿå—è¯—è¯ä¹‹ç¾Žã€‚
                 </MudText>
             </MudItem>
         </MudGrid>
         <MudDivider Class="my-3" />
         <MudText Typo="Typo.caption" Color="Color.Secondary" Align="Align.Center">
-            ? 2024 PoemApp. All rights reserved.
+            Â© 2026 PoemApp. All rights reserved.
         </MudText>
         <div style="text-align:center;margin-top:8px;">
-            <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">Â³ICP±¸2025209166ºÅ</a>
+            <a href="https://beian.miit.gov.cn" target="_blank" rel="noopener noreferrer" style="color:inherit;text-decoration:none;">é²ICPå¤‡2025209166å·</a>
         </div>
     </MudContainer>
 </footer>
