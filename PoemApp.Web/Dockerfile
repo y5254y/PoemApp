@@ -1,4 +1,4 @@
-# PoemApp.Web Dockerfile
+# PoemApp.Web Dockerfile - Blazor WebAssembly static hosting
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
@@ -31,9 +31,15 @@ RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config
 
 RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
-FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
-WORKDIR /app
-COPY --from=build /app/publish ./
-ENV ASPNETCORE_URLS=http://+:80
+# Runtime: use nginx to serve static files (Blazor WASM is client-side, not a server app)
+FROM nginx:stable
+
+# Copy published static files to nginx www root
+COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+
+# Copy nginx config (optional: for SPA routing fallback to index.html)
+COPY nginx/web.conf /etc/nginx/conf.d/default.conf
+
 EXPOSE 80
-ENTRYPOINT ["dotnet", "PoemApp.Web.dll"]
+
+CMD ["nginx", "-g", "daemon off;"]
