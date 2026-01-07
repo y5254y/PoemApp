@@ -43,15 +43,6 @@
     <PackageReference Include="SixLabors.ImageSharp" Version="3.1.12" />
   </ItemGroup>
 
-  <!-- Build the Blazor WebAssembly client and place its published output into this API's wwwroot so the API can host the client -->
-  <Target Name="PublishClient" AfterTargets="Publish">
-    <Message Importance="high" Text="Publishing PoemApp.Web and copying to API wwwroot..." />
-    <Exec Command="dotnet publish ..\PoemApp.Web\PoemApp.Web.csproj -c $(Configuration) -o $(ProjectDir)wwwroot\_framework" />
-    <!-- Copy client static assets (wwwroot) into server wwwroot -->
-    <ItemGroup>
-      <ClientWwwroot Include="..\PoemApp.Web\wwwroot\**\*" />
-    </ItemGroup>
-    <Copy SourceFiles="@(ClientWwwroot)" DestinationFiles="@(ClientWwwroot->'$(ProjectDir)wwwroot\%(RecursiveDir)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
-  </Target>
+
 
 </Project>

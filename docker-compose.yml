@@ -53,7 +53,7 @@ services:
     depends_on:
       - api
     ports:
-      - "8080:80"
+      - "5005:80"
 
   nginx:
     build:
