@@ -18,9 +18,11 @@ if (string.IsNullOrWhiteSpace(configuredApiBase))
     configuredApiBase = builder.Configuration["Api:BaseUrl"];
 }
 var apiBase = !string.IsNullOrWhiteSpace(configuredApiBase) ? configuredApiBase : builder.HostEnvironment.BaseAddress;
+Console.WriteLine($"Using API Base URL: {apiBase}");
 
 // Register shared API clients
 builder.Services.AddPoemAppApiClients(apiBase);
+
 
 // Add MudBlazor
 builder.Services.AddMudServices();

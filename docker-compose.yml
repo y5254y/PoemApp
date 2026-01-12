@@ -6,6 +6,7 @@ services:
       MYSQL_DATABASE: ${MYSQL_DATABASE:-PoemApp}
       MYSQL_USER: ${MYSQL_USER:-poemapp}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:-poemapp}
+      TZ : Asia/Shanghai
     volumes:
       - db_data:/var/lib/mysql
     ports:
@@ -24,7 +25,8 @@ services:
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=root;Password=${MYSQL_ROOT_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Production
       - HostWebClient=false
-      - Cors__AllowedOrigins=http://localhost:6000;http://localhost:7000;http://localhost:5005
+      - Cors__AllowedOrigins=http://localhost:8080;http://localhost:7000;http://localhost:5005
+      - TZ=Asia/Shanghai
     depends_on:
       - db
     ports:
@@ -38,6 +40,7 @@ services:
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=${MYSQL_USER};Password=${MYSQL_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Production
       - Api__BaseUrl=http://api:5000
+      - TZ=Asia/Shanghai
     depends_on:
       - api
     ports:
@@ -49,16 +52,19 @@ services:
       dockerfile: PoemApp.Web/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ApiBaseUrl=http://api:5000/
+      - ApiBaseUrl=http://localhost:5000/
+      - TZ=Asia/Shanghai
     depends_on:
       - api
     ports:
-      - "5005:80"
+      - "8080:80"
 
   nginx:
     build:
       context: ./nginx
       dockerfile: Dockerfile
+    environment:
+      - TZ=Asia/Shanghai  
     ports:
       - "80:80"
     depends_on:
