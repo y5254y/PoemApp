@@ -59,18 +59,5 @@ services:
     ports:
       - "8080:80"
 
-  nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
-    environment:
-      - TZ=Asia/Shanghai  
-    ports:
-      - "80:80"
-    depends_on:
-      - api
-      - admin
-      - web
-
 volumes:
   db_data:
