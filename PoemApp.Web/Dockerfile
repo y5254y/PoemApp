@@ -41,6 +41,9 @@ COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 # This ensures _framework, _content, etc. are accessible from the root
 RUN cp -r /usr/share/nginx/html/_content/PoemApp.Web/* /usr/share/nginx/html/ 2>/dev/null || true
 
+# Ensure _framework directory exists and is accessible
+RUN mkdir -p /usr/share/nginx/html/_framework
+
 # Copy nginx config (for SPA routing fallback to index.html)
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
@@ -48,7 +51,7 @@ COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 RUN echo "=== Checking wwwroot structure ===" && \
     ls -la /usr/share/nginx/html/ && \
     echo "=== Checking _framework ===" && \
-    ls -la /usr/share/nginx/html/_framework 2>/dev/null || echo "Note: _framework at /usr/share/nginx/html/_framework"
+    ls -la /usr/share/nginx/html/_framework 2>/dev/null || echo "WARNING: _framework directory still missing or empty"
 
 EXPOSE 80
 
