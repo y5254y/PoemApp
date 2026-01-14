@@ -39,10 +39,13 @@ COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 
 # Copy Blazor WebAssembly framework files from _content subdirectory to root
 # This ensures _framework, _content, etc. are accessible from the root
-RUN cp -r /usr/share/nginx/html/_content/PoemApp.Web/* /usr/share/nginx/html/ 2>/dev/null || true
+RUN if [ -d /usr/share/nginx/html/_content/PoemApp.Web ]; then cp -r /usr/share/nginx/html/_content/PoemApp.Web/* /usr/share/nginx/html/; fi
 
-# Ensure _framework directory exists and is accessible
-RUN mkdir -p /usr/share/nginx/html/_framework
+# Ensure _framework directory exists with proper contents
+# If _framework is nested deeper, move it to root
+RUN if [ -d /usr/share/nginx/html/_content/PoemApp.Web/_framework ]; then \
+      cp -r /usr/share/nginx/html/_content/PoemApp.Web/_framework/* /usr/share/nginx/html/_framework/; \
+    fi
 
 # Copy nginx config (for SPA routing fallback to index.html)
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
@@ -51,7 +54,7 @@ COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 RUN echo "=== Checking wwwroot structure ===" && \
     ls -la /usr/share/nginx/html/ && \
     echo "=== Checking _framework ===" && \
-    ls -la /usr/share/nginx/html/_framework 2>/dev/null || echo "WARNING: _framework directory still missing or empty"
+    ls -la /usr/share/nginx/html/_framework 2>/dev/null || echo "WARNING: _framework directory missing or empty"
 
 EXPOSE 80
 
