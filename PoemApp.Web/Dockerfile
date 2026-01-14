@@ -29,23 +29,23 @@ RUN find . -type d -name obj -prune -exec rm -rf {} + || true
 # restore again after cleaning host obj so assets are generated in container
 RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
-RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder -p:PublishTrimmed=false
+# Publish directly to /wwwroot (not /app/publish) to ensure _framework and _content are in the root
+RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /wwwroot -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder -p:PublishTrimmed=false
 
 # Runtime: use nginx to serve static files (Blazor WASM is client-side, not a server app)
 FROM nginx:stable
 
-# Copy all published wwwroot files directly to nginx html root
-# wwwroot should already have _framework and _content in correct structure from dotnet publish
-COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+# Copy all published files (including _framework and _content) directly to nginx
+COPY --from=build /wwwroot /usr/share/nginx/html
 
 # Copy nginx config (for SPA routing fallback to index.html)
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
-# Verify key files exist
-RUN echo "=== wwwroot contents ===" && \
+# Verify structure
+RUN echo "=== wwwroot listing ===" && \
     ls -la /usr/share/nginx/html/ && \
-    echo "=== _framework contents (first 10) ===" && \
-    ls -la /usr/share/nginx/html/_framework 2>/dev/null | head -15
+    echo "=== _framework sample ===" && \
+    ls /usr/share/nginx/html/_framework | head -10
 
 EXPOSE 80
 
