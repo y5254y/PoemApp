@@ -34,27 +34,18 @@ RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:
 # Runtime: use nginx to serve static files (Blazor WASM is client-side, not a server app)
 FROM nginx:stable
 
-# Copy all published wwwroot files to nginx html root
+# Copy all published wwwroot files directly to nginx html root
+# wwwroot should already have _framework and _content in correct structure from dotnet publish
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
-
-# Copy Blazor WebAssembly framework files from _content subdirectory to root
-# This ensures _framework, _content, etc. are accessible from the root
-RUN if [ -d /usr/share/nginx/html/_content/PoemApp.Web ]; then cp -r /usr/share/nginx/html/_content/PoemApp.Web/* /usr/share/nginx/html/; fi
-
-# Ensure _framework directory exists with proper contents
-# If _framework is nested deeper, move it to root
-RUN if [ -d /usr/share/nginx/html/_content/PoemApp.Web/_framework ]; then \
-      cp -r /usr/share/nginx/html/_content/PoemApp.Web/_framework/* /usr/share/nginx/html/_framework/; \
-    fi
 
 # Copy nginx config (for SPA routing fallback to index.html)
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
 # Verify key files exist
-RUN echo "=== Checking wwwroot structure ===" && \
+RUN echo "=== wwwroot contents ===" && \
     ls -la /usr/share/nginx/html/ && \
-    echo "=== Checking _framework ===" && \
-    ls -la /usr/share/nginx/html/_framework 2>/dev/null || echo "WARNING: _framework directory missing or empty"
+    echo "=== _framework contents (first 10) ===" && \
+    ls -la /usr/share/nginx/html/_framework 2>/dev/null | head -15
 
 EXPOSE 80
 
