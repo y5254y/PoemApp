@@ -35,17 +35,18 @@ RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:
 # Runtime: use nginx to serve static files
 FROM nginx:stable
 
+# Remove nginx default files that might interfere
+RUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/50x.html
+
 # Copy published wwwroot (which contains _framework, _content, index.html, etc.) to nginx
 COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
 
-# Copy nginx config (for SPA routing fallback to index.html)
+# Copy nginx config
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
-# Verify structure
-RUN echo "=== wwwroot listing ===" && \
-    ls -la /usr/share/nginx/html/ && \
-    echo "=== _framework contents ===" && \
-    ls /usr/share/nginx/html/_framework 2>&1 | head -20
+# Verify files
+RUN echo "=== Checking /usr/share/nginx/html ===" && \
+    ls -la /usr/share/nginx/html/
 
 EXPOSE 80
 
