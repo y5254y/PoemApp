@@ -32,6 +32,12 @@ RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj --configfile /src/NuGet.config
 # Publish to /app/publish (standard location), wwwroot will be at /app/publish/wwwroot
 RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder -p:PublishTrimmed=false
 
+# Debug: verify wwwroot structure in build stage
+RUN echo "=== /app/publish structure ===" && \
+    find /app/publish -type f | head -30 && \
+    echo "=== /app/publish/wwwroot ===" && \
+    ls -la /app/publish/wwwroot/ 2>&1 || echo "wwwroot not found"
+
 # Runtime: use nginx to serve static files
 FROM nginx:stable
 
