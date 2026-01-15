@@ -33,6 +33,12 @@ RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config
 # Publish API WITH hosted Web client (PublishClient=true or default)
 RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
+# Debug: Verify wwwroot structure
+RUN echo "=== /app/publish/wwwroot contents ===" && \
+    ls -la /app/publish/wwwroot/ && \
+    echo "=== Check for _framework ===" && \
+    find /app/publish/wwwroot -name "_framework" -o -name "_content" 2>/dev/null | head -10 || echo "No _framework or _content found"
+
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
 COPY --from=build /app/publish ./
