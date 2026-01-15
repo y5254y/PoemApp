@@ -44,15 +44,23 @@ FROM nginx:stable
 # Remove nginx default files that might interfere
 RUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/50x.html
 
-# Copy published wwwroot (which contains _framework, _content, index.html, etc.) to nginx
-COPY --from=build /app/publish/wwwroot /usr/share/nginx/html
+# Copy published wwwroot to temp location
+COPY --from=build /app/publish/wwwroot /tmp/wwwroot
+
+# Move all files from _content/PoemApp.Web to nginx html root (because StaticWebAssetBasePath puts them in a subdir)
+RUN cp -r /tmp/wwwroot/_content/PoemApp.Web/* /usr/share/nginx/html/ && \
+    # Also keep _content structure for client libraries
+    mkdir -p /usr/share/nginx/html/_content && \
+    cp -r /tmp/wwwroot/_content /usr/share/nginx/html/ 2>/dev/null || true
 
 # Copy nginx config
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
 # Verify files
 RUN echo "=== Checking /usr/share/nginx/html ===" && \
-    ls -la /usr/share/nginx/html/
+    ls -la /usr/share/nginx/html/ && \
+    echo "=== Checking index.html ===" && \
+    head -c 100 /usr/share/nginx/html/index.html
 
 EXPOSE 80
 
