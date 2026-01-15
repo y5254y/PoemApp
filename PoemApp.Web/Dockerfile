@@ -47,20 +47,17 @@ RUN rm -f /usr/share/nginx/html/index.html /usr/share/nginx/html/50x.html
 # Copy published wwwroot to temp location
 COPY --from=build /app/publish/wwwroot /tmp/wwwroot
 
-# Move all files from _content/PoemApp.Web to nginx html root (because StaticWebAssetBasePath puts them in a subdir)
-RUN cp -r /tmp/wwwroot/_content/PoemApp.Web/* /usr/share/nginx/html/ && \
-    # Also keep _content structure for client libraries
-    mkdir -p /usr/share/nginx/html/_content && \
-    cp -r /tmp/wwwroot/_content /usr/share/nginx/html/ 2>/dev/null || true
+# Move all files from _content/PoemApp.Web to nginx html root
+RUN cp -r /tmp/wwwroot/_content/PoemApp.Web/* /usr/share/nginx/html/
 
 # Copy nginx config
 COPY nginx/web.conf /etc/nginx/conf.d/default.conf
 
-# Verify files
-RUN echo "=== Checking /usr/share/nginx/html ===" && \
+# Verify _framework files are at root
+RUN echo "=== /usr/share/nginx/html contents ===" && \
     ls -la /usr/share/nginx/html/ && \
-    echo "=== Checking index.html ===" && \
-    head -c 100 /usr/share/nginx/html/index.html
+    echo "=== _framework sample ===" && \
+    ls /usr/share/nginx/html/_framework/*.wasm | head -3
 
 EXPOSE 80
 
