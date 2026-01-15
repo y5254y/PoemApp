@@ -24,6 +24,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=root;Password=${MYSQL_ROOT_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Production
+      - HostWebClient=true
       - Cors__AllowedOrigins=http://localhost:5000;http://101.35.2.102:5000;http://localhost:7000
       - TZ=Asia/Shanghai
     depends_on:
