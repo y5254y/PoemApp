@@ -24,8 +24,7 @@ services:
     environment:
       - ConnectionStrings__DefaultConnection=Server=db;Port=3306;Database=${MYSQL_DATABASE};User=root;Password=${MYSQL_ROOT_PASSWORD};
       - ASPNETCORE_ENVIRONMENT=Production
-      - HostWebClient=false
-      - Cors__AllowedOrigins=http://101.35.2.102:8080;http://localhost:8080;http://localhost:7000;http://localhost:5005
+      - Cors__AllowedOrigins=http://localhost:5000;http://101.35.2.102:5000
       - TZ=Asia/Shanghai
     depends_on:
       - db
@@ -45,19 +44,6 @@ services:
       - api
     ports:
       - "7000:80"
-
-  web:
-    build:
-      context: .
-      dockerfile: PoemApp.Web/Dockerfile
-    environment:
-      - ASPNETCORE_ENVIRONMENT=Production
-      - ApiBaseUrl=http://101.35.2.102:5000/
-      - TZ=Asia/Shanghai
-    depends_on:
-      - api
-    ports:
-      - "8080:80"
 
 volumes:
   db_data:

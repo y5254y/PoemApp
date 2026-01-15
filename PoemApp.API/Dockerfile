@@ -29,7 +29,9 @@ RUN find . -type d -name obj -prune -exec rm -rf {} + || true
 
 # restore and publish API without building/copying the client
 RUN dotnet restore PoemApp.API/PoemApp.API.csproj --configfile /src/NuGet.config -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
-RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish -p:PublishClient=false
+
+# Publish API WITH hosted Web client (PublishClient=true or default)
+RUN dotnet publish PoemApp.API/PoemApp.API.csproj -c Release -o /app/publish -p:RestorePackagesPath=/root/.nuget/packages -p:RestoreFallbackFolders=/usr/share/dotnet/sdk/NuGetFallbackFolder
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS runtime
 WORKDIR /app
