@@ -191,16 +191,6 @@ public class Program
         app.UseCors("AllowAll");
         app.UseAuthorization();
 
-        // Serve static files (web client) from wwwroot when API hosts the Blazor WebAssembly client
-        var hostWebClient = builder.Configuration.GetValue<bool>("HostWebClient");
-        if (hostWebClient)
-        {
-            app.UseDefaultFiles();
-            app.UseStaticFiles();
-            // Fallback to index.html for SPA routes
-            app.MapFallbackToFile("/index.html");
-        }
-
         app.MapControllers();
 
         //app.MapHealthChecks("/health"); // Map health check endpoint
