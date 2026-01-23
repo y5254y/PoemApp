@@ -8,6 +8,7 @@ using PoemApp.Core.Extensions;
 using PoemApp.Core.Enums;
 using System.Security.Cryptography;
 using System.Text;
+using PoemApp.Core.DTOs;
 
 namespace PoemApp.Infrastructure.Services;
 
@@ -20,104 +21,72 @@ public partial class UserService : IUserService
         _context = context;
     }
 
-    public async Task<IEnumerable<UserDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<BasicUserDto>> GetAllUsersAsync()
     {
         return await _context.Users
-            .Select(u => new UserDto
+            .Select(u => new BasicUserDto
             {
                 Id = u.Id,
                 Username = u.Username,
                 WeChatId = u.WeChatId,
                 QQId = u.QQId,
                 Phone = u.Phone,
-                CreatedAt = u.CreatedAt,
-                Role = u.Role,
-                RoleDisplayName = u.Role.GetDisplayName(),
-                VipStartDate = u.VipStartDate,
-                VipEndDate = u.VipEndDate,
-                IsVip = u.IsVip,
-                Points = u.Points
+                Points = u.Points,
+                Role = u.Role.ToString(),
+                RoleDisplayName = u.Role.GetDisplayName()
             })
             .ToListAsync();
     }
 
-    public async Task<UserDetailDto> GetUserByIdAsync(int id)
+    public async Task<DetailedUserDto> GetUserByIdAsync(int id)
     {
         var user = await _context.Users
-            .Include(u => u.Favorites)
-                .ThenInclude(uf => uf.Poem)
-                    .ThenInclude(p => p.Author)
-            .Include(u => u.PointsRecords)
-            .Include(u => u.Audios)
-                .ThenInclude(a => a.Poem)
-            .Include(u => u.Annotations)
-                .ThenInclude(a => a.Poem)
+            .Include(u => u.Favorites).ThenInclude(f => f.Poem).ThenInclude(p => p.Author)
+            .Include(u => u.Recitations).ThenInclude(r => r.Poem)
+            .Include(u => u.Achievements).ThenInclude(a => a.Achievement)
             .FirstOrDefaultAsync(u => u.Id == id);
 
-        if (user == null)
-            throw new ArgumentException("user not found");
+        if (user == null) throw new Exception("User not found");
 
-        return new UserDetailDto
+        return new DetailedUserDto
         {
             Id = user.Id,
             Username = user.Username,
             WeChatId = user.WeChatId,
             QQId = user.QQId,
             Phone = user.Phone,
-            CreatedAt = user.CreatedAt,
             Role = user.Role,
-            RoleDisplayName = user.Role.GetDisplayName(),
+            CreatedAt = user.CreatedAt,
             VipStartDate = user.VipStartDate,
             VipEndDate = user.VipEndDate,
-            IsVip = user.IsVip,
             Points = user.Points,
-            Favorites = user.Favorites.Select(uf => new UserFavoriteDto
+            Favorites = user.Favorites.Select(f => new PoemDto
             {
-                UserId = uf.UserId,
-                PoemId = uf.PoemId,
-                PoemTitle = uf.Poem.Title,
-                AuthorName = uf.Poem.Author.Name,
-                FavoriteTime = uf.FavoriteTime
+                Id = f.PoemId,
+                Title = f.Poem.Title,
+                AuthorName = f.Poem.Author.Name
             }).ToList(),
-            PointsRecords = user.PointsRecords.Select(pr => new PointsRecordDto
+            Recitations = user.Recitations.Select(r => new RecitationDto
             {
-                Id = pr.Id,
-                UserId = pr.UserId,
-                Source = pr.Source,
-                SourceDisplayName = pr.Source.GetDisplayName(),
-                Points = pr.Points,
-                Description = pr.Description,
-                CreatedAt = pr.CreatedAt,
-                RelatedId = pr.RelatedId
+                Id = r.Id,
+                PoemId = r.PoemId,
+                PoemTitle = r.Poem.Title,
+                Status = r.Status.ToString(),
+                NextReviewTime = r.NextReviewTime,
+                Proficiency = r.Proficiency
             }).ToList(),
-            UploadedAudios = user.Audios.Select(a => new AudioDto
+            Achievements = user.Achievements.Select(a => new UserAchievementDto
             {
                 Id = a.Id,
-                PoemId = a.PoemId,
-                PoemTitle = a.Poem.Title,
-                FileUrl = a.FileUrl ?? string.Empty, // 修复 CS8601
-                UploaderId = a.UploaderId,
-                UploadTime = a.UploadTime,
-                AverageRating = a.AverageRating,
-                RatingCount = a.Ratings.Count
-            }).ToList(),
-            Annotations = user.Annotations.Select(a => new AnnotationDto
-            {
-                Id = a.Id,
-                PoemId = a.PoemId,
-                PoemTitle = a.Poem.Title,
-                UserId = a.UserId,
-                UserName = user.Username,
-                HighlightText = a.HighlightText,
-                Comment = a.Comment,
-                StartIndex = a.StartIndex,
-                EndIndex = a.EndIndex,
-                CreatedAt = a.CreatedAt
+                AchievementName = a.Achievement.Name,
+                AchievedAt = a.AchievedAt,
+                CurrentValue = a.CurrentValue,
+                RewardClaimed = a.RewardClaimed
             }).ToList()
         };
     }
 
-    public async Task<UserDto> CreateUserAsync(CreateUserDto userDto)
+    public async Task<BasicUserDto> CreateUserAsync(CreateUserDto userDto)
     {
         // 检查用户名是否已存在
         var existingUser = await _context.Users
@@ -133,62 +102,56 @@ public partial class UserService : IUserService
             WeChatId = userDto.WeChatId,
             QQId = userDto.QQId,
             Phone = userDto.Phone,
-            Role = userDto.Role,
-            CreatedAt = DateTime.UtcNow,
-            Points = 0
+            CreatedAt = DateTime.UtcNow
         };
-
-        // If password provided, create hash
-        if (!string.IsNullOrEmpty(userDto.Password))
-        {
-            CreatePasswordHash(userDto.Password, out var hash, out var salt);
-            user.PasswordHash = hash;
-            user.PasswordSalt = salt;
-        }
 
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
-        return await GetUserByIdAsync(user.Id);
+        return new BasicUserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            WeChatId = user.WeChatId,
+            QQId = user.QQId,
+            Phone = user.Phone,
+            Points = user.Points,
+            Role = user.Role.ToString(),
+            RoleDisplayName = user.Role.GetDisplayName()
+        };
     }
 
-    public async Task<UserDto> UpdateUserAsync(int id, UpdateUserDto userDto)
+    public async Task<BasicUserDto> UpdateUserAsync(int id, UpdateUserDto userDto)
     {
-        var user = await _context.Users.FindAsync(id);
+        var user = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
         if (user == null)
         {
-            throw new ArgumentException("User not found");
+            throw new Exception("User not found");
         }
 
-        // 如果提供了新用户名，检查是否与其他用户冲突
-        if (!string.IsNullOrEmpty(userDto.Username) && userDto.Username != user.Username)
+        user.Username = userDto.Username;
+        user.Phone = userDto.Phone;
+        if (userDto.Role.HasValue)
         {
-            var existingUser = await _context.Users
-                .FirstOrDefaultAsync(u => u.Username == userDto.Username && u.Id != id);
-            if (existingUser != null)
-            {
-                throw new ArgumentException("Username already exists");
-            }
-            user.Username = userDto.Username;
+            user.Role = userDto.Role.Value;
         }
-
-        if (userDto.WeChatId != null) user.WeChatId = userDto.WeChatId;
-        if (userDto.QQId != null) user.QQId = userDto.QQId;
-        if (userDto.Phone != null) user.Phone = userDto.Phone;
-        if (userDto.Role.HasValue) user.Role = userDto.Role.Value;
-
-        // 如果提供了密码，更新密码
-        if (!string.IsNullOrEmpty(userDto.Password))
-        {
-            CreatePasswordHash(userDto.Password, out var hash, out var salt);
-            user.PasswordHash = hash;
-            user.PasswordSalt = salt;
-        }
+        user.WeChatId = userDto.WeChatId;
+        user.QQId = userDto.QQId;
 
         _context.Users.Update(user);
         await _context.SaveChangesAsync();
 
-        return await GetUserByIdAsync(user.Id);
+        return new BasicUserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            WeChatId = user.WeChatId,
+            QQId = user.QQId,
+            Phone = user.Phone,
+            Points = user.Points,
+            Role = user.Role.ToString(),
+            RoleDisplayName = user.Role.GetDisplayName()
+        };
     }
 
     public async Task DeleteUserAsync(int id)
@@ -427,14 +390,13 @@ public partial class UserService : IUserService
         }).ToList();
     }
 
-    public async Task<PagedResult<UserDto>> GetUsersAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null)
+    public async Task<PagedResult<BasicUserDto>> GetUsersAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null)
     {
         var query = _context.Users.AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(search))
+        if (!string.IsNullOrEmpty(search))
         {
-            var s = search.Trim().ToLowerInvariant();
-            query = query.Where(u => u.Username.ToLower().Contains(s) || (u.Phone ?? string.Empty).ToLower().Contains(s) || (u.WeChatId ?? string.Empty).ToLower().Contains(s) || (u.QQId ?? string.Empty).ToLower().Contains(s));
+            query = query.Where(u => u.Username.Contains(search));
         }
 
         if (role.HasValue)
@@ -444,41 +406,30 @@ public partial class UserService : IUserService
 
         if (isVip.HasValue)
         {
-            if (isVip.Value)
-                query = query.Where(u => u.VipEndDate.HasValue && u.VipEndDate.Value > DateTime.UtcNow);
-            else
-                query = query.Where(u => !u.VipEndDate.HasValue || u.VipEndDate.Value <= DateTime.UtcNow);
+            query = query.Where(u => u.IsVip == isVip.Value);
         }
 
         var total = await query.CountAsync();
-
-        var items = await query
-            .OrderBy(u => u.Username)
-            .Skip((page - 1) * pageSize)
-            .Take(pageSize)
-            .Select(u => new UserDto
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize)
+            .Select(u => new BasicUserDto
             {
                 Id = u.Id,
                 Username = u.Username,
                 WeChatId = u.WeChatId,
                 QQId = u.QQId,
                 Phone = u.Phone,
-                CreatedAt = u.CreatedAt,
-                Role = u.Role,
-                RoleDisplayName = u.Role.GetDisplayName(),
-                VipStartDate = u.VipStartDate,
-                VipEndDate = u.VipEndDate,
-                IsVip = u.VipEndDate.HasValue && u.VipEndDate.Value > DateTime.UtcNow,
-                Points = u.Points
+                Points = u.Points,
+                Role = u.Role.ToString(),
+                RoleDisplayName = u.Role.GetDisplayName()
             })
             .ToListAsync();
 
-        return new PagedResult<UserDto>
+        return new PagedResult<BasicUserDto>
         {
-            Items = items,
+            TotalCount = total,
             Page = page,
             PageSize = pageSize,
-            TotalCount = total
+            Items = items
         };
     }
 

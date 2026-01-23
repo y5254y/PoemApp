@@ -58,7 +58,7 @@ public class AuthController : ControllerBase
     // GET api/auth/me
     // Returns current authenticated user based on Bearer token
     [HttpGet("me")]
-    public async Task<ActionResult<UserDto>> Me()
+    public async Task<ActionResult<BasicUserDto>> Me()
     {
         // Look for Authorization header
         if (!Request.Headers.TryGetValue("Authorization", out var authHeaderValues))

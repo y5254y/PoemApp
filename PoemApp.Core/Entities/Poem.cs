@@ -38,4 +38,8 @@ public class Poem
 
     // 收藏用户
     public ICollection<UserFavorite> FavoritedBy { get; set; } = [];
+    
+    // 拼音：与 Content 对应的拼音（带音调符号），用于前端显示注音。
+    // 存储为与 Content 等长的文本（保留标点位置），或者按需由管理端填写/生成。
+    public string? Pinyin { get; set; }
 }

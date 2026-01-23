@@ -1,5 +1,6 @@
 @page "/categories/edit/{Id:int}"
 @attribute [Authorize]
+@using MudBlazor
 @using PoemApp.Admin.Services
 @using PoemApp.Core.DTOs
 @using PoemApp.Core.Extensions
@@ -18,7 +19,7 @@
     <EditForm Model="_model" OnValidSubmit="HandleValid">
         <MudTextField @bind-Value="_model.Name" Label="名称" Required="true" />
 
-        <MudSelect T="CategoryGroup?" Label="分组" @bind-Value="_model.Group">
+        <MudSelect T="CategoryGroup?" Label="分组" @bind-Value="_model.Group" @onchange="OnGroupChanged">
             <MudSelectItem T="CategoryGroup?" Value="@(null)">未指定</MudSelectItem>
             @foreach (var val in Enum.GetValues(typeof(CategoryGroup)).Cast<CategoryGroup>())
             {
@@ -33,6 +34,18 @@
                 <MudSelectItem T="int?" Value="@opt.Id">@opt.Name</MudSelectItem>
             }
         </MudSelect>
+
+        <MudNumericField T="int" @bind-Value="_model.SortOrder" Label="排序（SortOrder）" />
+        <div class="mt-2 d-flex" style="gap:12px; align-items:center;">
+            <label style="display:inline-flex; align-items:center; gap:6px;">
+                <input type="checkbox" @bind="_model.IsEnabled" />
+                <span>启用（IsEnabled）</span>
+            </label>
+            <label style="display:inline-flex; align-items:center; gap:6px;">
+                <input type="checkbox" @bind="_model.IsLeaf" />
+                <span>叶子节点（IsLeaf）</span>
+            </label>
+        </div>
 
         <MudText Typo="Typo.subtitle1" Class="mt-2">描述</MudText>
         <QuillEditor @ref="_descriptionEditor" InitialContent="@(_model.Description ?? string.Empty)" />
@@ -82,7 +95,16 @@
             var dto = await CategoriesClient.GetByIdAsync(Id);
             if (dto != null)
             {
-                _model = new CreateCategoryDto { Name = dto.Name, Description = dto.Description, Group = dto.Group, ParentId = dto.ParentId };
+                _model = new CreateCategoryDto
+                {
+                    Name = dto.Name,
+                    Description = dto.Description,
+                    Group = dto.Group,
+                    ParentId = dto.ParentId,
+                    SortOrder = dto.SortOrder,
+                    IsEnabled = dto.IsEnabled,
+                    IsLeaf = dto.IsLeaf
+                };
             }
         }
 
@@ -106,7 +128,22 @@
             }
         }
 
-        _parentOptions = _allCategories.Where(c => !exclude.Contains(c.Id)).OrderBy(c => c.Name).ToList();
+        // Exclude categories that are marked as leaf (IsLeaf == true) because a leaf cannot be a parent
+        var query = _allCategories.Where(c => !exclude.Contains(c.Id) && !c.IsLeaf);
+
+        // If a group is selected, restrict parents to the same group
+        if (_model.Group.HasValue)
+        {
+            query = query.Where(c => c.Group == _model.Group.Value);
+        }
+
+        _parentOptions = query.OrderBy(c => c.Name).ToList();
+    }
+
+    private void OnGroupChanged(ChangeEventArgs e)
+    {
+        // Rebuild parent options when group changes
+        BuildParentOptions();
     }
 
     private async Task HandleValid()
@@ -137,9 +174,17 @@
             }
             else
             {
-                var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Name = _model.Name, Description = _model.Description, Group = _model.Group, ParentId = _model.ParentId });
+                var ok = await CategoriesClient.UpdateAsync(Id, new UpdateCategoryDto { Name = _model.Name, Description = _model.Description, Group = _model.Group, ParentId = _model.ParentId, SortOrder = _model.SortOrder, IsEnabled = _model.IsEnabled, IsLeaf = _model.IsLeaf });
                 if (ok)
                 {
+                    // Refresh from server to ensure UI reflects persisted values
+                    var fresh = await CategoriesClient.GetByIdAsync(Id);
+                    if (fresh != null)
+                    {
+                        _model.SortOrder = fresh.SortOrder;
+                        _model.IsEnabled = fresh.IsEnabled;
+                        _model.IsLeaf = fresh.IsLeaf;
+                    }
                     Snackbar.Add("更新成功", Severity.Success);
                     Navigation.NavigateTo("/categories");
                 }

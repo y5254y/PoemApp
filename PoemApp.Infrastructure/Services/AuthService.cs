@@ -61,7 +61,6 @@ public class AuthService : IAuthService
     {
         try
         {
-            // 调用微信API获取OpenId
             var weChatInfo = await GetWeChatOpenIdAsync(code);
 
             if (weChatInfo == null)
@@ -69,31 +68,37 @@ public class AuthService : IAuthService
                 return new LoginResultDto { Success = false, Message = "微信登录失败" };
             }
 
-            // 查找或创建用户 - 使用 WeChatId 字段
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.WeChatId == weChatInfo.OpenId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.WeChatId == weChatInfo.OpenId);
 
             if (user == null)
             {
-                // 创建新用户
                 var createUserDto = new CreateUserDto
                 {
                     Username = weChatInfo.Nickname ?? $"微信用户_{DateTime.Now.Ticks}",
-                    WeChatId = weChatInfo.OpenId // 使用 WeChatId
+                    WeChatId = weChatInfo.OpenId
                 };
 
                 var newUser = await _userService.CreateUserAsync(createUserDto);
                 user = await _context.Users.FindAsync(newUser.Id);
             }
 
-            // 新增非空检查
             if (user == null)
             {
                 return new LoginResultDto { Success = false, Message = "用户创建失败" };
             }
 
             var token = GenerateJwtToken(user);
-            var userDto = await _userService.GetUserByIdAsync(user.Id);
+            var userDto = new BasicUserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                WeChatId = user.WeChatId,
+                QQId = user.QQId,
+                Phone = user.Phone,
+                Points = user.Points,
+                Role = user.Role.ToString(),
+                RoleDisplayName = user.Role.GetDisplayName()
+            };
 
             return new LoginResultDto
             {
@@ -109,11 +114,11 @@ public class AuthService : IAuthService
         }
     }
 
+    // 修复 QQLoginAsync 方法中的类型转换问题
     public async Task<LoginResultDto> QQLoginAsync(string code)
     {
         try
         {
-            // 调用QQ API获取OpenId
             var qqInfo = await GetQQOpenIdAsync(code);
 
             if (qqInfo == null)
@@ -121,31 +126,37 @@ public class AuthService : IAuthService
                 return new LoginResultDto { Success = false, Message = "QQ登录失败" };
             }
 
-            // 查找或创建用户 - 使用 QQId 字段
-            var user = await _context.Users
-                .FirstOrDefaultAsync(u => u.QQId == qqInfo.OpenId);
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.QQId == qqInfo.OpenId);
 
             if (user == null)
             {
-                // 创建新用户
                 var createUserDto = new CreateUserDto
                 {
                     Username = qqInfo.Nickname ?? $"QQ用户_{DateTime.Now.Ticks}",
-                    QQId = qqInfo.OpenId // 使用 QQId
+                    QQId = qqInfo.OpenId
                 };
 
                 var newUser = await _userService.CreateUserAsync(createUserDto);
                 user = await _context.Users.FindAsync(newUser.Id);
             }
 
-            // 新增非空检查
             if (user == null)
             {
                 return new LoginResultDto { Success = false, Message = "用户创建失败" };
             }
 
             var token = GenerateJwtToken(user);
-            var userDto = await _userService.GetUserByIdAsync(user.Id);
+            var userDto = new BasicUserDto
+            {
+                Id = user.Id,
+                Username = user.Username,
+                WeChatId = user.WeChatId,
+                QQId = user.QQId,
+                Phone = user.Phone,
+                Points = user.Points,
+                Role = user.Role.ToString(),
+                RoleDisplayName = user.Role.GetDisplayName()
+            };
 
             return new LoginResultDto
             {
@@ -194,7 +205,7 @@ public class AuthService : IAuthService
         }
 
         var token = GenerateJwtToken(user);
-        var userDto = await _userService.GetUserByIdAsync(user.Id);
+        var userDto = MapToBasicUserDto(user);
 
         return new LoginResultDto
         {
@@ -220,7 +231,7 @@ public class AuthService : IAuthService
         }
 
         var token = GenerateJwtToken(user);
-        var userDto = await _userService.GetUserByIdAsync(user.Id);
+        var userDto = MapToBasicUserDto(user);
 
         return new LoginResultDto
         {
@@ -297,7 +308,7 @@ public class AuthService : IAuthService
         await _context.SaveChangesAsync();
 
         var token = GenerateJwtToken(user);
-        var userDto = await _userService.GetUserByIdAsync(user.Id);
+        var userDto = MapToBasicUserDto(user);
 
         return new LoginResultDto
         {
@@ -305,6 +316,21 @@ public class AuthService : IAuthService
             Token = token,
             User = userDto,
             Message = "注册成功"
+        };
+    }
+
+    private BasicUserDto MapToBasicUserDto(User user)
+    {
+        return new BasicUserDto
+        {
+            Id = user.Id,
+            Username = user.Username,
+            WeChatId = user.WeChatId,
+            QQId = user.QQId,
+            Phone = user.Phone,
+            Points = user.Points,
+            Role = user.Role.ToString(),
+            RoleDisplayName = user.Role.GetDisplayName()
         };
     }
 
@@ -532,7 +558,7 @@ public class AuthService : IAuthService
         }
     }
 
-    public async Task<UserDto?> GetUserFromTokenAsync(string token)
+    public async Task<BasicUserDto?> GetUserFromTokenAsync(string token)
     {
         if (string.IsNullOrEmpty(token))
             return null;
@@ -545,7 +571,7 @@ public class AuthService : IAuthService
             {
                 var userEntity = await _context.Users.FindAsync(devUserId);
                 if (userEntity == null) return null;
-                return new UserDto
+                return new BasicUserDto
                 {
                     Id = userEntity.Id,
                     Username = userEntity.Username,
@@ -553,7 +579,7 @@ public class AuthService : IAuthService
                     QQId = userEntity.QQId,
                     Phone = userEntity.Phone,
                     Points = userEntity.Points,
-                    Role = userEntity.Role,
+                    Role = userEntity.Role.ToString(),
                     RoleDisplayName = userEntity.Role.GetDisplayName()
                 };
             }
@@ -595,7 +621,7 @@ public class AuthService : IAuthService
             var userEntity = await _context.Users.FindAsync(userId);
             if (userEntity == null) return null;
 
-            return new UserDto
+            return new BasicUserDto
             {
                 Id = userEntity.Id,
                 Username = userEntity.Username,
@@ -603,7 +629,7 @@ public class AuthService : IAuthService
                 QQId = userEntity.QQId,
                 Phone = userEntity.Phone,
                 Points = userEntity.Points,
-                Role = userEntity.Role,
+                Role = userEntity.Role.ToString(),
                 RoleDisplayName = userEntity.Role.GetDisplayName()
             };
         }
@@ -613,20 +639,20 @@ public class AuthService : IAuthService
             return null;
         }
     }
-}
 
-// 微信用户信息DTO
-public class WeChatUserInfo
-{
-    public string OpenId { get; set; } = string.Empty;
-    public string Nickname { get; set; } = string.Empty;
-    public string HeadImgUrl { get; set; } = string.Empty;
-}
+    // 微信用户信息DTO
+    public class WeChatUserInfo
+    {
+        public string OpenId { get; set; } = string.Empty;
+        public string Nickname { get; set; } = string.Empty;
+        public string HeadImgUrl { get; set; } = string.Empty;
+    }
 
-// QQ用户信息DTO
-public class QQUserInfo
-{
-    public string OpenId { get; set; } = string.Empty;
-    public string Nickname { get; set; } = string.Empty;
-    public string HeadImgUrl { get; set; } = string.Empty;
+    // QQ用户信息DTO
+    public class QQUserInfo
+    {
+        public string OpenId { get; set; } = string.Empty;
+        public string Nickname { get; set; } = string.Empty;
+        public string HeadImgUrl { get; set; } = string.Empty;
+    }
 }

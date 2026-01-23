@@ -21,7 +21,7 @@ public class UsersController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles ="Admin")]
-    public async Task<ActionResult<PagedResult<UserDto>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] UserRole? role = null, [FromQuery] bool? isVip = null)
+    public async Task<ActionResult<PagedResult<BasicUserDto>>> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 20, [FromQuery] string? search = null, [FromQuery] UserRole? role = null, [FromQuery] bool? isVip = null)
     {
         var result = await _userService.GetUsersAsync(page, pageSize, search, role, isVip);
         return Ok(result);
@@ -29,7 +29,7 @@ public class UsersController : ControllerBase
 
     [HttpGet("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<UserDetailDto>> GetUser(int id)
+    public async Task<ActionResult<DetailedUserDto>> GetUser(int id)
     {
         var user = await _userService.GetUserByIdAsync(id);
         if (user == null)
@@ -41,7 +41,7 @@ public class UsersController : ControllerBase
 
     [HttpPost]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<UserDto>> PostUser(CreateUserDto userDto)
+    public async Task<ActionResult<BasicUserDto>> PostUser(CreateUserDto userDto)
     {
         try
         {
@@ -56,7 +56,7 @@ public class UsersController : ControllerBase
 
     [HttpPut("{id}")]
     [Authorize(Roles = "Admin")]
-    public async Task<ActionResult<UserDto>> PutUser(int id, UpdateUserDto userDto)
+    public async Task<ActionResult<BasicUserDto>> PutUser(int id, UpdateUserDto userDto)
     {
         try
         {
@@ -327,5 +327,17 @@ public class UsersController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    [HttpGet("{id}/details")]
+    public async Task<ActionResult<DetailedUserDto>> GetUserDetails(int id)
+    {
+        var user = await _userService.GetUserByIdAsync(id);
+        if (user == null)
+        {
+            return NotFound();
+        }
+
+        return Ok(user);
     }
 }

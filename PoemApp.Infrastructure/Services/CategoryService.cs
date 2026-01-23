@@ -38,6 +38,9 @@ public class CategoryService : ICategoryService
             Group = c.Group,
             ParentId = c.ParentId,
             ParentName = c.Parent?.Name,
+            SortOrder = c.SortOrder,
+            IsEnabled = c.IsEnabled,
+            IsLeaf = c.IsLeaf,
             Poems = c.Poems.Select(pc => new PoemDto
             {
                 Id = pc.Poem.Id,
@@ -74,6 +77,9 @@ public class CategoryService : ICategoryService
             Group = category.Group,
             ParentId = category.ParentId,
             ParentName = category.Parent?.Name,
+            SortOrder = category.SortOrder,
+            IsEnabled = category.IsEnabled,
+            IsLeaf = category.IsLeaf,
             Poems = category.Poems.Select(pc => new PoemDto
             {
                 Id = pc.Poem.Id,
@@ -106,6 +112,9 @@ public class CategoryService : ICategoryService
             Description = HtmlSanitizerHelper.SanitizeHtml(categoryDto.Description),
             Group = categoryDto.Group,
             ParentId = categoryDto.ParentId
+            ,SortOrder = categoryDto.SortOrder
+            ,IsEnabled = categoryDto.IsEnabled
+            ,IsLeaf = categoryDto.IsLeaf
         };
 
         _context.Categories.Add(category);
@@ -134,6 +143,9 @@ public class CategoryService : ICategoryService
         category.Description = HtmlSanitizerHelper.SanitizeHtml(categoryDto.Description);
         category.Group = categoryDto.Group;
         category.ParentId = categoryDto.ParentId;
+        category.SortOrder = categoryDto.SortOrder;
+        category.IsEnabled = categoryDto.IsEnabled;
+        category.IsLeaf = categoryDto.IsLeaf;
 
         _context.Categories.Update(category);
         await _context.SaveChangesAsync();

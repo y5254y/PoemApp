@@ -22,5 +22,7 @@ public class CreatePoemDto
     public string Translation { get; set; } = string.Empty;
     public string Annotation { get; set; } = string.Empty;
     public string Appreciation { get; set; } = string.Empty;
+    // admin 可选填写或生成的拼音（优先由生成按钮生成）
+    public string Pinyin { get; set; } = string.Empty;
     public List<int> CategoryIds { get; set; } = new List<int>();
 }

@@ -22,5 +22,6 @@ public class UpdatePoemDto
     public string Translation { get; set; } = string.Empty;
     public string Annotation { get; set; } = string.Empty;
     public string Appreciation { get; set; } = string.Empty;
+    public string Pinyin { get; set; } = string.Empty;
     public List<int> CategoryIds { get; set; } = new List<int>();
 }

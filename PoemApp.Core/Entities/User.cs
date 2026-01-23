@@ -58,6 +58,12 @@ public class User
 
     // 标注记录
     public ICollection<Annotation> Annotations { get; set; } = [];
+
+    // 背诵记录
+    public ICollection<UserRecitation> Recitations { get; set; } = [];
+
+    // 获得的成就
+    public ICollection<UserAchievement> Achievements { get; set; } = [];
 }
 
 

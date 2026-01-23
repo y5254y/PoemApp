@@ -10,5 +10,8 @@ public class CategoryDto
     public CategoryGroup? Group { get; set; }
     public int? ParentId { get; set; }
     public string? ParentName { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsEnabled { get; set; }
+    public bool IsLeaf { get; set; }
     public List<PoemDto> Poems { get; set; } = new List<PoemDto>();
 }

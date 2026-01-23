@@ -33,14 +33,21 @@ public class Program
         // Create a LoggingLevelSwitch so we can change the level at runtime
         var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Information);
 
-        // Configure Serilog with async file sink and controlled level
-        var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-api.log");
-        Log.Logger = new LoggerConfiguration()
+        // Configure Serilog; file sink only for dev/local
+        var loggerConfig = new LoggerConfiguration()
             .MinimumLevel.ControlledBy(levelSwitch)
             .Enrich.FromLogContext()
-            .WriteTo.Console()
-            .WriteTo.Async(a => a.File(logFilePath, rollingInterval: RollingInterval.Day))
-            .CreateLogger();
+            .WriteTo.Console();
+
+        var isContainer = string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase);
+
+        if (builder.Environment.IsDevelopment() || !isContainer)
+        {
+            var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-api.log");
+            loggerConfig = loggerConfig.WriteTo.Async(a => a.File(logFilePath, rollingInterval: RollingInterval.Day));
+        }
+
+        Log.Logger = loggerConfig.CreateLogger();
 
         builder.Host.UseSerilog();
 
@@ -165,7 +172,59 @@ public class Program
             });
         });
 
+        // 注册后台定时任务
+        builder.Services.AddHostedService<PoemApp.Infrastructure.Services.BackgroundTasks.ReviewReminderTask>();
+        builder.Services.AddHostedService<PoemApp.Infrastructure.Services.BackgroundTasks.ExpiredReviewTask>();
+        builder.Services.AddHostedService<PoemApp.Infrastructure.Services.BackgroundTasks.AchievementCheckTask>();
+
         var app = builder.Build();
+
+        // 自动应用 EF Core 迁移以确保数据库模式包含新添加的字段（Category.SortOrder/IsEnabled/IsLeaf 等）
+        try
+        {
+            using (var scope = app.Services.CreateScope())
+            {
+                var db = scope.ServiceProvider.GetService<PoemApp.Infrastructure.Data.AppDbContext>();
+                if (db != null)
+                {
+                    Console.WriteLine("Applying database migrations...");
+                    db.Database.Migrate();
+                    Console.WriteLine("Database migrations applied.");
+                    try
+                    {
+                        // Ensure new category columns exist (safe for MySQL 8+ with IF NOT EXISTS)
+                        db.Database.ExecuteSqlRaw(@"ALTER TABLE `categories` ADD COLUMN IF NOT EXISTS `sortorder` int NOT NULL DEFAULT 0;");
+                        db.Database.ExecuteSqlRaw(@"ALTER TABLE `categories` ADD COLUMN IF NOT EXISTS `isenabled` tinyint(1) NOT NULL DEFAULT 1;");
+                        db.Database.ExecuteSqlRaw(@"ALTER TABLE `categories` ADD COLUMN IF NOT EXISTS `isleaf` tinyint(1) NOT NULL DEFAULT 1;");
+                        Console.WriteLine("Ensured category extra columns exist.");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine("Ensure category columns failed: " + ex.Message);
+                    }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Failed to apply migrations: " + ex.Message);
+        }
+
+        // 在应用启动时自动执行 EF Core 迁移，确保数据库结构与迁移文件同步。
+        try
+        {
+            using var migrateScope = app.Services.CreateScope();
+            var migrateDb = migrateScope.ServiceProvider.GetRequiredService<AppDbContext>();
+            migrateDb.Database.Migrate();
+            var migrateLogger = migrateScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+            migrateLogger.LogInformation("Database migrations applied successfully.");
+        }
+        catch (Exception ex)
+        {
+            // 记录迁移失败但不阻止应用启动（根据需要可改为抛出以阻止启动）
+            var logger = app.Services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "An error occurred while applying database migrations.");
+        }
 
 
         // 种子数据（仅在开发环境）

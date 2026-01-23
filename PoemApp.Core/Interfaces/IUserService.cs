@@ -6,11 +6,11 @@ namespace PoemApp.Core.Interfaces;
 
 public interface IUserService
 {
-    Task<IEnumerable<UserDto>> GetAllUsersAsync();
-    Task<PagedResult<UserDto>> GetUsersAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null);
-    Task<UserDetailDto> GetUserByIdAsync(int id);
-    Task<UserDto> CreateUserAsync(CreateUserDto userDto);
-    Task<UserDto> UpdateUserAsync(int id, UpdateUserDto userDto);
+    Task<IEnumerable<BasicUserDto>> GetAllUsersAsync();
+    Task<PagedResult<BasicUserDto>> GetUsersAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null);
+    Task<DetailedUserDto> GetUserByIdAsync(int id);
+    Task<BasicUserDto> CreateUserAsync(CreateUserDto userDto);
+    Task<BasicUserDto> UpdateUserAsync(int id, UpdateUserDto userDto);
     Task DeleteUserAsync(int id);
     Task UpdateUserPasswordAsync(int userId, string newPassword);
 

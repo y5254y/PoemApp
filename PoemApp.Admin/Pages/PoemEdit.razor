@@ -59,20 +59,29 @@
             </MudPaper>
         }
 
-        <MudText Typo="Typo.subtitle1" Class="mt-2">内容</MudText>
-        <QuillEditor @ref="_editor" InitialContent="@(_model.Content ?? string.Empty)" OnContentChanged="OnEditorContentChanged" />
+        <MudText Typo="Typo.subtitle1" Class="mt-2">内容（纯文本）</MudText>
+        <MudTextField TextFieldStyle="TextFieldStyle.Outlined" @bind-Value="_model.Content" Lines="6" Placeholder="请输入诗文文本（纯文本）"/>
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">拼音（带音调）</MudText>
+        <MudTextField TextFieldStyle="TextFieldStyle.Outlined" @bind-Value="_model.Pinyin" Lines="6" Placeholder="可手工编辑或粘贴"/>
+        <div class="mt-2">
+            <MudButton Variant="Variant.Text" Color="Color.Primary" OnClick="ValidatePinyin">校验对齐</MudButton>
+        </div>
+
+        <MudText Typo="Typo.subtitle1" Class="mt-2">对齐预览（上：拼音；下：正文）</MudText>
+        <MudTextField TextFieldStyle="TextFieldStyle.Outlined" Value="@GetAlignedPreview()" Lines="12" ReadOnly="true" Class="font-monospace" />
 
         <MudText Typo="Typo.subtitle1" Class="mt-2">译文</MudText>
-        <QuillEditor @ref="_translationEditor" InitialContent="@(_model.Translation ?? string.Empty)" OnContentChanged="OnTranslationChanged" />
+        <QuillEditor @ref="_translationEditor" InitialContent="@(_model.Translation ?? string.Empty)" />
 
         <MudText Typo="Typo.subtitle1" Class="mt-2">注释</MudText>
-        <QuillEditor @ref="_annotationEditor" InitialContent="@(_model.Annotation ?? string.Empty)" OnContentChanged="OnAnnotationChanged" />
+        <QuillEditor @ref="_annotationEditor" InitialContent="@(_model.Annotation ?? string.Empty)" />
 
         <MudText Typo="Typo.subtitle1" Class="mt-2">作品鉴赏</MudText>
-        <QuillEditor @ref="_appreciationEditor" InitialContent="@(_model.Appreciation ?? string.Empty)" OnContentChanged="OnAppreciationChanged" />
+        <QuillEditor @ref="_appreciationEditor" InitialContent="@(_model.Appreciation ?? string.Empty)" />
 
         <MudText Typo="Typo.subtitle1" Class="mt-2">背景</MudText>
-        <QuillEditor @ref="_backgroundEditor" InitialContent="@(_model.Background ?? string.Empty)" OnContentChanged="OnBackgroundChanged" />
+        <QuillEditor @ref="_backgroundEditor" InitialContent="@(_model.Background ?? string.Empty)" />
 
         <div class="mt-3">
             <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Filled">保存</MudButton>
@@ -86,7 +95,6 @@
     [Parameter] public int Id { get; set; }
 
     private CreatePoemDto _model = new();
-    private QuillEditor? _editor;
     private QuillEditor? _translationEditor;
     private QuillEditor? _annotationEditor;
     private QuillEditor? _appreciationEditor;
@@ -135,6 +143,7 @@
                     Annotation = dto.Annotation,
                     Appreciation = dto.Appreciation,
                     Content = dto.Content,
+                    Pinyin = dto.Pinyin,
                     CategoryIds = (dto.CategoryIds != null && dto.CategoryIds.Count > 0)
                         ? dto.CategoryIds
                         : dto.Categories.Select(cn => _categories.FirstOrDefault(c => c.Name == cn)?.Id ?? 0).Where(x => x > 0).ToList()
@@ -179,61 +188,13 @@
 
     private Task OnEditorContentChanged(string html)
     {
-        _model.Content = html;
-        return Task.CompletedTask;
-    }
-
-    private Task OnTranslationChanged(string html)
-    {
-        _model.Translation = html;
-        return Task.CompletedTask;
-    }
-
-    private Task OnAnnotationChanged(string html)
-    {
-        _model.Annotation = html;
-        return Task.CompletedTask;
-    }
-
-    private Task OnAppreciationChanged(string html)
-    {
-        _model.Appreciation = html;
-        return Task.CompletedTask;
-    }
-
-    private Task OnBackgroundChanged(string html)
-    {
-        _model.Background = html;
+        // no-op: rich editor replaced by plain textarea
         return Task.CompletedTask;
     }
 
     private async Task HandleValid()
     {
-        // get content from editors (redundant if OnContentChanged already updated model, kept for safety)
-        if (_editor != null)
-        {
-            _model.Content = await _editor.GetHtmlAsync();
-        }
-
-        if (_translationEditor != null)
-        {
-            _model.Translation = await _translationEditor.GetHtmlAsync();
-        }
-
-        if (_annotationEditor != null)
-        {
-            _model.Annotation = await _annotationEditor.GetHtmlAsync();
-        }
-
-        if (_appreciationEditor != null)
-        {
-            _model.Appreciation = await _appreciationEditor.GetHtmlAsync();
-        }
-
-        if (_backgroundEditor != null)
-        {
-            _model.Background = await _backgroundEditor.GetHtmlAsync();
-        }
+        // content is plain text already bound to _model.Content
 
         // sync selected categories into model from selection wrappers
         _model.CategoryIds = _categorySelections.Where(s => s.Checked).Select(s => s.Id).ToList();
@@ -261,6 +222,7 @@
                     Translation = _model.Translation,
                     Annotation = _model.Annotation,
                     Appreciation = _model.Appreciation,
+                    Pinyin = _model.Pinyin,
                     CategoryIds = _model.CategoryIds
                 });
                 if (ok) { Snackbar.Add("更新成功", Severity.Success); Navigation.NavigateTo("/poems"); }
@@ -334,5 +296,151 @@
         }
 
         return list;
+    }
+
+    private void ValidatePinyin()
+    {
+        var content = _model.Content ?? string.Empty;
+        var pinyin = _model.Pinyin ?? string.Empty;
+
+        // 跳过空内容校验
+        if (string.IsNullOrWhiteSpace(content) || string.IsNullOrWhiteSpace(pinyin))
+        {
+            Snackbar.Add("原文或拼音不能为空，无法校验", Severity.Warning);
+            return;
+        }
+
+        // 1. 校验换行数量一致（核心：行对行）
+        var contentLines = content.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line.Trim())).ToList();
+        var pinyinLines = pinyin.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line.Trim())).ToList();
+
+        if (contentLines.Count != pinyinLines.Count)
+        {
+            Snackbar.Add($"对齐失败：原文{contentLines.Count}行，拼音{pinyinLines.Count}行，请让每行诗句对应一行拼音", Severity.Error);
+            return;
+        }
+
+        // 2. 逐行校验：标点一致 + 有效字符数=拼音token数（不自动拆分，只提示）
+        var errorLines = new List<int>();
+        for (int i = 0; i < contentLines.Count; i++)
+        {
+            var lineNum = i + 1;
+            var contentLine = contentLines[i].Trim();
+            var pinyinLine = pinyinLines[i].Trim();
+
+            // 2.1 校验标点一致（只比数量，不比对具体位置，简化逻辑）
+            int contentPunctCount = contentLine.Count(c => IsPunctuation(c));
+            int pinyinPunctCount = pinyinLine.Count(c => IsPunctuation(c));
+            if (contentPunctCount != pinyinPunctCount)
+            {
+                errorLines.Add(lineNum);
+                continue;
+            }
+
+            // 2.2 校验有效汉字数=拼音token数（已修复调用方式）
+            int contentCharCount = contentLine.Count(c => !IsPunctuation(c)); // 过滤标点后的汉字数
+            int pinyinTokenCount = ReplacePunctuations(pinyinLine) // 这里改了！
+                                  .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                                  .Length; // 按空格拆分的token数
+
+            if (contentCharCount != pinyinTokenCount)
+            {
+                errorLines.Add(lineNum);
+            }
+        }
+
+        // 3. 汇总结果
+        if (errorLines.Any())
+        {
+            var lineStr = string.Join("、", errorLines);
+            Snackbar.Add($"第{lineStr}行对齐失败！请确保：1. 标点数量和原文一致；2. 每个汉字对应1个空格分隔的拼音", Severity.Error);
+            return;
+        }
+
+        // 所有校验通过
+        Snackbar.Add("对齐校验通过！", Severity.Success);
+    }
+
+    #region 简化版辅助方法（只保留核心功能）
+    /// <summary>
+    /// 判断是否为全角标点（只保留常用的，不搞复杂）
+    /// </summary>
+    private static bool IsPunctuation(char c)
+    {
+        var punctuations = new[] { '，', '。', '！', '？', '；', '、' };
+        return punctuations.Contains(c);
+    }
+
+    /// <summary>
+    /// 过滤文本中的全角标点（用于统计token数）
+    /// </summary>
+    private static string ReplacePunctuations(string text)
+    {
+        var punctuations = new[] { '，', '。', '！', '？', '；', '、' };
+        foreach (var p in punctuations)
+        {
+            text = text.Replace(p.ToString(), " ");
+        }
+        return text;
+    }
+    #endregion
+
+    // 简化版预览（只保证“数量一致时对齐，不一致时提示”）
+    private string GetAlignedPreview()
+    {
+        var p = _model.Pinyin ?? string.Empty;
+        var c = _model.Content ?? string.Empty;
+
+        // 按行拆分（行对行）
+        var contentLines = c.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line.Trim())).ToList();
+        var pinyinLines = p.Split('\n').Where(line => !string.IsNullOrWhiteSpace(line.Trim())).ToList();
+
+        var preview = new List<string>();
+        preview.Add("=== 对齐预览（上：拼音；下：原文）===");
+
+        for (int i = 0; i < Math.Max(contentLines.Count, pinyinLines.Count); i++)
+        {
+            var pLine = i < pinyinLines.Count ? pinyinLines[i].Trim() : "";
+            var cLine = i < contentLines.Count ? contentLines[i].Trim() : "";
+
+            // 1. 过滤标点，拆分拼音token和汉字
+            var pTokens = ReplacePunctuations(pLine)
+                          .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries)
+                          .ToList();
+            var cChars = cLine.Where(ch => !IsPunctuation(ch))
+                              .Select(ch => ch.ToString())
+                              .ToList();
+
+            // 2. 数量不一致时，直接提示
+            if (pTokens.Count != cChars.Count)
+            {
+                preview.Add($"⚠️  第{i + 1}行数量不匹配：");
+                preview.Add(pLine);
+                preview.Add(cLine);
+                preview.Add("");
+                continue;
+            }
+
+            // 3. 逐字生成“固定宽度+居中”的对齐块（用空格填充，确保每个占位宽度一致）
+            const int fixedWidth = 8; // 每个拼音/汉字的固定宽度（可根据字体调整）
+            string PadCenter(string s)
+            {
+                // 居中对齐：左右补空格，总长度为fixedWidth
+                var spaceCount = fixedWidth - s.Length;
+                var left = spaceCount / 2;
+                var right = spaceCount - left;
+                return new string(' ', left) + s + new string(' ', right);
+            }
+
+            // 生成拼音行和原文行
+            var pAligned = string.Join("", pTokens.Select(t => PadCenter(t)));
+            var cAligned = string.Join("", cChars.Select(ch => PadCenter(ch)));
+
+            preview.Add(pAligned);
+            preview.Add(cAligned);
+            preview.Add(""); // 行间距
+        }
+
+        return string.Join("\n", preview);
     }
 }

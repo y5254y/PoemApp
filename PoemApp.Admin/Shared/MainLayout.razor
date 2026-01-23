@@ -7,6 +7,7 @@
 @using Microsoft.JSInterop
 @using System.Net.Http.Headers
 @using System.Net.Http.Json
+@using PoemApp.Core.DTOs
 
 <MudLayout>
     <!-- Use a primary AppBar so icons/text contrast on mobile -->
@@ -47,6 +48,13 @@
 
     private const string DebugKey = "poemapp_token_debug";
     private bool _drawerOpen = true;
+    private BasicUserDto? _currentUser;
+
+    private async Task LoadCurrentUser()
+    {
+        var client = HttpClientFactory.CreateClient("Api");
+        _currentUser = await client.GetFromJsonAsync<BasicUserDto>("api/auth/me");
+    }
 
     private async Task Logout()
     {
@@ -102,7 +110,7 @@
             if (!resp.IsSuccessStatusCode)
                 return;
 
-            var user = await resp.Content.ReadFromJsonAsync<PoemApp.Core.DTOs.UserDto>();
+            var user = await resp.Content.ReadFromJsonAsync<BasicUserDto>();
             if (user != null && AuthStateProvider is ApiAuthenticationStateProvider api)
             {
                 await api.NotifyUserAuthenticationAsync(user, token);

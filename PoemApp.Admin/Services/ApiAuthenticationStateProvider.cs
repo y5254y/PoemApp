@@ -5,6 +5,9 @@ using System.Text.Json;
 using PoemApp.Core.DTOs;
 using Microsoft.Extensions.Logging;
 using PoemApp.Core.Interfaces;
+using System.Collections.Generic;
+using System.Net.Http.Json;
+
 namespace PoemApp.Admin.Services;
 
 public class ApiAuthenticationStateProvider : AuthenticationStateProvider
@@ -45,7 +48,7 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
                 return new AuthenticationState(_anonymous);
             }
 
-            var user = await resp.Content.ReadFromJsonAsync<UserDto>();
+            var user = await resp.Content.ReadFromJsonAsync<BasicUserDto>();
             if (user == null)
             {
                 _logger.LogWarning("GetAuthenticationStateAsync: /api/auth/me returned success but user payload was null");
@@ -71,7 +74,7 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
         }
     }
 
-    public async Task NotifyUserAuthenticationAsync(UserDto user, string token)
+    public async Task NotifyUserAuthenticationAsync(BasicUserDto user, string token)
     {
         try
         {
@@ -83,14 +86,17 @@ public class ApiAuthenticationStateProvider : AuthenticationStateProvider
             }
 
             // 在所有 user.Username 访问前添加 null 检查，避免空引用异常
-            var identity = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
-                    new Claim("id", user.Id.ToString()),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
-                }, "apiauth");
+            var claims = new List<Claim>
+            {
+                new Claim(ClaimTypes.Name, user.Username ?? string.Empty),
+                new Claim("id", user.Id.ToString()),
+                new Claim(ClaimTypes.Role, user.Role)
+            };
 
-            var principal = new ClaimsPrincipal(identity);
-            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(principal)));
+            var identity = new ClaimsIdentity(claims, "apiauth_type");
+            var userPrincipal = new ClaimsPrincipal(identity);
+
+            NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(userPrincipal)));
         }
         catch (Exception ex)
         {

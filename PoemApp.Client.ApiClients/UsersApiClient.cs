@@ -16,7 +16,7 @@ public class UsersApiClient
         _logger = logger;
     }
 
-    public async Task<PagedResult<UserDto>> GetAllAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null)
+    public async Task<PagedResult<BasicUserDto>> GetAllAsync(int page = 1, int pageSize = 20, string? search = null, UserRole? role = null, bool? isVip = null)
     {
         var query = new List<string>();
         if (page > 1) query.Add($"page={page}");
@@ -27,32 +27,32 @@ public class UsersApiClient
 
         var url = "api/users" + (query.Count > 0 ? "?" + string.Join("&", query) : string.Empty);
         _logger.LogInformation("UsersApiClient.GetAllAsync: calling GET {Url}", url);
-        var result = await _http.GetFromJsonAsync<PagedResult<UserDto>>(url);
-        return result ?? new PagedResult<UserDto>();
+        var result = await _http.GetFromJsonAsync<PagedResult<BasicUserDto>>(url);
+        return result ?? new PagedResult<BasicUserDto>();
     }
 
-    public async Task<UserDetailDto?> GetByIdAsync(int id)
+    public async Task<DetailedUserDto?> GetByIdAsync(int id)
     {
         _logger.LogInformation("UsersApiClient.GetByIdAsync: GET api/users/{Id}", id);
-        return await _http.GetFromJsonAsync<UserDetailDto>($"api/users/{id}");
+        return await _http.GetFromJsonAsync<DetailedUserDto>($"api/users/{id}");
     }
 
-    public async Task<UserDto?> CreateAsync(CreateUserDto dto)
+    public async Task<BasicUserDto?> CreateAsync(CreateUserDto dto)
     {
         _logger.LogInformation("UsersApiClient.CreateAsync: POST api/users");
         var resp = await _http.PostAsJsonAsync("api/users", dto);
         _logger.LogInformation("CreateAsync: response {Status}", resp.StatusCode);
         if (!resp.IsSuccessStatusCode) return null;
-        return await resp.Content.ReadFromJsonAsync<UserDto>();
+        return await resp.Content.ReadFromJsonAsync<BasicUserDto>();
     }
 
-    public async Task<UserDto?> UpdateAsync(int id, UpdateUserDto dto)
+    public async Task<BasicUserDto?> UpdateAsync(int id, UpdateUserDto dto)
     {
         _logger.LogInformation("UsersApiClient.UpdateAsync: PUT api/users/{Id}", id);
         var resp = await _http.PutAsJsonAsync($"api/users/{id}", dto);
         _logger.LogInformation("UpdateAsync: response {Status}", resp.StatusCode);
         if (!resp.IsSuccessStatusCode) return null;
-        return await resp.Content.ReadFromJsonAsync<UserDto>();
+        return await resp.Content.ReadFromJsonAsync<BasicUserDto>();
     }
 
     public async Task<bool> DeleteAsync(int id)

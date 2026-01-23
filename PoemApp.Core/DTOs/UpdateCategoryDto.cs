@@ -13,4 +13,7 @@ public class UpdateCategoryDto
     public CategoryGroup? Group { get; set; }
 
     public int? ParentId { get; set; }
+    public int SortOrder { get; set; } = 0;
+    public bool IsEnabled { get; set; } = true;
+    public bool IsLeaf { get; set; } = true;
 }

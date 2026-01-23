@@ -29,5 +29,14 @@ public enum PointsSource
     ActivityReward,
 
     [Display(Name = "连续签到奖励")]
-    ContinuousCheckInReward
+    ContinuousCheckInReward,
+
+    [Display(Name = "背诵诗文")]
+    RecitationCompleted,
+
+    [Display(Name = "完成复习")]
+    ReviewCompleted,
+
+    [Display(Name = "获得成就")]
+    AchievementUnlocked
 }

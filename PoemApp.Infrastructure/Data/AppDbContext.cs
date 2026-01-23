@@ -15,15 +15,19 @@ public class AppDbContext : DbContext
     public DbSet<Author> Authors { get; set; }
     public DbSet<Category> Categories { get; set; }
     public DbSet<PoemCategory> PoemCategories { get; set; }
-    public DbSet<User> Users { get; set; }
-    public DbSet<UserFavorite> UserFavorites { get; set; }
-    public DbSet<UserQuoteFavorite> UserQuoteFavorites { get; set; }
+    public DbSet<User> Users { get; set; } = null!;
+    public DbSet<UserFavorite> UserFavorites { get; set; } = null!;
+    public DbSet<UserQuoteFavorite> UserQuoteFavorites { get; set; } = null!;
     public DbSet<Annotation> Annotations { get; set; }
     public DbSet<Audio> Audios { get; set; }
     public DbSet<AudioRating> AudioRatings { get; set; }
     public DbSet<AuthorRelationship> AuthorRelationships { get; set; }
     public DbSet<PointsRecord> PointsRecords { get; set; }
     public DbSet<Quote> Quotes { get; set; }
+    public DbSet<UserRecitation> UserRecitations { get; set; }
+    public DbSet<RecitationReview> RecitationReviews { get; set; }
+    public DbSet<Achievement> Achievements { get; set; }
+    public DbSet<UserAchievement> UserAchievements { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -155,5 +159,48 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(q => q.PoemId)
             .OnDelete(DeleteBehavior.SetNull);
+
+        // 配置用户背诵记录关系
+        modelBuilder.Entity<UserRecitation>()
+            .HasKey(ur => ur.Id);
+
+        modelBuilder.Entity<UserRecitation>()
+            .HasOne(ur => ur.User)
+            .WithMany(u => u.Recitations)
+            .HasForeignKey(ur => ur.UserId);
+
+        modelBuilder.Entity<UserRecitation>()
+            .HasOne(ur => ur.Poem)
+            .WithMany()
+            .HasForeignKey(ur => ur.PoemId);
+
+        // 配置复习记录关系
+        modelBuilder.Entity<RecitationReview>()
+            .HasKey(rr => rr.Id);
+
+        modelBuilder.Entity<RecitationReview>()
+            .HasOne(rr => rr.UserRecitation)
+            .WithMany(ur => ur.Reviews)
+            .HasForeignKey(rr => rr.UserRecitationId);
+
+        // 配置用户成就关系
+        modelBuilder.Entity<UserAchievement>()
+            .HasKey(ua => ua.Id);
+
+        modelBuilder.Entity<UserAchievement>()
+            .HasOne(ua => ua.User)
+            .WithMany(u => u.Achievements)
+            .HasForeignKey(ua => ua.UserId);
+
+        modelBuilder.Entity<UserAchievement>()
+            .HasOne(ua => ua.Achievement)
+            .WithMany(a => a.UserAchievements)
+            .HasForeignKey(ua => ua.AchievementId);
+
+        // 创建复合唯一索引，确保用户不能重复获得同一成就
+        modelBuilder.Entity<UserAchievement>()
+            .HasIndex(ua => new { ua.UserId, ua.AchievementId })
+            .IsUnique()
+            .HasDatabaseName("UX_UserAchievement_User_Achievement");
     }
 }

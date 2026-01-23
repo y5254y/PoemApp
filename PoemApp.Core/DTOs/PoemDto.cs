@@ -25,6 +25,8 @@ public class PoemDto
     public string Background { get; set; } = string.Empty;
     public string Translation { get; set; } = string.Empty;
     public string Annotation { get; set; } = string.Empty;
+    // 拼音字段（可选）
+    public string Pinyin { get; set; } = string.Empty;
     // 作品鉴赏
     public string Appreciation { get; set; } = string.Empty;
     // category names for display

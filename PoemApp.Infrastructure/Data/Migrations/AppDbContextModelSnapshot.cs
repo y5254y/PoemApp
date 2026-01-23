@@ -19,6 +19,55 @@ namespace PoemApp.Infrastructure.Data.Migrations
                 .HasAnnotation("ProductVersion", "9.0.9")
                 .HasAnnotation("Relational:MaxIdentifierLength", 64);
 
+            modelBuilder.Entity("PoemApp.Core.Entities.Achievement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IconUrl")
+                        .HasMaxLength(200)
+                        .HasColumnType("varchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<int>("Level")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("varchar(100)");
+
+                    b.Property<int>("RewardPoints")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TargetValue")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("achievements");
+                });
+
             modelBuilder.Entity("PoemApp.Core.Entities.Annotation", b =>
                 {
                     b.Property<int>("Id")
@@ -56,7 +105,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Annotations");
+                    b.ToTable("annotations");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.Audio", b =>
@@ -87,7 +136,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("UploaderId");
 
-                    b.ToTable("Audios");
+                    b.ToTable("audios");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.AudioRating", b =>
@@ -117,7 +166,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AudioRatings");
+                    b.ToTable("audioratings");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.Author", b =>
@@ -140,7 +189,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Authors");
+                    b.ToTable("authors");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.AuthorRelationship", b =>
@@ -165,7 +214,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("ToAuthorId");
 
-                    b.ToTable("AuthorRelationships");
+                    b.ToTable("authorrelationships");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.Category", b =>
@@ -180,12 +229,21 @@ namespace PoemApp.Infrastructure.Data.Migrations
                     b.Property<int?>("Group")
                         .HasColumnType("int");
 
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<bool>("IsLeaf")
+                        .HasColumnType("tinyint(1)");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("varchar(50)");
 
                     b.Property<int?>("ParentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SortOrder")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
@@ -199,7 +257,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
                         .IsUnique()
                         .HasDatabaseName("UX_Categories_Group_Name");
 
-                    b.ToTable("Categories");
+                    b.ToTable("categories");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.Poem", b =>
@@ -224,6 +282,9 @@ namespace PoemApp.Infrastructure.Data.Migrations
                         .IsRequired()
                         .HasColumnType("longtext");
 
+                    b.Property<string>("Pinyin")
+                        .HasColumnType("longtext");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(100)
@@ -236,7 +297,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.ToTable("Poems");
+                    b.ToTable("poems");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.PoemCategory", b =>
@@ -251,7 +312,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("PoemCategories");
+                    b.ToTable("poemcategories");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.PointsRecord", b =>
@@ -283,7 +344,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PointsRecords");
+                    b.ToTable("pointsrecords");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.Quote", b =>
@@ -322,7 +383,54 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("PoemId");
 
-                    b.ToTable("Quotes");
+                    b.ToTable("quotes");
+                });
+
+            modelBuilder.Entity("PoemApp.Core.Entities.RecitationReview", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ActualReviewTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int?>("DurationSeconds")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int?>("QualityRating")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ReminderSent")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("ReminderSentTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("ReviewRound")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ScheduledTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UserRecitationId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserRecitationId");
+
+                    b.ToTable("recitationreviews");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.User", b =>
@@ -373,7 +481,46 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("users");
+                });
+
+            modelBuilder.Entity("PoemApp.Core.Entities.UserAchievement", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("AchievedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("AchievementId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CurrentValue")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<bool>("RewardClaimed")
+                        .HasColumnType("tinyint(1)");
+
+                    b.Property<DateTime?>("RewardClaimedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AchievementId");
+
+                    b.HasIndex("UserId", "AchievementId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_UserAchievement_User_Achievement");
+
+                    b.ToTable("userachievements");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.UserFavorite", b =>
@@ -391,7 +538,7 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("PoemId");
 
-                    b.ToTable("UserFavorites");
+                    b.ToTable("userfavorites");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.UserQuoteFavorite", b =>
@@ -409,7 +556,56 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
                     b.HasIndex("QuoteId");
 
-                    b.ToTable("UserQuoteFavorites");
+                    b.ToTable("userquotefavorites");
+                });
+
+            modelBuilder.Entity("PoemApp.Core.Entities.UserRecitation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime>("FirstRecitationTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("LastReviewTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<DateTime?>("NextReviewTime")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("varchar(500)");
+
+                    b.Property<int>("PoemId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Proficiency")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReviewCount")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("datetime(6)");
+
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PoemId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("userrecitations");
                 });
 
             modelBuilder.Entity("PoemApp.Core.Entities.Annotation", b =>
@@ -554,6 +750,36 @@ namespace PoemApp.Infrastructure.Data.Migrations
                     b.Navigation("Poem");
                 });
 
+            modelBuilder.Entity("PoemApp.Core.Entities.RecitationReview", b =>
+                {
+                    b.HasOne("PoemApp.Core.Entities.UserRecitation", "UserRecitation")
+                        .WithMany("Reviews")
+                        .HasForeignKey("UserRecitationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("UserRecitation");
+                });
+
+            modelBuilder.Entity("PoemApp.Core.Entities.UserAchievement", b =>
+                {
+                    b.HasOne("PoemApp.Core.Entities.Achievement", "Achievement")
+                        .WithMany("UserAchievements")
+                        .HasForeignKey("AchievementId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PoemApp.Core.Entities.User", "User")
+                        .WithMany("Achievements")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Achievement");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("PoemApp.Core.Entities.UserFavorite", b =>
                 {
                     b.HasOne("PoemApp.Core.Entities.Poem", "Poem")
@@ -592,6 +818,30 @@ namespace PoemApp.Infrastructure.Data.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("PoemApp.Core.Entities.UserRecitation", b =>
+                {
+                    b.HasOne("PoemApp.Core.Entities.Poem", "Poem")
+                        .WithMany()
+                        .HasForeignKey("PoemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("PoemApp.Core.Entities.User", "User")
+                        .WithMany("Recitations")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Poem");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("PoemApp.Core.Entities.Achievement", b =>
+                {
+                    b.Navigation("UserAchievements");
+                });
+
             modelBuilder.Entity("PoemApp.Core.Entities.Audio", b =>
                 {
                     b.Navigation("Ratings");
@@ -626,6 +876,8 @@ namespace PoemApp.Infrastructure.Data.Migrations
 
             modelBuilder.Entity("PoemApp.Core.Entities.User", b =>
                 {
+                    b.Navigation("Achievements");
+
                     b.Navigation("Annotations");
 
                     b.Navigation("Audios");
@@ -637,6 +889,13 @@ namespace PoemApp.Infrastructure.Data.Migrations
                     b.Navigation("QuoteFavorites");
 
                     b.Navigation("Ratings");
+
+                    b.Navigation("Recitations");
+                });
+
+            modelBuilder.Entity("PoemApp.Core.Entities.UserRecitation", b =>
+                {
+                    b.Navigation("Reviews");
                 });
 #pragma warning restore 612, 618
         }

@@ -17,13 +17,20 @@ var builder = WebApplication.CreateBuilder(args);
 var levelSwitch = new LoggingLevelSwitch(LogEventLevel.Information);
 
 // Configure Serilog with async file sink and controlled level
-var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-admin.log");
-Log.Logger = new LoggerConfiguration()
+var isContainer = string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase);
+var loggerConfig = new LoggerConfiguration()
     .MinimumLevel.ControlledBy(levelSwitch)
     .Enrich.FromLogContext()
-    .WriteTo.Console()
-    .WriteTo.Async(a => a.File(logFilePath, rollingInterval: RollingInterval.Day))
-    .CreateLogger();
+    .WriteTo.Console();
+
+// Only write file logs when not running in container (or when in Development for local debugging)
+if (builder.Environment.IsDevelopment() || !isContainer)
+{
+    var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-admin.log");
+    loggerConfig = loggerConfig.WriteTo.Async(a => a.File(logFilePath, rollingInterval: RollingInterval.Day));
+}
+
+Log.Logger = loggerConfig.CreateLogger();
 
 builder.Host.UseSerilog();
 

@@ -17,5 +17,5 @@ public interface IAuthService
 
     // Token管理
     Task<bool> ValidateTokenAsync(string token);
-    Task<UserDto?> GetUserFromTokenAsync(string token);
+    Task<BasicUserDto?> GetUserFromTokenAsync(string token);
 }

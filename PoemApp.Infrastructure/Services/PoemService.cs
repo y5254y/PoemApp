@@ -65,6 +65,7 @@ public class PoemService : IPoemService
             Dynasty = poem.Author.Dynasty,
             DynastyDisplayName = poem.Author.Dynasty.GetDisplayName(),
             Background = poem.Background ?? string.Empty,
+            Pinyin = poem.Pinyin ?? string.Empty,
             Translation = poem.Translation ?? string.Empty,
             Annotation = poem.Annotation ?? string.Empty,
             Appreciation = poem.Appreciation ?? string.Empty,
@@ -146,6 +147,7 @@ public class PoemService : IPoemService
             Translation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Translation),
             Annotation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Annotation),
             Appreciation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Appreciation),
+            Pinyin = poemDto.Pinyin,
             Categories = new List<PoemCategory>()
         };
 
@@ -184,6 +186,7 @@ public class PoemService : IPoemService
         // Update basic properties
         poem.Title = poemDto.Title;
         poem.Content = HtmlSanitizerHelper.SanitizeHtml(poemDto.Content);
+        poem.Pinyin = poemDto.Pinyin;
         poem.AuthorId = poemDto.AuthorId;
         poem.Background = HtmlSanitizerHelper.SanitizeHtml(poemDto.Background);
         poem.Translation = HtmlSanitizerHelper.SanitizeHtml(poemDto.Translation);

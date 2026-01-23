@@ -1,15 +1,18 @@
 using System.Net.Http.Json;
 using PoemApp.Core.DTOs;
+using Microsoft.Extensions.Logging;
 
 namespace PoemApp.Client.ApiClients;
 
 public class PoemApiClient
 {
     private readonly HttpClient _http;
+    private readonly ILogger<PoemApiClient> _logger;
 
-    public PoemApiClient(IHttpClientFactory factory)
+    public PoemApiClient(IHttpClientFactory factory, ILogger<PoemApiClient> logger)
     {
         _http = factory.CreateClient("Api");
+        _logger = logger;
     }
 
     public async Task<List<PoemDto>> GetAllAsync()
