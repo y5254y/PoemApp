@@ -41,6 +41,9 @@ public class Program
 
         var isContainer = string.Equals(Environment.GetEnvironmentVariable("DOTNET_RUNNING_IN_CONTAINER"), "true", StringComparison.OrdinalIgnoreCase);
 
+        // Control migrations via config: default run in Development only; in container/prod default skip unless explicitly enabled.
+        var enableEfMigrations = builder.Configuration.GetValue<bool>("EnableEfMigrations") || (builder.Environment.IsDevelopment() && !isContainer);
+
         if (builder.Environment.IsDevelopment() || !isContainer)
         {
             var logFilePath = Path.Combine(Directory.GetCurrentDirectory(), "logs", "poemapp-api.log");
@@ -179,53 +182,27 @@ public class Program
 
         var app = builder.Build();
 
-        // 自动应用 EF Core 迁移以确保数据库模式包含新添加的字段（Category.SortOrder/IsEnabled/IsLeaf 等）
-        try
+        // 自动迁移只在开发环境或显式启用时运行，避免生产已有库重复建表
+        if (enableEfMigrations)
         {
-            using (var scope = app.Services.CreateScope())
+            try
             {
-                var db = scope.ServiceProvider.GetService<PoemApp.Infrastructure.Data.AppDbContext>();
-                if (db != null)
+                using (var scope = app.Services.CreateScope())
                 {
-                    Console.WriteLine("Applying database migrations...");
-                    db.Database.Migrate();
-                    Console.WriteLine("Database migrations applied.");
-                    try
+                    var db = scope.ServiceProvider.GetService<PoemApp.Infrastructure.Data.AppDbContext>();
+                    if (db != null)
                     {
-                        // Ensure new category columns exist (safe for MySQL 8+ with IF NOT EXISTS)
-                        db.Database.ExecuteSqlRaw(@"ALTER TABLE `categories` ADD COLUMN IF NOT EXISTS `sortorder` int NOT NULL DEFAULT 0;");
-                        db.Database.ExecuteSqlRaw(@"ALTER TABLE `categories` ADD COLUMN IF NOT EXISTS `isenabled` tinyint(1) NOT NULL DEFAULT 1;");
-                        db.Database.ExecuteSqlRaw(@"ALTER TABLE `categories` ADD COLUMN IF NOT EXISTS `isleaf` tinyint(1) NOT NULL DEFAULT 1;");
-                        Console.WriteLine("Ensured category extra columns exist.");
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine("Ensure category columns failed: " + ex.Message);
+                        Console.WriteLine("Applying database migrations (EnableEfMigrations=true)...");
+                        db.Database.Migrate();
+                        Console.WriteLine("Database migrations applied.");
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine("Failed to apply migrations: " + ex.Message);
+            }
         }
-        catch (Exception ex)
-        {
-            Console.WriteLine("Failed to apply migrations: " + ex.Message);
-        }
-
-        // 在应用启动时自动执行 EF Core 迁移，确保数据库结构与迁移文件同步。
-        try
-        {
-            using var migrateScope = app.Services.CreateScope();
-            var migrateDb = migrateScope.ServiceProvider.GetRequiredService<AppDbContext>();
-            migrateDb.Database.Migrate();
-            var migrateLogger = migrateScope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-            migrateLogger.LogInformation("Database migrations applied successfully.");
-        }
-        catch (Exception ex)
-        {
-            // 记录迁移失败但不阻止应用启动（根据需要可改为抛出以阻止启动）
-            var logger = app.Services.GetRequiredService<ILogger<Program>>();
-            logger.LogError(ex, "An error occurred while applying database migrations.");
-        }
-
 
         // 种子数据（仅在开发环境）
         if (app.Environment.IsDevelopment())

@@ -24,21 +24,33 @@ public class ExpiredReviewTask : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using (var scope = _serviceProvider.CreateScope())
+            try
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var now = DateTime.UtcNow;
-
-                var expiredReviews = dbContext.RecitationReviews
-                    .Where(rr => rr.ScheduledTime.AddHours(48) <= now && rr.Status == Core.Enums.ReviewStatus.Pending)
-                    .ToList();
-
-                foreach (var review in expiredReviews)
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    review.Status = Core.Enums.ReviewStatus.Expired;
-                }
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var now = DateTime.UtcNow;
 
-                await dbContext.SaveChangesAsync(stoppingToken);
+                    var expiredReviews = dbContext.RecitationReviews
+                        .Where(rr => rr.ScheduledTime.AddHours(48) <= now && rr.Status == Core.Enums.ReviewStatus.Pending)
+                        .ToList();
+
+                    foreach (var review in expiredReviews)
+                    {
+                        review.Status = Core.Enums.ReviewStatus.Expired;
+                    }
+
+                    await dbContext.SaveChangesAsync(stoppingToken);
+                }
+            }
+            catch (MySql.Data.MySqlClient.MySqlException ex)
+            {
+                // table missing or other MySQL errors: log and skip this cycle to avoid stopping host
+                Console.WriteLine($"ExpiredReviewTask skipped due to DB error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ExpiredReviewTask error: {ex.Message}");
             }
 
             await Task.Delay(TimeSpan.FromHours(24), stoppingToken); // 每天检查一次

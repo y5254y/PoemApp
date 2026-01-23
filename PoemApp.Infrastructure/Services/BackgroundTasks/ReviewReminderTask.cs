@@ -24,25 +24,36 @@ public class ReviewReminderTask : BackgroundService
     {
         while (!stoppingToken.IsCancellationRequested)
         {
-            using (var scope = _serviceProvider.CreateScope())
+            try
             {
-                var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                var now = DateTime.UtcNow;
-
-                var dueReviews = dbContext.RecitationReviews
-                    .Where(rr => rr.ScheduledTime <= now && rr.Status == Core.Enums.ReviewStatus.Pending && !rr.ReminderSent)
-                    .ToList();
-
-                foreach (var review in dueReviews)
+                using (var scope = _serviceProvider.CreateScope())
                 {
-                    // TODO: Implement notification logic (e.g., email, push notification)
-                    Console.WriteLine($"Reminder: Review ID {review.Id} is due.");
+                    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                    var now = DateTime.UtcNow;
 
-                    review.ReminderSent = true;
-                    review.ReminderSentTime = now;
+                    var dueReviews = dbContext.RecitationReviews
+                        .Where(rr => rr.ScheduledTime <= now && rr.Status == Core.Enums.ReviewStatus.Pending && !rr.ReminderSent)
+                        .ToList();
+
+                    foreach (var review in dueReviews)
+                    {
+                        // TODO: Implement notification logic (e.g., email, push notification)
+                        Console.WriteLine($"Reminder: Review ID {review.Id} is due.");
+
+                        review.ReminderSent = true;
+                        review.ReminderSentTime = now;
+                    }
+
+                    await dbContext.SaveChangesAsync(stoppingToken);
                 }
-
-                await dbContext.SaveChangesAsync(stoppingToken);
+            }
+            catch (MySql.Data.MySqlClient.MySqlException ex)
+            {
+                Console.WriteLine($"ReviewReminderTask skipped due to DB error: {ex.Message}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"ReviewReminderTask error: {ex.Message}");
             }
 
             await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // 每小时检查一次
