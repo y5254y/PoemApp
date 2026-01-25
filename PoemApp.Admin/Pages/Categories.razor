@@ -37,7 +37,7 @@
             </div>
 
             <MudExpansionPanels Class="mt-2">
-                @foreach (var root in groupCats.Where(c => c.ParentId == null || !groupCats.Any(gc => gc.Id == c.ParentId)).OrderBy(r => r.Name))
+                @foreach (var root in groupCats.Where(c => c.ParentId == null || !groupCats.Any(gc => gc.Id == c.ParentId)).OrderBy(r => r.SortOrder).ThenBy(r => r.Name))
                 {
                     <CategoryPanelMud Category="root"
                                      Children="GetChildrenForGroup(root.Id, group)"
@@ -122,7 +122,7 @@
     {
         return _categories
             .Where(c => c.ParentId == parentId && c.Group == group)
-            .OrderBy(c => c.Name)
+            .OrderBy(c => c.SortOrder).ThenBy(c => c.Name)
             .ToList();
     }
 
