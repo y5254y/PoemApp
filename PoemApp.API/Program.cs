@@ -183,26 +183,26 @@ public class Program
         var app = builder.Build();
 
         // 自动迁移只在开发环境或显式启用时运行，避免生产已有库重复建表
-        if (enableEfMigrations)
-        {
-            try
-            {
-                using (var scope = app.Services.CreateScope())
-                {
-                    var db = scope.ServiceProvider.GetService<PoemApp.Infrastructure.Data.AppDbContext>();
-                    if (db != null)
-                    {
-                        Console.WriteLine("Applying database migrations (EnableEfMigrations=true)...");
-                        db.Database.Migrate();
-                        Console.WriteLine("Database migrations applied.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Failed to apply migrations: " + ex.Message);
-            }
-        }
+        //if (enableEfMigrations)
+        //{
+        //    try
+        //    {
+        //        using (var scope = app.Services.CreateScope())
+        //        {
+        //            var db = scope.ServiceProvider.GetService<PoemApp.Infrastructure.Data.AppDbContext>();
+        //            if (db != null)
+        //            {
+        //                Console.WriteLine("Applying database migrations (EnableEfMigrations=true)...");
+        //                db.Database.Migrate();
+        //                Console.WriteLine("Database migrations applied.");
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine("Failed to apply migrations: " + ex.Message);
+        //    }
+        //}
 
         // 种子数据（仅在开发环境）
         if (app.Environment.IsDevelopment())
