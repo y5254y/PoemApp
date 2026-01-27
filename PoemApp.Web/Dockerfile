@@ -1,21 +1,15 @@
-# PoemApp.API Dockerfile
+# PoemApp.web Dockerfile
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /src
 
-# Copy only the project files for the web project and its project references
-# to allow restore to resolve project-to-project references before copying
-# the full source (enables Docker layer caching).
 COPY PoemApp.Web/PoemApp.Web.csproj PoemApp.Web/
 COPY PoemApp.Core/PoemApp.Core.csproj PoemApp.Core/
 COPY PoemApp.Client.ApiClients/PoemApp.Client.ApiClients.csproj PoemApp.Client.ApiClients/
 
-# Restore the web project (will also restore referenced projects)
 RUN dotnet restore PoemApp.Web/PoemApp.Web.csproj
 
-# Copy the remaining source files
 COPY . ./
 
-# Publish the web project
 RUN dotnet publish PoemApp.Web/PoemApp.Web.csproj -c Release -o /app/publish
 
 FROM nginx:alpine AS final
