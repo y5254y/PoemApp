@@ -112,6 +112,8 @@ public class Program
 
 
         // 添加服务到容器
+        // 注册 HttpClient 用于远程调用（例如微信 code2session）
+        builder.Services.AddHttpClient();
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
 

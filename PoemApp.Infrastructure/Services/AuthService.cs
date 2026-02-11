@@ -22,14 +22,16 @@ public class AuthService : IAuthService
     private readonly IUserService _userService;
     private readonly IAppLogger _logger;
     private readonly System.Net.Http.HttpClient _httpClient;
+    private readonly IWeChatLoginService _weChatLoginService;
 
-    public AuthService(AppDbContext context, IConfiguration configuration, IUserService userService, IAppLogger logger, System.Net.Http.HttpClient httpClient)
+    public AuthService(AppDbContext context, IConfiguration configuration, IUserService userService, IAppLogger logger, System.Net.Http.HttpClient httpClient, IWeChatLoginService weChatLoginService)
     {
         _context = context;
         _configuration = configuration;
         _userService = userService;
         _logger = logger;
         _httpClient = httpClient;
+        _weChatLoginService = weChatLoginService;
         _logger.LogInformation("AuthService 实例化完成");
     }
 
@@ -401,54 +403,28 @@ public class AuthService : IAuthService
         return computedHash.SequenceEqual(storedHash);
     }
 
-    // 微信API调用（改为真实实现：调用微信接口获取 openid）
+        // 微信API调用（改为真实实现：调用 WeChatLoginService）
     private async Task<WeChatUserInfo> GetWeChatOpenIdAsync(string code)
     {
-        var appId = _configuration["WeChat:AppId"];
-        var appSecret = _configuration["WeChat:AppSecret"];
-
-        // 如果未配置，则返回模拟数据以便开发环境继续工作
-        if (string.IsNullOrWhiteSpace(appId) || string.IsNullOrWhiteSpace(appSecret))
-        {
-            _logger.LogWarning("WeChat AppId/AppSecret 未配置，使用 mock OpenId（仅用于开发环境）");
-            return await Task.FromResult(new WeChatUserInfo
+            try
             {
-                OpenId = $"wx_openid_{code}",
-                Nickname = "微信用户",
-                HeadImgUrl = "https://example.com/avatar.jpg"
-            });
-        }
-
-        try
-        {
-            // 微信登录凭证校验接口（服务端用 code 换取 session_key 和 openid）
-            // 文档: https://developers.weixin.qq.com/miniprogram/dev/api-backend/open-api/login/auth.code2Session.html
-            var url = $"https://api.weixin.qq.com/sns/jscode2session?appid={appId}&secret={appSecret}&js_code={code}&grant_type=authorization_code";
-
-            var response = await _httpClient.GetAsync(url);
-            if (!response.IsSuccessStatusCode)
+                var resp = await _weChatLoginService.Code2SessionAsync(code);
+            if (resp == null)
             {
-                _logger.LogWarning($"调用微信 code2session 接口失败，状态码: {response.StatusCode}");
+                _logger.LogWarning("WeChat code2session 返回 null");
                 return null!;
             }
 
-            var payload = await response.Content.ReadFromJsonAsync<WeChatCode2SessionResponse>();
-            if (payload == null)
+            if (resp.Errcode.HasValue && resp.Errcode.Value != 0)
             {
-                _logger.LogWarning("微信返回空响应");
-                return null!;
-            }
-
-            if (!string.IsNullOrEmpty(payload.errcode) && payload.errcode != "0")
-            {
-                _logger.LogWarning($"微信返回错误: {payload.errmsg} ({payload.errcode})");
+                _logger.LogWarning($"WeChat 接口错误: {resp.Errmsg} ({resp.Errcode})");
                 return null!;
             }
 
             return new WeChatUserInfo
             {
-                OpenId = payload.openid ?? string.Empty,
-                Nickname = string.Empty, // 需要后续请求获取用户信息（可选）
+                OpenId = resp.OpenId ?? string.Empty,
+                Nickname = string.Empty,
                 HeadImgUrl = string.Empty
             };
         }

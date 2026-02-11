@@ -6,6 +6,7 @@ using PoemApp.Infrastructure.Data;
 using PoemApp.Infrastructure.Services;
 using PoemApp.Core.Interfaces;
 using MySql.EntityFrameworkCore.Extensions;
+using PoemApp.Infrastructure.Settings;
 
 
 namespace PoemApp.Infrastructure.Extensions
@@ -37,6 +38,11 @@ namespace PoemApp.Infrastructure.Extensions
 
             // 注册 HttpClient 实例，供服务调用第三方 API（如微信）
             services.AddSingleton<System.Net.Http.HttpClient>();
+
+            // Bind WeChat settings
+            services.Configure<WeChatSettings>(configuration.GetSection("WeChat"));
+            // Register WeChat service
+            services.AddTransient<IWeChatLoginService, WeChatLoginService>();
 
             // 2. 注册所有服务（按照依赖顺序）
             // 注册自定义日志服务

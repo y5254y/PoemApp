@@ -43,9 +43,12 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("wechat")]
-    public async Task<ActionResult<LoginResultDto>> WeChatLogin([FromBody] string code)
+    public async Task<ActionResult<LoginResultDto>> WeChatLogin([FromBody] WeChatLoginRequestDto request)
     {
-        var result = await _authService.WeChatLoginAsync(code);
+        if (request == null || string.IsNullOrEmpty(request.Code))
+            return BadRequest(new { message = "缺少 code" });
+
+        var result = await _authService.WeChatLoginAsync(request.Code);
 
         if (!result.Success)
         {
