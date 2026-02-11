@@ -105,6 +105,12 @@ public partial class UserService : IUserService
             CreatedAt = DateTime.UtcNow
         };
 
+        // Ensure password hash/salt are set because database columns are non-nullable.
+        // If caller didn't provide a password (e.g. third-party login), generate a random fallback password and store its hash.
+        CreatePasswordHash(string.IsNullOrEmpty(userDto.Password) ? Guid.NewGuid().ToString() : userDto.Password, out byte[] passwordHash, out byte[] passwordSalt);
+        user.PasswordHash = passwordHash;
+        user.PasswordSalt = passwordSalt;
+
         _context.Users.Add(user);
         await _context.SaveChangesAsync();
 
