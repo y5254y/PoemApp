@@ -283,4 +283,63 @@ public class PoemService : IPoemService
         _context.PoemCategories.Remove(poemCategory);
         await _context.SaveChangesAsync();
     }
+
+    public async Task<PagedResult<PoemDto>> GetPoemsPagedAsync(int pageNumber, int pageSize, string? search = null, string? dynasty = null)
+    {
+        var query = _context.Poems
+            .Include(p => p.Author)
+            .Include(p => p.Categories)
+                .ThenInclude(pc => pc.Category)
+            .AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var s = search.Trim().ToLowerInvariant();
+            query = query.Where(p =>
+                p.Title.ToLower().Contains(s) ||
+                p.Author.Name.ToLower().Contains(s) ||
+                (p.Content ?? string.Empty).ToLower().Contains(s));
+        }
+
+        if (!string.IsNullOrWhiteSpace(dynasty))
+        {
+            // try map display name to enum
+            var enumVal = EnumExtensions.GetEnumFromDisplayName<DynastyEnum>(dynasty);
+            query = query.Where(p => p.Author.Dynasty == enumVal);
+        }
+
+        var total = await query.CountAsync();
+        var totalPages = (int)Math.Ceiling((double)total / pageSize);
+
+        var items = await query
+            .OrderByDescending(p => p.Id)
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .Select(p => new PoemDto
+            {
+                Id = p.Id,
+                Title = p.Title,
+                Content = p.Content,
+                AuthorId = p.AuthorId,
+                AuthorName = p.Author.Name,
+                Dynasty = p.Author.Dynasty,
+                DynastyDisplayName = p.Author.Dynasty.GetDisplayName(),
+                Background = p.Background ?? string.Empty,
+                Translation = p.Translation ?? string.Empty,
+                Annotation = p.Annotation ?? string.Empty,
+                Appreciation = p.Appreciation ?? string.Empty,
+                Categories = p.Categories.Select(pc => pc.Category.Name).ToList(),
+                CategoryIds = p.Categories.Select(pc => pc.CategoryId).ToList()
+            })
+            .ToListAsync();
+
+        return new PagedResult<PoemDto>
+        {
+            Items = items,
+            TotalCount = total,
+            Page = pageNumber,
+            PageSize = pageSize,
+            TotalPages = totalPages
+        };
+    }
 }

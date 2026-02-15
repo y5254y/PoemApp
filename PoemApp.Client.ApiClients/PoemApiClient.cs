@@ -20,6 +20,16 @@ public class PoemApiClient
         return await _http.GetFromJsonAsync<List<PoemDto>>("api/poems") ?? new List<PoemDto>();
     }
 
+    public async Task<PagedResult<PoemDto>> GetPagedAsync(int pageNumber = 1, int pageSize = 12, string? search = null, string? dynasty = null)
+    {
+        var url = $"api/poems/paged?pageNumber={pageNumber}&pageSize={pageSize}";
+        if (!string.IsNullOrWhiteSpace(search)) url += $"&search={Uri.EscapeDataString(search)}";
+        if (!string.IsNullOrWhiteSpace(dynasty)) url += $"&dynasty={Uri.EscapeDataString(dynasty)}";
+
+        var resp = await _http.GetFromJsonAsync<PagedResult<PoemDto>>(url);
+        return resp ?? new PagedResult<PoemDto>();
+    }
+
     public async Task<PoemDto?> GetByIdAsync(int id)
     {
         return await _http.GetFromJsonAsync<PoemDto>($"api/poems/{id}");

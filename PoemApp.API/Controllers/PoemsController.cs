@@ -25,7 +25,7 @@ public class PoemsController : ControllerBase
         return Ok(poems);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [AllowAnonymous]
     public async Task<ActionResult<PoemDto>> GetPoem(int id)
     {
@@ -129,5 +129,16 @@ public class PoemsController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    [HttpGet("paged")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PagedResult<PoemDto>>> GetPoemsPaged([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 12, [FromQuery] string? search = null, [FromQuery] string? dynasty = null)
+    {
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 12;
+
+        var result = await _poemService.GetPoemsPagedAsync(pageNumber, pageSize, search, dynasty);
+        return Ok(result);
     }
 }
