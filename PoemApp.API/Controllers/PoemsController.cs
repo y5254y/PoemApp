@@ -133,12 +133,23 @@ public class PoemsController : ControllerBase
 
     [HttpGet("paged")]
     [AllowAnonymous]
-    public async Task<ActionResult<PagedResult<PoemDto>>> GetPoemsPaged([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 12, [FromQuery] string? search = null, [FromQuery] string? dynasty = null)
+    public async Task<ActionResult<PagedResult<PoemDto>>> GetPoemsPaged([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 12, [FromQuery] string? search = null, [FromQuery] string? dynasty = null, [FromQuery] string? category = null)
     {
         if (pageNumber <= 0) pageNumber = 1;
         if (pageSize <= 0) pageSize = 12;
 
-        var result = await _poemService.GetPoemsPagedAsync(pageNumber, pageSize, search, dynasty);
+        var result = await _poemService.GetPoemsPagedAsync(pageNumber, pageSize, search, dynasty, category);
+        return Ok(result);
+    }
+
+    [HttpGet("category/{categoryName}/paged")]
+    [AllowAnonymous]
+    public async Task<ActionResult<PagedResult<PoemDto>>> GetPoemsPagedByCategory(string categoryName, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 12, [FromQuery] string? search = null, [FromQuery] string? dynasty = null)
+    {
+        if (pageNumber <= 0) pageNumber = 1;
+        if (pageSize <= 0) pageSize = 12;
+
+        var result = await _poemService.GetPoemsPagedAsync(pageNumber, pageSize, search, dynasty, categoryName);
         return Ok(result);
     }
 }

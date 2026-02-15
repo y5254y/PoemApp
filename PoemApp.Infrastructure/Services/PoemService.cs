@@ -284,7 +284,7 @@ public class PoemService : IPoemService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<PagedResult<PoemDto>> GetPoemsPagedAsync(int pageNumber, int pageSize, string? search = null, string? dynasty = null)
+    public async Task<PagedResult<PoemDto>> GetPoemsPagedAsync(int pageNumber, int pageSize, string? search = null, string? dynasty = null, string? category = null)
     {
         var query = _context.Poems
             .Include(p => p.Author)
@@ -306,6 +306,12 @@ public class PoemService : IPoemService
             // try map display name to enum
             var enumVal = EnumExtensions.GetEnumFromDisplayName<DynastyEnum>(dynasty);
             query = query.Where(p => p.Author.Dynasty == enumVal);
+        }
+
+        if (!string.IsNullOrWhiteSpace(category))
+        {
+            var c = category.Trim();
+            query = query.Where(p => p.Categories.Any(pc => pc.Category.Name == c));
         }
 
         var total = await query.CountAsync();
