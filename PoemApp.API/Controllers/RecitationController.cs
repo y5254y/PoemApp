@@ -22,12 +22,29 @@ public class RecitationController : ControllerBase
 
     private int GetCurrentUserId()
     {
-        var userIdClaim = User.FindFirst("sub")?.Value ?? User.FindFirst("userId")?.Value;
-        if (int.TryParse(userIdClaim, out var userId) && userId > 0)
+        // Try multiple claim name variations
+        var claimNames = new[] 
+        { 
+            "sub", 
+            System.Security.Claims.ClaimTypes.NameIdentifier,
+            "http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier",
+            "userId", 
+            "id",
+            "user_id"
+        };
+
+        foreach (var claimName in claimNames)
         {
-            return userId;
+            var claimValue = User.FindFirst(claimName)?.Value;
+            if (!string.IsNullOrEmpty(claimValue) && int.TryParse(claimValue, out var userId) && userId > 0)
+            {
+                return userId;
+            }
         }
-        throw new UnauthorizedAccessException("User ID not found in token");
+
+        // Fallback: log all claims for debugging
+        var allClaims = string.Join(", ", User.Claims.Select(c => $"{c.Type}={c.Value}"));
+        throw new UnauthorizedAccessException($"User ID not found in token. Available claims: {allClaims}");
     }
 
     [HttpPost]
