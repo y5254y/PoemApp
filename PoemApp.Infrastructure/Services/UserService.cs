@@ -174,22 +174,23 @@ public partial class UserService : IUserService
 
     public async Task<IEnumerable<UserFavoriteDto>> GetUserFavoritesAsync(int userId)
     {
-        var user = await _context.Users
-            .Include(u => u.Favorites)
-                .ThenInclude(uf => uf.Poem)
-                    .ThenInclude(p => p.Author)
-            .FirstOrDefaultAsync(u => u.Id == userId);
+        var favorites = await _context.UserFavorites
+            .Where(uf => uf.UserId == userId)
+            .Include(uf => uf.Poem)
+                .ThenInclude(p => p.Author)
+            .OrderByDescending(uf => uf.FavoriteTime)
+            .ToListAsync();
 
-        if (user == null) throw new ArgumentException("User not found");
-
-        return user.Favorites.Select(uf => new UserFavoriteDto
-        {
-            UserId = uf.UserId,
-            PoemId = uf.PoemId,
-            PoemTitle = uf.Poem.Title,
-            AuthorName = uf.Poem.Author.Name,
-            FavoriteTime = uf.FavoriteTime
-        }).ToList();
+        return favorites
+            .Where(uf => uf.Poem != null && uf.Poem.Author != null)
+            .Select(uf => new UserFavoriteDto
+            {
+                UserId = uf.UserId,
+                PoemId = uf.PoemId,
+                PoemTitle = uf.Poem.Title,
+                AuthorName = uf.Poem.Author.Name,
+                FavoriteTime = uf.FavoriteTime
+            }).ToList();
     }
 
     public async Task<UserFavoriteDto> AddUserFavoriteAsync(int userId, CreateUserFavoriteDto favoriteDto)
