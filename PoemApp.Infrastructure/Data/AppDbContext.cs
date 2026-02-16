@@ -174,6 +174,12 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(ur => ur.PoemId);
 
+        // 创建复合唯一索引，确保同一用户对同一首诗只能有一条背诵记录
+        modelBuilder.Entity<UserRecitation>()
+            .HasIndex(ur => new { ur.UserId, ur.PoemId })
+            .IsUnique()
+            .HasDatabaseName("UX_UserRecitation_User_Poem");
+
         // 配置复习记录关系
         modelBuilder.Entity<RecitationReview>()
             .HasKey(rr => rr.Id);
