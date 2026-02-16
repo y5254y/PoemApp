@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Entities;
 
 /// <summary>
-/// ÓÃ»§³É¾Í¼ÇÂ¼ - ¼ÇÂ¼ÓÃ»§»ñµÃµÄ³É¾Í
+/// ç”¨æˆ·æˆå°±è®°å½• - è®°å½•ç”¨æˆ·è·å¾—çš„æˆå°±
 /// </summary>
 public class UserAchievement
 {
@@ -18,27 +18,27 @@ public class UserAchievement
     public Achievement Achievement { get; set; } = null!;
 
     /// <summary>
-    /// »ñµÃ³É¾ÍµÄÊ±¼ä
+    /// è·å¾—æˆå°±çš„æ—¶é—´
     /// </summary>
     public DateTime AchievedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// µ±Ç°½ø¶ÈÖµ£¨ÓÃÓÚÏÔÊ¾½ø¶ÈÌõ£©
+    /// å½“å‰è¿›åº¦å€¼ï¼ˆç”¨äºæ˜¾ç¤ºè¿›åº¦æ¡ï¼‰
     /// </summary>
     public int CurrentValue { get; set; }
 
     /// <summary>
-    /// ÊÇ·ñÒÑÁìÈ¡½±Àø
+    /// æ˜¯å¦å·²é¢†å–å¥–åŠ±
     /// </summary>
     public bool RewardClaimed { get; set; } = false;
 
     /// <summary>
-    /// ½±ÀøÁìÈ¡Ê±¼ä
+    /// å¥–åŠ±é¢†å–æ—¶é—´
     /// </summary>
     public DateTime? RewardClaimedAt { get; set; }
 
     /// <summary>
-    /// ±¸×¢
+    /// å¤‡æ³¨
     /// </summary>
     [StringLength(500)]
     public string? Notes { get; set; }

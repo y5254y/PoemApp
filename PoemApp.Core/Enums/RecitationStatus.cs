@@ -3,19 +3,19 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Enums;
 
 /// <summary>
-/// ±³ËĞ×´Ì¬
+/// èƒŒè¯µçŠ¶æ€
 /// </summary>
 public enum RecitationStatus
 {
-    [Display(Name = "Ñ§Ï°ÖĞ")]
+    [Display(Name = "å­¦ä¹ ä¸­")]
     Learning,
 
-    [Display(Name = "ÒÑÕÆÎÕ")]
+    [Display(Name = "å·²æŒæ¡")]
     Mastered,
 
-    [Display(Name = "ĞèÒª¸´Ï°")]
+    [Display(Name = "éœ€è¦å¤ä¹ ")]
     NeedReview,
 
-    [Display(Name = "ÒÑ·ÅÆú")]
+    [Display(Name = "å·²æ”¾å¼ƒ")]
     Abandoned
 }

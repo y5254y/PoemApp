@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PoemApp.Infrastructure.Services.BackgroundTasks;
 
 /// <summary>
-/// ¶¨Ê±ÈÎÎñ£º¹ıÆÚ¸´Ï°´¦Àí
+/// å®šæ—¶ä»»åŠ¡ï¼šè¿‡æœŸå¤ä¹ å¤„ç†
 /// </summary>
 public class ExpiredReviewTask : BackgroundService
 {
@@ -53,7 +53,7 @@ public class ExpiredReviewTask : BackgroundService
                 Console.WriteLine($"ExpiredReviewTask error: {ex.Message}");
             }
 
-            await Task.Delay(TimeSpan.FromHours(24), stoppingToken); // Ã¿Ìì¼ì²éÒ»´Î
+            await Task.Delay(TimeSpan.FromHours(24), stoppingToken); // æ¯å¤©æ£€æŸ¥ä¸€æ¬¡
         }
     }
 }

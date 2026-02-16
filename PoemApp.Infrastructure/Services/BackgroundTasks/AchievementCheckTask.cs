@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PoemApp.Infrastructure.Services.BackgroundTasks;
 
 /// <summary>
-/// ��ʱ���񣺳ɾͼ��
+/// 定时任务：成就检查
 /// </summary>
 public class AchievementCheckTask : BackgroundService
 {
@@ -41,7 +41,7 @@ public class AchievementCheckTask : BackgroundService
                 await dbContext.SaveChangesAsync(stoppingToken);
             }
 
-            await Task.Delay(TimeSpan.FromHours(6), stoppingToken); // ÿ6Сʱ���һ��
+            await Task.Delay(TimeSpan.FromHours(6), stoppingToken); // 每6小时检查一次
         }
     }
 }

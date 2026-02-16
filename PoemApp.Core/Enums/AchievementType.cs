@@ -3,40 +3,40 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Enums;
 
 /// <summary>
-/// 成就类型
+/// 鎴愬氨绫诲瀷
 /// </summary>
 public enum AchievementType
 {
-    [Display(Name = "连续签到")]
+    [Display(Name = "杩炵画绛惧埌")]
     ContinuousCheckIn,
 
-    [Display(Name = "背诵诗文")]
+    [Display(Name = "鑳岃璇楁枃")]
     RecitationCount,
 
-    [Display(Name = "收藏诗文")]
+    [Display(Name = "鏀惰棌璇楁枃")]
     FavoriteCount,
 
-    [Display(Name = "上传音频")]
+    [Display(Name = "涓婁紶闊抽")]
     AudioUpload,
 
-    [Display(Name = "获得评分")]
+    [Display(Name = "鑾峰緱璇勫垎")]
     RatingReceived,
 
-    [Display(Name = "添加标注")]
+    [Display(Name = "娣诲姞鏍囨敞")]
     AnnotationCount,
 
-    [Display(Name = "积分累计")]
+    [Display(Name = "绉垎绱")]
     PointsTotal,
 
-    [Display(Name = "使用天数")]
+    [Display(Name = "浣跨敤澶╂暟")]
     UsageDays,
 
-    [Display(Name = "学习时长")]
+    [Display(Name = "瀛︿範鏃堕暱")]
     StudyDuration,
 
-    [Display(Name = "完美复习")]
+    [Display(Name = "瀹岀編澶嶄範")]
     PerfectReview,
 
-    [Display(Name = "特殊成就")]
+    [Display(Name = "鐗规畩鎴愬氨")]
     Special
 }

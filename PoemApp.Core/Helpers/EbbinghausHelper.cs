@@ -1,34 +1,34 @@
 namespace PoemApp.Core.Helpers;
 
 /// <summary>
-/// °¬±öºÆË¹ÒÅÍüÇúÏß¸´Ï°¼Æ»®ÖúÊÖ
-/// »ùÓÚ°¬±öºÆË¹ÒÅÍüÇúÏßÀíÂÛ£¬¼ÆËã×î¼Ñ¸´Ï°Ê±¼äµã
+/// è‰¾å®¾æµ©æ–¯é—å¿˜æ›²çº¿å¤ä¹ è®¡åˆ’åŠ©æ‰‹
+/// åŸºäºè‰¾å®¾æµ©æ–¯é—å¿˜æ›²çº¿ç†è®ºï¼Œè®¡ç®—æœ€ä½³å¤ä¹ æ—¶é—´ç‚¹
 /// </summary>
 public static class EbbinghausHelper
 {
     /// <summary>
-    /// °¬±öºÆË¹ÒÅÍüÇúÏßµÄ±ê×¼¸´Ï°¼ä¸ô£¨Ìì£©
-    /// µÚ1´Î¸´Ï°£º1Ììºó
-    /// µÚ2´Î¸´Ï°£º2Ììºó
-    /// µÚ3´Î¸´Ï°£º4Ììºó
-    /// µÚ4´Î¸´Ï°£º7Ììºó
-    /// µÚ5´Î¸´Ï°£º15Ììºó
-    /// µÚ6´Î¸´Ï°£º30Ììºó
-    /// µÚ7´Î¼°ÒÔºó£º60Ììºó
+    /// è‰¾å®¾æµ©æ–¯é—å¿˜æ›²çº¿çš„æ ‡å‡†å¤ä¹ é—´éš”ï¼ˆå¤©ï¼‰
+    /// ç¬¬1æ¬¡å¤ä¹ ï¼š1å¤©å
+    /// ç¬¬2æ¬¡å¤ä¹ ï¼š2å¤©å
+    /// ç¬¬3æ¬¡å¤ä¹ ï¼š4å¤©å
+    /// ç¬¬4æ¬¡å¤ä¹ ï¼š7å¤©å
+    /// ç¬¬5æ¬¡å¤ä¹ ï¼š15å¤©å
+    /// ç¬¬6æ¬¡å¤ä¹ ï¼š30å¤©å
+    /// ç¬¬7æ¬¡åŠä»¥åï¼š60å¤©å
     /// </summary>
     private static readonly int[] ReviewIntervals = { 1, 2, 4, 7, 15, 30, 60 };
 
     /// <summary>
-    /// ¸ù¾İ¸´Ï°ÂÖ´Î»ñÈ¡¸´Ï°¼ä¸ôÌìÊı
+    /// æ ¹æ®å¤ä¹ è½®æ¬¡è·å–å¤ä¹ é—´éš”å¤©æ•°
     /// </summary>
-    /// <param name="reviewRound">¸´Ï°ÂÖ´Î£¨´Ó1¿ªÊ¼£©</param>
-    /// <returns>¾àÀëÉÏ´Î¸´Ï°µÄÌìÊı</returns>
+    /// <param name="reviewRound">å¤ä¹ è½®æ¬¡ï¼ˆä»1å¼€å§‹ï¼‰</param>
+    /// <returns>è·ç¦»ä¸Šæ¬¡å¤ä¹ çš„å¤©æ•°</returns>
     public static int GetReviewInterval(int reviewRound)
     {
         if (reviewRound <= 0)
             return 1;
 
-        // Èç¹û³¬¹ıÔ¤¶¨ÒåµÄ¸´Ï°´ÎÊı£¬Ê¹ÓÃ×îºóÒ»¸ö¼ä¸ô£¨60Ìì£©
+        // å¦‚æœè¶…è¿‡é¢„å®šä¹‰çš„å¤ä¹ æ¬¡æ•°ï¼Œä½¿ç”¨æœ€åä¸€ä¸ªé—´éš”ï¼ˆ60å¤©ï¼‰
         if (reviewRound > ReviewIntervals.Length)
             return ReviewIntervals[^1];
 
@@ -36,11 +36,11 @@ public static class EbbinghausHelper
     }
 
     /// <summary>
-    /// ¼ÆËãÏÂ´Î¸´Ï°Ê±¼ä
+    /// è®¡ç®—ä¸‹æ¬¡å¤ä¹ æ—¶é—´
     /// </summary>
-    /// <param name="lastReviewTime">ÉÏ´Î¸´Ï°Ê±¼ä</param>
-    /// <param name="nextReviewRound">ÏÂ´Î¸´Ï°ÂÖ´Î</param>
-    /// <returns>ÏÂ´Î¸´Ï°Ê±¼ä</returns>
+    /// <param name="lastReviewTime">ä¸Šæ¬¡å¤ä¹ æ—¶é—´</param>
+    /// <param name="nextReviewRound">ä¸‹æ¬¡å¤ä¹ è½®æ¬¡</param>
+    /// <returns>ä¸‹æ¬¡å¤ä¹ æ—¶é—´</returns>
     public static DateTime CalculateNextReviewTime(DateTime lastReviewTime, int nextReviewRound)
     {
         int intervalDays = GetReviewInterval(nextReviewRound);
@@ -48,13 +48,13 @@ public static class EbbinghausHelper
     }
 
     /// <summary>
-    /// ¸ù¾İ¸´Ï°ÖÊÁ¿µ÷ÕûÏÂ´Î¸´Ï°¼ä¸ô
-    /// Èç¹û¸´Ï°ÖÊÁ¿²î£¨ÆÀ·ÖµÍ£©£¬Ëõ¶Ì¼ä¸ô£»Èç¹ûÖÊÁ¿ºÃ£¬¿ÉÒÔÂÔÎ¢ÑÓ³¤
+    /// æ ¹æ®å¤ä¹ è´¨é‡è°ƒæ•´ä¸‹æ¬¡å¤ä¹ é—´éš”
+    /// å¦‚æœå¤ä¹ è´¨é‡å·®ï¼ˆè¯„åˆ†ä½ï¼‰ï¼Œç¼©çŸ­é—´éš”ï¼›å¦‚æœè´¨é‡å¥½ï¼Œå¯ä»¥ç•¥å¾®å»¶é•¿
     /// </summary>
-    /// <param name="lastReviewTime">ÉÏ´Î¸´Ï°Ê±¼ä</param>
-    /// <param name="nextReviewRound">ÏÂ´Î¸´Ï°ÂÖ´Î</param>
-    /// <param name="qualityRating">¸´Ï°ÖÊÁ¿ÆÀ·Ö£¨1-5£©</param>
-    /// <returns>µ÷ÕûºóµÄÏÂ´Î¸´Ï°Ê±¼ä</returns>
+    /// <param name="lastReviewTime">ä¸Šæ¬¡å¤ä¹ æ—¶é—´</param>
+    /// <param name="nextReviewRound">ä¸‹æ¬¡å¤ä¹ è½®æ¬¡</param>
+    /// <param name="qualityRating">å¤ä¹ è´¨é‡è¯„åˆ†ï¼ˆ1-5ï¼‰</param>
+    /// <returns>è°ƒæ•´åçš„ä¸‹æ¬¡å¤ä¹ æ—¶é—´</returns>
     public static DateTime CalculateNextReviewTimeWithQuality(
         DateTime lastReviewTime,
         int nextReviewRound,
@@ -63,22 +63,22 @@ public static class EbbinghausHelper
         int baseInterval = GetReviewInterval(nextReviewRound);
         double adjustedInterval = baseInterval;
 
-        // ¸ù¾İÖÊÁ¿ÆÀ·Öµ÷Õû¼ä¸ô
+        // æ ¹æ®è´¨é‡è¯„åˆ†è°ƒæ•´é—´éš”
         switch (qualityRating)
         {
-            case 1: // ÍêÈ«Íü¼Ç - Ëõ¶Ìµ½Ô­À´µÄ30%
+            case 1: // å®Œå…¨å¿˜è®° - ç¼©çŸ­åˆ°åŸæ¥çš„30%
                 adjustedInterval = baseInterval * 0.3;
                 break;
-            case 2: // Ä£ºı - Ëõ¶Ìµ½Ô­À´µÄ50%
+            case 2: // æ¨¡ç³Š - ç¼©çŸ­åˆ°åŸæ¥çš„50%
                 adjustedInterval = baseInterval * 0.5;
                 break;
-            case 3: // ÄÜÏëÆğ - ±£³Ö±ê×¼¼ä¸ô
+            case 3: // èƒ½æƒ³èµ· - ä¿æŒæ ‡å‡†é—´éš”
                 adjustedInterval = baseInterval * 1.0;
                 break;
-            case 4: // ÊìÁ· - ÑÓ³¤µ½Ô­À´µÄ120%
+            case 4: // ç†Ÿç»ƒ - å»¶é•¿åˆ°åŸæ¥çš„120%
                 adjustedInterval = baseInterval * 1.2;
                 break;
-            case 5: // ÍêÃÀ - ÑÓ³¤µ½Ô­À´µÄ150%
+            case 5: // å®Œç¾ - å»¶é•¿åˆ°åŸæ¥çš„150%
                 adjustedInterval = baseInterval * 1.5;
                 break;
             default:
@@ -90,20 +90,20 @@ public static class EbbinghausHelper
     }
 
     /// <summary>
-    /// ¼ÆËãÊìÁ·¶È£¨0-100£©
-    /// »ùÓÚ¸´Ï°´ÎÊıºÍ×î½üµÄ¸´Ï°ÖÊÁ¿
+    /// è®¡ç®—ç†Ÿç»ƒåº¦ï¼ˆ0-100ï¼‰
+    /// åŸºäºå¤ä¹ æ¬¡æ•°å’Œæœ€è¿‘çš„å¤ä¹ è´¨é‡
     /// </summary>
-    /// <param name="reviewCount">×Ü¸´Ï°´ÎÊı</param>
-    /// <param name="recentQualityRatings">×î½ü3´ÎµÄ¸´Ï°ÖÊÁ¿ÆÀ·Ö</param>
-    /// <returns>ÊìÁ·¶È£¨0-100£©</returns>
+    /// <param name="reviewCount">æ€»å¤ä¹ æ¬¡æ•°</param>
+    /// <param name="recentQualityRatings">æœ€è¿‘3æ¬¡çš„å¤ä¹ è´¨é‡è¯„åˆ†</param>
+    /// <returns>ç†Ÿç»ƒåº¦ï¼ˆ0-100ï¼‰</returns>
     public static int CalculateProficiency(int reviewCount, IEnumerable<int> recentQualityRatings)
     {
         var ratings = recentQualityRatings.ToList();
         
-        // »ù´¡ÊìÁ·¶È£º¸ù¾İ¸´Ï°´ÎÊı
+        // åŸºç¡€ç†Ÿç»ƒåº¦ï¼šæ ¹æ®å¤ä¹ æ¬¡æ•°
         int baseProficiency = Math.Min(reviewCount * 10, 50);
 
-        // ×î½ü±íÏÖ¼Ó³É£º¸ù¾İ×î½üµÄ¸´Ï°ÖÊÁ¿
+        // æœ€è¿‘è¡¨ç°åŠ æˆï¼šæ ¹æ®æœ€è¿‘çš„å¤ä¹ è´¨é‡
         if (ratings.Count > 0)
         {
             double averageQuality = ratings.Average();
@@ -115,15 +115,15 @@ public static class EbbinghausHelper
     }
 
     /// <summary>
-    /// ÅĞ¶ÏÊÇ·ñÓ¦¸Ã·¢ËÍ¸´Ï°ÌáĞÑ
-    /// ÔÚ¼Æ»®¸´Ï°Ê±¼äÇ°1Ğ¡Ê±µ½ºó24Ğ¡Ê±ÄÚ·¢ËÍ
+    /// åˆ¤æ–­æ˜¯å¦åº”è¯¥å‘é€å¤ä¹ æé†’
+    /// åœ¨è®¡åˆ’å¤ä¹ æ—¶é—´å‰1å°æ—¶åˆ°å24å°æ—¶å†…å‘é€
     /// </summary>
-    /// <param name="scheduledTime">¼Æ»®¸´Ï°Ê±¼ä</param>
-    /// <param name="now">µ±Ç°Ê±¼ä</param>
-    /// <returns>ÊÇ·ñÓ¦¸Ã·¢ËÍÌáĞÑ</returns>
+    /// <param name="scheduledTime">è®¡åˆ’å¤ä¹ æ—¶é—´</param>
+    /// <param name="now">å½“å‰æ—¶é—´</param>
+    /// <returns>æ˜¯å¦åº”è¯¥å‘é€æé†’</returns>
     public static bool ShouldSendReminder(DateTime scheduledTime, DateTime now)
     {
-        // ÔÚ¼Æ»®Ê±¼äÇ°1Ğ¡Ê±µ½ºó24Ğ¡Ê±ÄÚ
+        // åœ¨è®¡åˆ’æ—¶é—´å‰1å°æ—¶åˆ°å24å°æ—¶å†…
         var reminderWindowStart = scheduledTime.AddHours(-1);
         var reminderWindowEnd = scheduledTime.AddHours(24);
         
@@ -131,12 +131,12 @@ public static class EbbinghausHelper
     }
 
     /// <summary>
-    /// ÅĞ¶Ï¸´Ï°ÊÇ·ñ¹ıÆÚ
-    /// Èç¹û³¬¹ı¼Æ»®Ê±¼ä48Ğ¡Ê±ÈÔÎ´Íê³É£¬±ê¼ÇÎª¹ıÆÚ
+    /// åˆ¤æ–­å¤ä¹ æ˜¯å¦è¿‡æœŸ
+    /// å¦‚æœè¶…è¿‡è®¡åˆ’æ—¶é—´48å°æ—¶ä»æœªå®Œæˆï¼Œæ ‡è®°ä¸ºè¿‡æœŸ
     /// </summary>
-    /// <param name="scheduledTime">¼Æ»®¸´Ï°Ê±¼ä</param>
-    /// <param name="now">µ±Ç°Ê±¼ä</param>
-    /// <returns>ÊÇ·ñ¹ıÆÚ</returns>
+    /// <param name="scheduledTime">è®¡åˆ’å¤ä¹ æ—¶é—´</param>
+    /// <param name="now">å½“å‰æ—¶é—´</param>
+    /// <returns>æ˜¯å¦è¿‡æœŸ</returns>
     public static bool IsReviewExpired(DateTime scheduledTime, DateTime now)
     {
         return now > scheduledTime.AddHours(48);

@@ -2,24 +2,24 @@
 @using PoemApp.Client.ApiClients
 @inject UsersApiClient UsersClient
 
-<h3>ÓÃ»§ÏêÇé</h3>
+<h3>ç”¨æˆ·è¯¦æƒ…</h3>
 
 @if (user == null)
 {
-    <p>¼ÓÔØÖĞ...</p>
+    <p>åŠ è½½ä¸­...</p>
 }
 else
 {
-    <h4>»ù±¾ĞÅÏ¢</h4>
-    <p>ÓÃ»§Ãû: @user.Username</p>
-    <p>×¢²áÊ±¼ä: @user.CreatedAt.ToLocalTime()</p>
+    <h4>åŸºæœ¬ä¿¡æ¯</h4>
+    <p>ç”¨æˆ·å: @user.Username</p>
+    <p>æ³¨å†Œæ—¶é—´: @user.CreatedAt.ToLocalTime()</p>
 
-    <h4>ÊÕ²ØµÄ¹ÅÊ«ÎÄ</h4>
+    <h4>æ”¶è—çš„å¤è¯—æ–‡</h4>
     <table class="table">
         <thead>
             <tr>
-                <th>±êÌâ</th>
-                <th>×÷Õß</th>
+                <th>æ ‡é¢˜</th>
+                <th>ä½œè€…</th>
             </tr>
         </thead>
         <tbody>
@@ -33,14 +33,14 @@ else
         </tbody>
     </table>
 
-    <h4>±³ËĞ¼ÇÂ¼</h4>
+    <h4>èƒŒè¯µè®°å½•</h4>
     <table class="table">
         <thead>
             <tr>
-                <th>Ê«ÎÄ±êÌâ</th>
-                <th>×´Ì¬</th>
-                <th>ÊìÁ·¶È</th>
-                <th>ÏÂ´Î¸´Ï°Ê±¼ä</th>
+                <th>è¯—æ–‡æ ‡é¢˜</th>
+                <th>çŠ¶æ€</th>
+                <th>ç†Ÿç»ƒåº¦</th>
+                <th>ä¸‹æ¬¡å¤ä¹ æ—¶é—´</th>
             </tr>
         </thead>
         <tbody>
@@ -56,13 +56,13 @@ else
         </tbody>
     </table>
 
-    <h4>³É¾ÍĞÅÏ¢</h4>
+    <h4>æˆå°±ä¿¡æ¯</h4>
     <table class="table">
         <thead>
             <tr>
-                <th>³É¾ÍÃû³Æ</th>
-                <th>´ï³ÉÊ±¼ä</th>
-                <th>½±Àø×´Ì¬</th>
+                <th>æˆå°±åç§°</th>
+                <th>è¾¾æˆæ—¶é—´</th>
+                <th>å¥–åŠ±çŠ¶æ€</th>
             </tr>
         </thead>
         <tbody>
@@ -71,7 +71,7 @@ else
                 <tr>
                     <td>@achievement.AchievementName</td>
                     <td>@achievement.AchievedAt.ToLocalTime()</td>
-                    <td>@(achievement.RewardClaimed ? "ÒÑÁìÈ¡" : "Î´ÁìÈ¡")</td>
+                    <td>@(achievement.RewardClaimed ? "å·²é¢†å–" : "æœªé¢†å–")</td>
                 </tr>
             }
         </tbody>

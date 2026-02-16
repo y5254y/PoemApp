@@ -3,19 +3,19 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Enums;
 
 /// <summary>
-/// ¸´Ï°×´Ì¬
+/// å¤ä¹ çŠ¶æ€
 /// </summary>
 public enum ReviewStatus
 {
-    [Display(Name = "´ı¸´Ï°")]
+    [Display(Name = "å¾…å¤ä¹ ")]
     Pending,
 
-    [Display(Name = "ÒÑÍê³É")]
+    [Display(Name = "å·²å®Œæˆ")]
     Completed,
 
-    [Display(Name = "ÒÑÌø¹ı")]
+    [Display(Name = "å·²è·³è¿‡")]
     Skipped,
 
-    [Display(Name = "ÒÑ¹ıÆÚ")]
+    [Display(Name = "å·²è¿‡æœŸ")]
     Expired
 }

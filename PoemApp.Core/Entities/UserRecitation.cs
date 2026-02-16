@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Entities;
 
 /// <summary>
-/// ÓÃ»§±³ËĞ¼ÇÂ¼ - ¼ÇÂ¼ÓÃ»§¿ªÊ¼±³ËĞÄ³Ê×Ê«ÎÄµÄĞÅÏ¢
+/// ç”¨æˆ·èƒŒè¯µè®°å½• - è®°å½•ç”¨æˆ·å¼€å§‹èƒŒè¯µæŸé¦–è¯—æ–‡çš„ä¿¡æ¯
 /// </summary>
 public class UserRecitation
 {
@@ -19,54 +19,54 @@ public class UserRecitation
     public Poem Poem { get; set; } = null!;
 
     /// <summary>
-    /// ±³ËĞ×´Ì¬
+    /// èƒŒè¯µçŠ¶æ€
     /// </summary>
     [Required]
     public RecitationStatus Status { get; set; } = RecitationStatus.Learning;
 
     /// <summary>
-    /// Ê×´Î±³ËĞÊ±¼ä
+    /// é¦–æ¬¡èƒŒè¯µæ—¶é—´
     /// </summary>
     public DateTime FirstRecitationTime { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// ×îºóÒ»´Î¸´Ï°Ê±¼ä
+    /// æœ€åä¸€æ¬¡å¤ä¹ æ—¶é—´
     /// </summary>
     public DateTime? LastReviewTime { get; set; }
 
     /// <summary>
-    /// ¸´Ï°´ÎÊı
+    /// å¤ä¹ æ¬¡æ•°
     /// </summary>
     public int ReviewCount { get; set; } = 0;
 
     /// <summary>
-    /// ÊìÁ·¶È£¨0-100£©- ¿É¸ù¾İ¸´Ï°Çé¿ö¼ÆËã
+    /// ç†Ÿç»ƒåº¦ï¼ˆ0-100ï¼‰- å¯æ ¹æ®å¤ä¹ æƒ…å†µè®¡ç®—
     /// </summary>
     public int Proficiency { get; set; } = 0;
 
     /// <summary>
-    /// ÏÂ´Î¸´Ï°Ê±¼ä£¨¸ù¾İ°¬±öºÆË¹ÇúÏß¼ÆËã£©
+    /// ä¸‹æ¬¡å¤ä¹ æ—¶é—´ï¼ˆæ ¹æ®è‰¾å®¾æµ©æ–¯æ›²çº¿è®¡ç®—ï¼‰
     /// </summary>
     public DateTime? NextReviewTime { get; set; }
 
     /// <summary>
-    /// ±¸×¢
+    /// å¤‡æ³¨
     /// </summary>
     [StringLength(500)]
     public string? Notes { get; set; }
 
     /// <summary>
-    /// ´´½¨Ê±¼ä
+    /// åˆ›å»ºæ—¶é—´
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// ¸üĞÂÊ±¼ä
+    /// æ›´æ–°æ—¶é—´
     /// </summary>
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// ¸Ã±³ËĞ¼ÇÂ¼µÄËùÓĞ¸´Ï°¼ÇÂ¼
+    /// è¯¥èƒŒè¯µè®°å½•çš„æ‰€æœ‰å¤ä¹ è®°å½•
     /// </summary>
     public ICollection<RecitationReview> Reviews { get; set; } = [];
 }

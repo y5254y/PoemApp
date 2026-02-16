@@ -4,75 +4,75 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Entities;
 
 /// <summary>
-/// ³É¾Í¶¨Òå - ¶¨ÒåËùÓĞ¿ÉÄÜµÄ³É¾Í
+/// æˆå°±å®šä¹‰ - å®šä¹‰æ‰€æœ‰å¯èƒ½çš„æˆå°±
 /// </summary>
 public class Achievement
 {
     public int Id { get; set; }
 
     /// <summary>
-    /// ³É¾ÍÃû³Æ
+    /// æˆå°±åç§°
     /// </summary>
     [Required]
     [StringLength(100)]
     public string Name { get; set; } = null!;
 
     /// <summary>
-    /// ³É¾ÍÃèÊö
+    /// æˆå°±æè¿°
     /// </summary>
     [Required]
     [StringLength(500)]
     public string Description { get; set; } = null!;
 
     /// <summary>
-    /// ³É¾ÍÀàĞÍ
+    /// æˆå°±ç±»å‹
     /// </summary>
     [Required]
     public AchievementType Type { get; set; }
 
     /// <summary>
-    /// ³É¾ÍÍ¼±êURL»òÂ·¾¶
+    /// æˆå°±å›¾æ ‡URLæˆ–è·¯å¾„
     /// </summary>
     [StringLength(200)]
     public string? IconUrl { get; set; }
 
     /// <summary>
-    /// ´ï³ÉÌõ¼şÖµ£¨Èç£ºÁ¬ĞøÇ©µ½7Ìì£¬ÕâÀï¾ÍÊÇ7£©
+    /// è¾¾æˆæ¡ä»¶å€¼ï¼ˆå¦‚ï¼šè¿ç»­ç­¾åˆ°7å¤©ï¼Œè¿™é‡Œå°±æ˜¯7ï¼‰
     /// </summary>
     public int TargetValue { get; set; }
 
     /// <summary>
-    /// ½±Àø»ı·Ö
+    /// å¥–åŠ±ç§¯åˆ†
     /// </summary>
     public int RewardPoints { get; set; } = 0;
 
     /// <summary>
-    /// ³É¾ÍµÈ¼¶£¨ÓÃÓÚÍ¬Àà³É¾ÍµÄ²»Í¬¼¶±ğ£¬Èç£ºÍ­¡¢Òø¡¢½ğ£©
+    /// æˆå°±ç­‰çº§ï¼ˆç”¨äºåŒç±»æˆå°±çš„ä¸åŒçº§åˆ«ï¼Œå¦‚ï¼šé“œã€é“¶ã€é‡‘ï¼‰
     /// </summary>
     public int Level { get; set; } = 1;
 
     /// <summary>
-    /// ÏÔÊ¾Ë³Ğò
+    /// æ˜¾ç¤ºé¡ºåº
     /// </summary>
     public int DisplayOrder { get; set; } = 0;
 
     /// <summary>
-    /// ÊÇ·ñÒş²Ø£¨Òş²Ø³É¾ÍÔÚ´ï³ÉÇ°²»ÏÔÊ¾£©
+    /// æ˜¯å¦éšè—ï¼ˆéšè—æˆå°±åœ¨è¾¾æˆå‰ä¸æ˜¾ç¤ºï¼‰
     /// </summary>
     public bool IsHidden { get; set; } = false;
 
     /// <summary>
-    /// ÊÇ·ñÆôÓÃ
+    /// æ˜¯å¦å¯ç”¨
     /// </summary>
     public bool IsActive { get; set; } = true;
 
     /// <summary>
-    /// ´´½¨Ê±¼ä
+    /// åˆ›å»ºæ—¶é—´
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     /// <summary>
-    /// »ñµÃ¸Ã³É¾ÍµÄÓÃ»§ÁĞ±í
+    /// è·å¾—è¯¥æˆå°±çš„ç”¨æˆ·åˆ—è¡¨
     /// </summary>
     public ICollection<UserAchievement> UserAchievements { get; set; } = [];
 }

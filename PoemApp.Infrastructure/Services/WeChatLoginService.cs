@@ -33,7 +33,7 @@ namespace PoemApp.Infrastructure.Services
                 var resp = await _httpClient.GetAsync(url);
                 if (!resp.IsSuccessStatusCode)
                 {
-                    _logger.LogWarning($"WeChat code2session ·µ»Ø·Ç³É¹¦×´Ì¬: {resp.StatusCode}");
+                    _logger.LogWarning($"WeChat code2session è¿”å›éæˆåŠŸçŠ¶æ€: {resp.StatusCode}");
                     return null;
                 }
 
@@ -44,7 +44,7 @@ namespace PoemApp.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError($"WeChat Code2Session µ÷ÓÃÊ§°Ü: {ex.Message}", ex);
+                _logger.LogError($"WeChat Code2Session è°ƒç”¨å¤±è´¥: {ex.Message}", ex);
                 return null;
             }
         }

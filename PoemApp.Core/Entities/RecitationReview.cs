@@ -4,8 +4,8 @@ using System.ComponentModel.DataAnnotations;
 namespace PoemApp.Core.Entities;
 
 /// <summary>
-/// ¸´Ï°¼ÇÂ¼ - »ùÓÚ°¬±öºÆË¹ÒÅÍüÇúÏßµÄ¸´Ï°¼Æ»®ºÍÍê³ÉÇé¿ö
-/// °¬±öºÆË¹ÒÅÍüÇúÏß¸´Ï°Ê±¼äµã£º1Ìì¡¢2Ìì¡¢4Ìì¡¢7Ìì¡¢15Ìì¡¢30Ìì
+/// å¤ä¹ è®°å½• - åŸºäºè‰¾å®¾æµ©æ–¯é—å¿˜æ›²çº¿çš„å¤ä¹ è®¡åˆ’å’Œå®Œæˆæƒ…å†µ
+/// è‰¾å®¾æµ©æ–¯é—å¿˜æ›²çº¿å¤ä¹ æ—¶é—´ç‚¹ï¼š1å¤©ã€2å¤©ã€4å¤©ã€7å¤©ã€15å¤©ã€30å¤©
 /// </summary>
 public class RecitationReview
 {
@@ -16,54 +16,54 @@ public class RecitationReview
     public UserRecitation UserRecitation { get; set; } = null!;
 
     /// <summary>
-    /// ¼Æ»®¸´Ï°Ê±¼ä
+    /// è®¡åˆ’å¤ä¹ æ—¶é—´
     /// </summary>
     public DateTime ScheduledTime { get; set; }
 
     /// <summary>
-    /// Êµ¼Ê¸´Ï°Ê±¼ä
+    /// å®é™…å¤ä¹ æ—¶é—´
     /// </summary>
     public DateTime? ActualReviewTime { get; set; }
 
     /// <summary>
-    /// ¸´Ï°×´Ì¬
+    /// å¤ä¹ çŠ¶æ€
     /// </summary>
     [Required]
     public ReviewStatus Status { get; set; } = ReviewStatus.Pending;
 
     /// <summary>
-    /// ¸´Ï°ÂÖ´Î£¨µÚ¼¸´Î¸´Ï°£º1¡¢2¡¢3...£©
+    /// å¤ä¹ è½®æ¬¡ï¼ˆç¬¬å‡ æ¬¡å¤ä¹ ï¼š1ã€2ã€3...ï¼‰
     /// </summary>
     public int ReviewRound { get; set; }
 
     /// <summary>
-    /// ¸´Ï°ÖÊÁ¿ÆÀ·Ö£¨1-5£©£º1=ÍêÈ«Íü¼Ç£¬2=Ä£ºı£¬3=ÄÜÏëÆğ£¬4=ÊìÁ·£¬5=ÍêÃÀ
+    /// å¤ä¹ è´¨é‡è¯„åˆ†ï¼ˆ1-5ï¼‰ï¼š1=å®Œå…¨å¿˜è®°ï¼Œ2=æ¨¡ç³Šï¼Œ3=èƒ½æƒ³èµ·ï¼Œ4=ç†Ÿç»ƒï¼Œ5=å®Œç¾
     /// </summary>
     public int? QualityRating { get; set; }
 
     /// <summary>
-    /// ¸´Ï°ºÄÊ±£¨Ãë£©
+    /// å¤ä¹ è€—æ—¶ï¼ˆç§’ï¼‰
     /// </summary>
     public int? DurationSeconds { get; set; }
 
     /// <summary>
-    /// ¸´Ï°±¸×¢
+    /// å¤ä¹ å¤‡æ³¨
     /// </summary>
     [StringLength(500)]
     public string? Notes { get; set; }
 
     /// <summary>
-    /// ÊÇ·ñ·¢ËÍÁËÌáĞÑ
+    /// æ˜¯å¦å‘é€äº†æé†’
     /// </summary>
     public bool ReminderSent { get; set; } = false;
 
     /// <summary>
-    /// ÌáĞÑ·¢ËÍÊ±¼ä
+    /// æé†’å‘é€æ—¶é—´
     /// </summary>
     public DateTime? ReminderSentTime { get; set; }
 
     /// <summary>
-    /// ´´½¨Ê±¼ä
+    /// åˆ›å»ºæ—¶é—´
     /// </summary>
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 }

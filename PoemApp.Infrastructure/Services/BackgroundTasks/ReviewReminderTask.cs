@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace PoemApp.Infrastructure.Services.BackgroundTasks;
 
 /// <summary>
-/// ¶¨Ê±ÈÎÎñ£º¸´Ï°ÌáĞÑ
+/// å®šæ—¶ä»»åŠ¡ï¼šå¤ä¹ æé†’
 /// </summary>
 public class ReviewReminderTask : BackgroundService
 {
@@ -56,7 +56,7 @@ public class ReviewReminderTask : BackgroundService
                 Console.WriteLine($"ReviewReminderTask error: {ex.Message}");
             }
 
-            await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // Ã¿Ğ¡Ê±¼ì²éÒ»´Î
+            await Task.Delay(TimeSpan.FromHours(1), stoppingToken); // æ¯å°æ—¶æ£€æŸ¥ä¸€æ¬¡
         }
     }
 }
