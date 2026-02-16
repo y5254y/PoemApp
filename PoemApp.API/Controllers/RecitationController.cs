@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using PoemApp.Core.DTOs;
 using PoemApp.Core.Entities;
 using PoemApp.Infrastructure.Data;
+using Microsoft.EntityFrameworkCore;
+using PoemApp.Core.Enums;
 
 namespace PoemApp.API.Controllers;
 
@@ -23,10 +25,22 @@ public class RecitationController : ControllerBase
         {
             UserId = 1, // Replace with actual user ID from auth context
             PoemId = dto.PoemId,
-            Notes = dto.Notes
+            Notes = dto.Notes,
+            NextReviewTime = DateTime.UtcNow.AddDays(1) // First review after 1 day
         };
 
         _context.UserRecitations.Add(recitation);
+        _context.SaveChanges();
+
+        // Create first review schedule
+        var firstReview = new RecitationReview
+        {
+            UserRecitationId = recitation.Id,
+            ScheduledTime = recitation.NextReviewTime.Value,
+            ReviewRound = 1,
+            Status = ReviewStatus.Pending
+        };
+        _context.RecitationReviews.Add(firstReview);
         _context.SaveChanges();
 
         return Ok(recitation.Id);
@@ -73,13 +87,63 @@ public class RecitationController : ControllerBase
     [HttpPost("{id}/reviews")]
     public IActionResult CompleteReview(int id, [FromBody] CreateReviewDto dto)
     {
-        var review = _context.RecitationReviews.FirstOrDefault(rr => rr.Id == id);
+        var review = _context.RecitationReviews
+            .Include(r => r.UserRecitation)
+            .FirstOrDefault(rr => rr.Id == id);
         if (review == null) return NotFound();
 
-        review.ActualReviewTime = DateTime.UtcNow;
-        review.Status = Core.Enums.ReviewStatus.Completed;
+        var now = DateTime.UtcNow;
+        review.ActualReviewTime = now;
+        review.Status = ReviewStatus.Completed;
         review.QualityRating = dto.QualityRating;
         review.Notes = dto.Notes;
+
+        // Update UserRecitation
+        var recitation = review.UserRecitation;
+        recitation.LastReviewTime = now;
+        recitation.ReviewCount++;
+        recitation.UpdatedAt = now;
+
+        // Update proficiency based on quality rating (1-5)
+        // Quality: 1=完全忘记, 2=模糊, 3=能想起, 4=熟练, 5=完美
+        int qualityBonus = (dto.QualityRating - 1) * 5; // 0, 5, 10, 15, 20
+        recitation.Proficiency = Math.Min(100, recitation.Proficiency + qualityBonus);
+
+        // Calculate next review time based on Ebbinghaus curve
+        // Review intervals: 1, 2, 4, 7, 15, 30 days
+        int[] intervals = { 1, 2, 4, 7, 15, 30 };
+        int nextInterval = review.ReviewRound < intervals.Length 
+            ? intervals[review.ReviewRound] 
+            : 30;
+        
+        recitation.NextReviewTime = now.AddDays(nextInterval);
+
+        // Update status based on proficiency and review count
+        if (recitation.Proficiency >= 80 && recitation.ReviewCount >= 3)
+        {
+            recitation.Status = RecitationStatus.Mastered;
+        }
+        else if (recitation.Proficiency >= 50)
+        {
+            recitation.Status = RecitationStatus.NeedReview;
+        }
+        else
+        {
+            recitation.Status = RecitationStatus.Learning;
+        }
+
+        // Schedule next review if not mastered
+        if (recitation.Status != RecitationStatus.Mastered)
+        {
+            var nextReview = new RecitationReview
+            {
+                UserRecitationId = recitation.Id,
+                ScheduledTime = recitation.NextReviewTime.Value,
+                ReviewRound = review.ReviewRound + 1,
+                Status = ReviewStatus.Pending
+            };
+            _context.RecitationReviews.Add(nextReview);
+        }
 
         _context.SaveChanges();
 
@@ -91,7 +155,7 @@ public class RecitationController : ControllerBase
     {
         var now = DateTime.UtcNow;
         var dueReviews = _context.RecitationReviews
-            .Where(rr => rr.ScheduledTime <= now && rr.Status == Core.Enums.ReviewStatus.Pending)
+            .Where(rr => rr.ScheduledTime <= now && rr.Status == ReviewStatus.Pending)
             .Select(rr => new ReviewDto
             {
                 Id = rr.Id,
