@@ -91,6 +91,15 @@ public class UsersController : ControllerBase
     {
         try
         {
+            // 从 Token 中获取当前登录用户的 ID
+            var currentUserId = GetCurrentUserIdFromToken();
+            
+            // 安全检查：只能查看自己的收藏（或管理员可以查看所有）
+            if (currentUserId != userId && !User.IsInRole("Admin"))
+            {
+                return Forbid("您只能查看自己的收藏");
+            }
+            
             var favorites = await _userService.GetUserFavoritesAsync(userId);
             return Ok(favorites);
         }
@@ -106,6 +115,15 @@ public class UsersController : ControllerBase
     {
         try
         {
+            // 从 Token 中获取当前登录用户的 ID
+            var currentUserId = GetCurrentUserIdFromToken();
+            
+            // 安全检查：只能为自己添加收藏
+            if (currentUserId != userId)
+            {
+                return Forbid("您只能为自己添加收藏");
+            }
+            
             var createdFavorite = await _userService.AddUserFavoriteAsync(userId, favoriteDto);
             return CreatedAtAction(nameof(GetUserFavorites), new { userId = userId }, createdFavorite);
         }
@@ -121,6 +139,15 @@ public class UsersController : ControllerBase
     {
         try
         {
+            // 从 Token 中获取当前登录用户的 ID
+            var currentUserId = GetCurrentUserIdFromToken();
+            
+            // 安全检查：只能删除自己的收藏
+            if (currentUserId != userId)
+            {
+                return Forbid("您只能删除自己的收藏");
+            }
+            
             await _userService.RemoveUserFavoriteAsync(userId, poemId);
             return NoContent();
         }
@@ -339,5 +366,29 @@ public class UsersController : ControllerBase
         }
 
         return Ok(user);
+    }
+
+    // 添加辅助方法：从 Token 中获取当前用户 ID
+    private int GetCurrentUserIdFromToken()
+    {
+        var claimNames = new[] 
+        { 
+            System.Security.Claims.ClaimTypes.NameIdentifier,
+            "nameid",
+            "sub",
+            "userId",
+            "id"
+        };
+
+        foreach (var claimName in claimNames)
+        {
+            var claimValue = User.FindFirst(claimName)?.Value;
+            if (!string.IsNullOrEmpty(claimValue) && int.TryParse(claimValue, out var userId) && userId > 0)
+            {
+                return userId;
+            }
+        }
+
+        throw new UnauthorizedAccessException("无法从 Token 中获取用户 ID");
     }
 }
