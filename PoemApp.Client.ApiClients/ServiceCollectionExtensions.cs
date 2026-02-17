@@ -17,6 +17,8 @@ public static class ServiceCollectionExtensions
         services.AddScoped<UsersApiClient>();
         services.AddScoped<PoemApiClient>();
         services.AddScoped<QuotesApiClient>();
+        services.AddScoped<PoemFeedbacksApiClient>();
+        services.AddScoped<QuoteFeedbacksApiClient>();
 
         return services;
     }

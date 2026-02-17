@@ -114,8 +114,12 @@ public class Program
         // 添加服务到容器
         // 注册 HttpClient 用于远程调用（例如微信 code2session）
         builder.Services.AddHttpClient();
+        builder.Services.AddHttpContextAccessor();
         builder.Services.AddAuthorization();
         builder.Services.AddControllers();
+
+        // 配置路由不区分大小写
+        builder.Services.Configure<RouteOptions>(options => options.LowercaseUrls = true);
 
         // 添加 JWT 认证
         var jwtKey = builder.Configuration["Jwt:Key"];

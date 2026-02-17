@@ -28,6 +28,8 @@ public class AppDbContext : DbContext
     public DbSet<RecitationReview> RecitationReviews { get; set; }
     public DbSet<Achievement> Achievements { get; set; }
     public DbSet<UserAchievement> UserAchievements { get; set; }
+    public DbSet<PoemFeedback> PoemFeedbacks { get; set; } = null!;
+    public DbSet<QuoteFeedback> QuoteFeedbacks { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

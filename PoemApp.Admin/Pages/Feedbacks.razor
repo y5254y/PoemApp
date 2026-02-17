@@ -1,0 +1,124 @@
+@page "/feedbacks"
+@attribute [Authorize(Roles = "Admin")]
+@using PoemApp.Core.DTOs
+@using PoemApp.Core.Enums
+@using PoemApp.Client.ApiClients
+@using MudBlazor
+@inject PoemFeedbacksApiClient PoemFeedbacksClient
+@inject QuoteFeedbacksApiClient QuoteFeedbacksClient
+@inject ISnackbar Snackbar
+
+<MudTabs>
+    <MudTabPanel Text="诗文反馈">
+        <MudTable T="PoemFeedbackDto" @ref="_poemTable" ServerData="LoadPoemFeedbacks" Striped="true" Hover="true" Bordered="true">
+            <ToolBarContent>
+                <MudSelect T="FeedbackStatus?" Value="_poemStatus" ValueChanged="OnPoemStatusChanged" Label="状态" Dense="true">
+                    <MudSelectItem T="FeedbackStatus?" Value="@(null)">全部</MudSelectItem>
+                    @foreach (var status in Enum.GetValues<FeedbackStatus>())
+                    {
+                        <MudSelectItem T="FeedbackStatus?" Value="@status">@status</MudSelectItem>
+                    }
+                </MudSelect>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>诗文</MudTh>
+                <MudTh>用户</MudTh>
+                <MudTh>反馈内容</MudTh>
+                <MudTh>分类</MudTh>
+                <MudTh>状态</MudTh>
+                <MudTh>时间</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.PoemTitle</MudTd>
+                <MudTd>@context.Username</MudTd>
+                <MudTd>@context.Content</MudTd>
+                <MudTd>@context.Category</MudTd>
+                <MudTd>@context.Status</MudTd>
+                <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudTabPanel>
+
+    <MudTabPanel Text="名句反馈">
+        <MudTable T="QuoteFeedbackDto" @ref="_quoteTable" ServerData="LoadQuoteFeedbacks" Striped="true" Hover="true" Bordered="true">
+            <ToolBarContent>
+                <MudSelect T="FeedbackStatus?" Value="_quoteStatus" ValueChanged="OnQuoteStatusChanged" Label="状态" Dense="true">
+                    <MudSelectItem T="FeedbackStatus?" Value="@(null)">全部</MudSelectItem>
+                    @foreach (var status in Enum.GetValues<FeedbackStatus>())
+                    {
+                        <MudSelectItem T="FeedbackStatus?" Value="@status">@status</MudSelectItem>
+                    }
+                </MudSelect>
+            </ToolBarContent>
+            <HeaderContent>
+                <MudTh>名句</MudTh>
+                <MudTh>用户</MudTh>
+                <MudTh>反馈内容</MudTh>
+                <MudTh>分类</MudTh>
+                <MudTh>状态</MudTh>
+                <MudTh>时间</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd>@context.QuoteContent</MudTd>
+                <MudTd>@context.Username</MudTd>
+                <MudTd>@context.Content</MudTd>
+                <MudTd>@context.Category</MudTd>
+                <MudTd>@context.Status</MudTd>
+                <MudTd>@context.CreatedAt.ToString("yyyy-MM-dd HH:mm")</MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudTabPanel>
+</MudTabs>
+
+@code {
+    private MudTable<PoemFeedbackDto>? _poemTable;
+    private MudTable<QuoteFeedbackDto>? _quoteTable;
+    private FeedbackStatus? _poemStatus;
+    private FeedbackStatus? _quoteStatus;
+
+    private async Task<TableData<PoemFeedbackDto>> LoadPoemFeedbacks(TableState state, CancellationToken ct)
+    {
+        try
+        {
+            var (items, total) = await PoemFeedbacksClient.GetPagedAsync(state.Page + 1, state.PageSize, _poemStatus);
+            return new TableData<PoemFeedbackDto> { TotalItems = total, Items = items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载诗文反馈失败: " + ex.Message, Severity.Error);
+            return new TableData<PoemFeedbackDto> { TotalItems = 0, Items = new List<PoemFeedbackDto>() };
+        }
+    }
+
+    private async Task<TableData<QuoteFeedbackDto>> LoadQuoteFeedbacks(TableState state, CancellationToken ct)
+    {
+        try
+        {
+            var (items, total) = await QuoteFeedbacksClient.GetPagedAsync(state.Page + 1, state.PageSize, _quoteStatus);
+            return new TableData<QuoteFeedbackDto> { TotalItems = total, Items = items };
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("加载名句反馈失败: " + ex.Message, Severity.Error);
+            return new TableData<QuoteFeedbackDto> { TotalItems = 0, Items = new List<QuoteFeedbackDto>() };
+        }
+    }
+
+    private Task OnPoemStatusChanged(FeedbackStatus? status)
+    {
+        _poemStatus = status;
+        return _poemTable?.ReloadServerData() ?? Task.CompletedTask;
+    }
+
+    private Task OnQuoteStatusChanged(FeedbackStatus? status)
+    {
+        _quoteStatus = status;
+        return _quoteTable?.ReloadServerData() ?? Task.CompletedTask;
+    }
+}
