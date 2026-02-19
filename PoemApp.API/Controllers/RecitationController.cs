@@ -144,6 +144,10 @@ public class RecitationController : ControllerBase
                     Status = rr.Status.ToString(),
                     QualityRating = rr.QualityRating,
                     ReviewRound = rr.ReviewRound
+                    ,
+                    UserRecitationId = rr.UserRecitationId,
+                    PoemId = rr.UserRecitation.PoemId,
+                    PoemTitle = rr.UserRecitation.Poem.Title
                 })
                 .ToList();
 
@@ -259,6 +263,10 @@ public class RecitationController : ControllerBase
                     Id = rr.Id,
                     ScheduledTime = rr.ScheduledTime,
                     Status = rr.Status.ToString()
+                    ,
+                    UserRecitationId = rr.UserRecitationId,
+                    PoemId = rr.UserRecitation.PoemId,
+                    PoemTitle = rr.UserRecitation.Poem.Title
                 })
                 .ToList();
 
